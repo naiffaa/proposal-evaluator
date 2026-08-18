@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# OCI credentials / secrets
+.oci/
+oci_api_key.pem
+*.pem
+config
+
+# Streamlit secrets
+.streamlit/secrets.toml
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Local generated evaluation outputs
+rfp_analysis.json
+proposal_01_technical.json
+proposal_01_experience.json
+proposal_01_team.json
+proposal_01_financial.json

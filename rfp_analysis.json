@@ -1,0 +1,765 @@
+{
+  "rfp_summary": "The Ministry of Health seeks a Smart Hospital Management System with comprehensive patient, appointment, clinical, pharmacy, billing, and reporting capabilities, hosted on a cloud-enabled, highly available platform, integrating multiple health systems, securing data, and meeting non‑functional performance targets. Vendor experience, team qualifications, and budget compliance are evaluated.",
+  "criteria": [
+    {
+      "name": "Technical Proposal",
+      "description": "Evaluation of the technical solution, including functional capabilities, integration, security, scalability, performance, and availability.",
+      "source": "Section 11 - Evaluation Criteria",
+      "weight": 50.0,
+      "weight_source": "explicit",
+      "requirements": [
+        {
+          "requirement": "Patient Registration",
+          "source": "Section 4.1 - Patient Management",
+          "mandatory": true,
+          "mandatory_evidence": "shall provide",
+          "id": "R001"
+        },
+        {
+          "requirement": "Electronic Medical Records (EMR)",
+          "source": "Section 4.1 - Patient Management",
+          "mandatory": true,
+          "mandatory_evidence": "shall provide",
+          "id": "R002"
+        },
+        {
+          "requirement": "Patient History Management",
+          "source": "Section 4.1 - Patient Management",
+          "mandatory": true,
+          "mandatory_evidence": "shall provide",
+          "id": "R003"
+        },
+        {
+          "requirement": "Patient Portal",
+          "source": "Section 4.1 - Patient Management",
+          "mandatory": true,
+          "mandatory_evidence": "shall provide",
+          "id": "R004"
+        },
+        {
+          "requirement": "Insurance Information Management",
+          "source": "Section 4.1 - Patient Management",
+          "mandatory": true,
+          "mandatory_evidence": "shall provide",
+          "id": "R005"
+        },
+        {
+          "requirement": "Appointment Scheduling",
+          "source": "Section 4.2 - Appointment Management",
+          "mandatory": true,
+          "mandatory_evidence": "shall support",
+          "id": "R006"
+        },
+        {
+          "requirement": "Doctor Availability Management",
+          "source": "Section 4.2 - Appointment Management",
+          "mandatory": true,
+          "mandatory_evidence": "shall support",
+          "id": "R007"
+        },
+        {
+          "requirement": "Appointment Reminders",
+          "source": "Section 4.2 - Appointment Management",
+          "mandatory": true,
+          "mandatory_evidence": "shall support",
+          "id": "R008"
+        },
+        {
+          "requirement": "Online Booking",
+          "source": "Section 4.2 - Appointment Management",
+          "mandatory": true,
+          "mandatory_evidence": "shall support",
+          "id": "R009"
+        },
+        {
+          "requirement": "Waiting List Management",
+          "source": "Section 4.2 - Appointment Management",
+          "mandatory": true,
+          "mandatory_evidence": "shall support",
+          "id": "R010"
+        },
+        {
+          "requirement": "Clinical Documentation",
+          "source": "Section 4.3 - Clinical Management",
+          "mandatory": true,
+          "mandatory_evidence": "shall provide",
+          "id": "R011"
+        },
+        {
+          "requirement": "Treatment Plans",
+          "source": "Section 4.3 - Clinical Management",
+          "mandatory": true,
+          "mandatory_evidence": "shall provide",
+          "id": "R012"
+        },
+        {
+          "requirement": "Diagnosis Management",
+          "source": "Section 4.3 - Clinical Management",
+          "mandatory": true,
+          "mandatory_evidence": "shall provide",
+          "id": "R013"
+        },
+        {
+          "requirement": "Laboratory Integration",
+          "source": "Section 4.3 - Clinical Management",
+          "mandatory": true,
+          "mandatory_evidence": "shall provide",
+          "id": "R014"
+        },
+        {
+          "requirement": "Radiology Integration",
+          "source": "Section 4.3 - Clinical Management",
+          "mandatory": true,
+          "mandatory_evidence": "shall provide",
+          "id": "R015"
+        },
+        {
+          "requirement": "Medication Management",
+          "source": "Section 4.4 - Pharmacy Management",
+          "mandatory": true,
+          "mandatory_evidence": "shall support",
+          "id": "R016"
+        },
+        {
+          "requirement": "Prescription Processing",
+          "source": "Section 4.4 - Pharmacy Management",
+          "mandatory": true,
+          "mandatory_evidence": "shall support",
+          "id": "R017"
+        },
+        {
+          "requirement": "Inventory Tracking",
+          "source": "Section 4.4 - Pharmacy Management",
+          "mandatory": true,
+          "mandatory_evidence": "shall support",
+          "id": "R018"
+        },
+        {
+          "requirement": "Drug Interaction Alerts",
+          "source": "Section 4.4 - Pharmacy Management",
+          "mandatory": true,
+          "mandatory_evidence": "shall support",
+          "id": "R019"
+        },
+        {
+          "requirement": "Billing Management",
+          "source": "Section 4.5 - Billing & Financial Management",
+          "mandatory": true,
+          "mandatory_evidence": "shall provide",
+          "id": "R020"
+        },
+        {
+          "requirement": "Insurance Claims Processing",
+          "source": "Section 4.5 - Billing & Financial Management",
+          "mandatory": true,
+          "mandatory_evidence": "shall provide",
+          "id": "R021"
+        },
+        {
+          "requirement": "Payment Tracking",
+          "source": "Section 4.5 - Billing & Financial Management",
+          "mandatory": true,
+          "mandatory_evidence": "shall provide",
+          "id": "R022"
+        },
+        {
+          "requirement": "Financial Reporting",
+          "source": "Section 4.5 - Billing & Financial Management",
+          "mandatory": true,
+          "mandatory_evidence": "shall provide",
+          "id": "R023"
+        },
+        {
+          "requirement": "Executive Dashboards",
+          "source": "Section 4.6 - Reporting & Analytics",
+          "mandatory": true,
+          "mandatory_evidence": "shall support",
+          "id": "R024"
+        },
+        {
+          "requirement": "Operational Reports",
+          "source": "Section 4.6 - Reporting & Analytics",
+          "mandatory": true,
+          "mandatory_evidence": "shall support",
+          "id": "R025"
+        },
+        {
+          "requirement": "KPI Monitoring",
+          "source": "Section 4.6 - Reporting & Analytics",
+          "mandatory": true,
+          "mandatory_evidence": "shall support",
+          "id": "R026"
+        },
+        {
+          "requirement": "Healthcare Analytics",
+          "source": "Section 4.6 - Reporting & Analytics",
+          "mandatory": true,
+          "mandatory_evidence": "shall support",
+          "id": "R027"
+        },
+        {
+          "requirement": "Regulatory Reporting",
+          "source": "Section 4.6 - Reporting & Analytics",
+          "mandatory": true,
+          "mandatory_evidence": "shall support",
+          "id": "R028"
+        },
+        {
+          "requirement": "Cloud Enabled",
+          "source": "Section 5 - Technical Requirements",
+          "mandatory": true,
+          "mandatory_evidence": "shall be",
+          "id": "R029"
+        },
+        {
+          "requirement": "Highly Available",
+          "source": "Section 5 - Technical Requirements",
+          "mandatory": true,
+          "mandatory_evidence": "shall be",
+          "id": "R030"
+        },
+        {
+          "requirement": "API Enabled",
+          "source": "Section 5 - Technical Requirements",
+          "mandatory": true,
+          "mandatory_evidence": "shall be",
+          "id": "R031"
+        },
+        {
+          "requirement": "Mobile Accessible",
+          "source": "Section 5 - Technical Requirements",
+          "mandatory": true,
+          "mandatory_evidence": "shall be",
+          "id": "R032"
+        },
+        {
+          "requirement": "Scalable",
+          "source": "Section 5 - Technical Requirements",
+          "mandatory": true,
+          "mandatory_evidence": "shall be",
+          "id": "R033"
+        },
+        {
+          "requirement": "Laboratory Information Systems",
+          "source": "Section 5 - Integration Requirements",
+          "mandatory": true,
+          "mandatory_evidence": "shall integrate with",
+          "id": "R034"
+        },
+        {
+          "requirement": "Radiology Systems",
+          "source": "Section 5 - Integration Requirements",
+          "mandatory": true,
+          "mandatory_evidence": "shall integrate with",
+          "id": "R035"
+        },
+        {
+          "requirement": "Insurance Providers",
+          "source": "Section 5 - Integration Requirements",
+          "mandatory": true,
+          "mandatory_evidence": "shall integrate with",
+          "id": "R036"
+        },
+        {
+          "requirement": "Government Health Platforms",
+          "source": "Section 5 - Integration Requirements",
+          "mandatory": true,
+          "mandatory_evidence": "shall integrate with",
+          "id": "R037"
+        },
+        {
+          "requirement": "SMS Services",
+          "source": "Section 5 - Integration Requirements",
+          "mandatory": true,
+          "mandatory_evidence": "shall integrate with",
+          "id": "R038"
+        },
+        {
+          "requirement": "Multi-Factor Authentication (MFA)",
+          "source": "Section 5 - Security Requirements",
+          "mandatory": true,
+          "mandatory_evidence": "shall support",
+          "id": "R039"
+        },
+        {
+          "requirement": "Role-Based Access Control (RBAC)",
+          "source": "Section 5 - Security Requirements",
+          "mandatory": true,
+          "mandatory_evidence": "shall support",
+          "id": "R040"
+        },
+        {
+          "requirement": "Audit Logging",
+          "source": "Section 5 - Security Requirements",
+          "mandatory": true,
+          "mandatory_evidence": "shall support",
+          "id": "R041"
+        },
+        {
+          "requirement": "Data Encryption",
+          "source": "Section 5 - Security Requirements",
+          "mandatory": true,
+          "mandatory_evidence": "shall support",
+          "id": "R042"
+        },
+        {
+          "requirement": "Privacy Controls",
+          "source": "Section 5 - Security Requirements",
+          "mandatory": true,
+          "mandatory_evidence": "shall support",
+          "id": "R043"
+        },
+        {
+          "requirement": "99.95% Availability",
+          "source": "Section 6 - Non-Functional Requirements",
+          "mandatory": false,
+          "mandatory_evidence": "",
+          "id": "R044"
+        },
+        {
+          "requirement": "Support Multiple Hospitals (Scalability)",
+          "source": "Section 6 - Non-Functional Requirements",
+          "mandatory": false,
+          "mandatory_evidence": "",
+          "id": "R045"
+        },
+        {
+          "requirement": "Real-Time Access to Patient Information (Performance)",
+          "source": "Section 6 - Non-Functional Requirements",
+          "mandatory": false,
+          "mandatory_evidence": "",
+          "id": "R046"
+        },
+        {
+          "requirement": "Disaster Recovery Support (Reliability)",
+          "source": "Section 6 - Non-Functional Requirements",
+          "mandatory": false,
+          "mandatory_evidence": "",
+          "id": "R047"
+        }
+      ]
+    },
+    {
+      "name": "Healthcare Experience",
+      "description": "Assessment of the vendor's past experience in delivering healthcare IT solutions.",
+      "source": "Section 11 - Evaluation Criteria",
+      "weight": 20.0,
+      "weight_source": "explicit",
+      "requirements": [
+        {
+          "requirement": "Minimum 5 years healthcare IT experience",
+          "source": "Section 9 - Vendor Qualifications",
+          "mandatory": true,
+          "mandatory_evidence": "Minimum",
+          "id": "R048"
+        },
+        {
+          "requirement": "Hospital system implementation experience",
+          "source": "Section 9 - Vendor Qualifications",
+          "mandatory": false,
+          "mandatory_evidence": "",
+          "id": "R049"
+        },
+        {
+          "requirement": "Government project experience",
+          "source": "Section 9 - Vendor Qualifications",
+          "mandatory": false,
+          "mandatory_evidence": "",
+          "id": "R050"
+        }
+      ]
+    },
+    {
+      "name": "Team Qualifications",
+      "description": "Evaluation of the vendor's team expertise, certifications, and specialist qualifications.",
+      "source": "Section 11 - Evaluation Criteria",
+      "weight": 10.0,
+      "weight_source": "explicit",
+      "requirements": [
+        {
+          "requirement": "Certified healthcare technology specialists",
+          "source": "Section 9 - Vendor Qualifications",
+          "mandatory": false,
+          "mandatory_evidence": "",
+          "id": "R051"
+        }
+      ]
+    },
+    {
+      "name": "Financial Proposal",
+      "description": "Assessment of the financial aspects of the proposal, including budget compliance and cost structure.",
+      "source": "Section 11 - Evaluation Criteria",
+      "weight": 20.0,
+      "weight_source": "explicit",
+      "requirements": [
+        {
+          "requirement": "Estimated Budget: SAR 4,500,000",
+          "source": "Section 10 - Financial Requirements",
+          "mandatory": false,
+          "mandatory_evidence": "",
+          "id": "R052"
+        }
+      ]
+    }
+  ],
+  "mandatory_requirements": [
+    {
+      "id": "M001",
+      "requirement_id": "R001",
+      "requirement": "Patient Registration",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.1 - Patient Management",
+      "mandatory_evidence": "shall provide"
+    },
+    {
+      "id": "M002",
+      "requirement_id": "R002",
+      "requirement": "Electronic Medical Records (EMR)",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.1 - Patient Management",
+      "mandatory_evidence": "shall provide"
+    },
+    {
+      "id": "M003",
+      "requirement_id": "R003",
+      "requirement": "Patient History Management",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.1 - Patient Management",
+      "mandatory_evidence": "shall provide"
+    },
+    {
+      "id": "M004",
+      "requirement_id": "R004",
+      "requirement": "Patient Portal",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.1 - Patient Management",
+      "mandatory_evidence": "shall provide"
+    },
+    {
+      "id": "M005",
+      "requirement_id": "R005",
+      "requirement": "Insurance Information Management",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.1 - Patient Management",
+      "mandatory_evidence": "shall provide"
+    },
+    {
+      "id": "M006",
+      "requirement_id": "R006",
+      "requirement": "Appointment Scheduling",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.2 - Appointment Management",
+      "mandatory_evidence": "shall support"
+    },
+    {
+      "id": "M007",
+      "requirement_id": "R007",
+      "requirement": "Doctor Availability Management",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.2 - Appointment Management",
+      "mandatory_evidence": "shall support"
+    },
+    {
+      "id": "M008",
+      "requirement_id": "R008",
+      "requirement": "Appointment Reminders",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.2 - Appointment Management",
+      "mandatory_evidence": "shall support"
+    },
+    {
+      "id": "M009",
+      "requirement_id": "R009",
+      "requirement": "Online Booking",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.2 - Appointment Management",
+      "mandatory_evidence": "shall support"
+    },
+    {
+      "id": "M010",
+      "requirement_id": "R010",
+      "requirement": "Waiting List Management",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.2 - Appointment Management",
+      "mandatory_evidence": "shall support"
+    },
+    {
+      "id": "M011",
+      "requirement_id": "R011",
+      "requirement": "Clinical Documentation",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.3 - Clinical Management",
+      "mandatory_evidence": "shall provide"
+    },
+    {
+      "id": "M012",
+      "requirement_id": "R012",
+      "requirement": "Treatment Plans",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.3 - Clinical Management",
+      "mandatory_evidence": "shall provide"
+    },
+    {
+      "id": "M013",
+      "requirement_id": "R013",
+      "requirement": "Diagnosis Management",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.3 - Clinical Management",
+      "mandatory_evidence": "shall provide"
+    },
+    {
+      "id": "M014",
+      "requirement_id": "R014",
+      "requirement": "Laboratory Integration",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.3 - Clinical Management",
+      "mandatory_evidence": "shall provide"
+    },
+    {
+      "id": "M015",
+      "requirement_id": "R015",
+      "requirement": "Radiology Integration",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.3 - Clinical Management",
+      "mandatory_evidence": "shall provide"
+    },
+    {
+      "id": "M016",
+      "requirement_id": "R016",
+      "requirement": "Medication Management",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.4 - Pharmacy Management",
+      "mandatory_evidence": "shall support"
+    },
+    {
+      "id": "M017",
+      "requirement_id": "R017",
+      "requirement": "Prescription Processing",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.4 - Pharmacy Management",
+      "mandatory_evidence": "shall support"
+    },
+    {
+      "id": "M018",
+      "requirement_id": "R018",
+      "requirement": "Inventory Tracking",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.4 - Pharmacy Management",
+      "mandatory_evidence": "shall support"
+    },
+    {
+      "id": "M019",
+      "requirement_id": "R019",
+      "requirement": "Drug Interaction Alerts",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.4 - Pharmacy Management",
+      "mandatory_evidence": "shall support"
+    },
+    {
+      "id": "M020",
+      "requirement_id": "R020",
+      "requirement": "Billing Management",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.5 - Billing & Financial Management",
+      "mandatory_evidence": "shall provide"
+    },
+    {
+      "id": "M021",
+      "requirement_id": "R021",
+      "requirement": "Insurance Claims Processing",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.5 - Billing & Financial Management",
+      "mandatory_evidence": "shall provide"
+    },
+    {
+      "id": "M022",
+      "requirement_id": "R022",
+      "requirement": "Payment Tracking",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.5 - Billing & Financial Management",
+      "mandatory_evidence": "shall provide"
+    },
+    {
+      "id": "M023",
+      "requirement_id": "R023",
+      "requirement": "Financial Reporting",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.5 - Billing & Financial Management",
+      "mandatory_evidence": "shall provide"
+    },
+    {
+      "id": "M024",
+      "requirement_id": "R024",
+      "requirement": "Executive Dashboards",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.6 - Reporting & Analytics",
+      "mandatory_evidence": "shall support"
+    },
+    {
+      "id": "M025",
+      "requirement_id": "R025",
+      "requirement": "Operational Reports",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.6 - Reporting & Analytics",
+      "mandatory_evidence": "shall support"
+    },
+    {
+      "id": "M026",
+      "requirement_id": "R026",
+      "requirement": "KPI Monitoring",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.6 - Reporting & Analytics",
+      "mandatory_evidence": "shall support"
+    },
+    {
+      "id": "M027",
+      "requirement_id": "R027",
+      "requirement": "Healthcare Analytics",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.6 - Reporting & Analytics",
+      "mandatory_evidence": "shall support"
+    },
+    {
+      "id": "M028",
+      "requirement_id": "R028",
+      "requirement": "Regulatory Reporting",
+      "criterion": "Technical Proposal",
+      "source": "Section 4.6 - Reporting & Analytics",
+      "mandatory_evidence": "shall support"
+    },
+    {
+      "id": "M029",
+      "requirement_id": "R029",
+      "requirement": "Cloud Enabled",
+      "criterion": "Technical Proposal",
+      "source": "Section 5 - Technical Requirements",
+      "mandatory_evidence": "shall be"
+    },
+    {
+      "id": "M030",
+      "requirement_id": "R030",
+      "requirement": "Highly Available",
+      "criterion": "Technical Proposal",
+      "source": "Section 5 - Technical Requirements",
+      "mandatory_evidence": "shall be"
+    },
+    {
+      "id": "M031",
+      "requirement_id": "R031",
+      "requirement": "API Enabled",
+      "criterion": "Technical Proposal",
+      "source": "Section 5 - Technical Requirements",
+      "mandatory_evidence": "shall be"
+    },
+    {
+      "id": "M032",
+      "requirement_id": "R032",
+      "requirement": "Mobile Accessible",
+      "criterion": "Technical Proposal",
+      "source": "Section 5 - Technical Requirements",
+      "mandatory_evidence": "shall be"
+    },
+    {
+      "id": "M033",
+      "requirement_id": "R033",
+      "requirement": "Scalable",
+      "criterion": "Technical Proposal",
+      "source": "Section 5 - Technical Requirements",
+      "mandatory_evidence": "shall be"
+    },
+    {
+      "id": "M034",
+      "requirement_id": "R034",
+      "requirement": "Laboratory Information Systems",
+      "criterion": "Technical Proposal",
+      "source": "Section 5 - Integration Requirements",
+      "mandatory_evidence": "shall integrate with"
+    },
+    {
+      "id": "M035",
+      "requirement_id": "R035",
+      "requirement": "Radiology Systems",
+      "criterion": "Technical Proposal",
+      "source": "Section 5 - Integration Requirements",
+      "mandatory_evidence": "shall integrate with"
+    },
+    {
+      "id": "M036",
+      "requirement_id": "R036",
+      "requirement": "Insurance Providers",
+      "criterion": "Technical Proposal",
+      "source": "Section 5 - Integration Requirements",
+      "mandatory_evidence": "shall integrate with"
+    },
+    {
+      "id": "M037",
+      "requirement_id": "R037",
+      "requirement": "Government Health Platforms",
+      "criterion": "Technical Proposal",
+      "source": "Section 5 - Integration Requirements",
+      "mandatory_evidence": "shall integrate with"
+    },
+    {
+      "id": "M038",
+      "requirement_id": "R038",
+      "requirement": "SMS Services",
+      "criterion": "Technical Proposal",
+      "source": "Section 5 - Integration Requirements",
+      "mandatory_evidence": "shall integrate with"
+    },
+    {
+      "id": "M039",
+      "requirement_id": "R039",
+      "requirement": "Multi-Factor Authentication (MFA)",
+      "criterion": "Technical Proposal",
+      "source": "Section 5 - Security Requirements",
+      "mandatory_evidence": "shall support"
+    },
+    {
+      "id": "M040",
+      "requirement_id": "R040",
+      "requirement": "Role-Based Access Control (RBAC)",
+      "criterion": "Technical Proposal",
+      "source": "Section 5 - Security Requirements",
+      "mandatory_evidence": "shall support"
+    },
+    {
+      "id": "M041",
+      "requirement_id": "R041",
+      "requirement": "Audit Logging",
+      "criterion": "Technical Proposal",
+      "source": "Section 5 - Security Requirements",
+      "mandatory_evidence": "shall support"
+    },
+    {
+      "id": "M042",
+      "requirement_id": "R042",
+      "requirement": "Data Encryption",
+      "criterion": "Technical Proposal",
+      "source": "Section 5 - Security Requirements",
+      "mandatory_evidence": "shall support"
+    },
+    {
+      "id": "M043",
+      "requirement_id": "R043",
+      "requirement": "Privacy Controls",
+      "criterion": "Technical Proposal",
+      "source": "Section 5 - Security Requirements",
+      "mandatory_evidence": "shall support"
+    },
+    {
+      "id": "M044",
+      "requirement_id": "R048",
+      "requirement": "Minimum 5 years healthcare IT experience",
+      "criterion": "Healthcare Experience",
+      "source": "Section 9 - Vendor Qualifications",
+      "mandatory_evidence": "Minimum"
+    }
+  ],
+  "metadata": {
+    "criteria_count": 4,
+    "requirement_count": 52,
+    "mandatory_requirement_count": 44,
+    "total_weight": 100.0
+  }
+}

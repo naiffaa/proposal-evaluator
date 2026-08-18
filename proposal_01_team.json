@@ -1,0 +1,34 @@
+{
+  "vendor": "HealthTech Solutions",
+  "criterion": "Team Qualifications",
+  "criterion_description": "Evaluation of the vendor's team expertise, certifications, and specialist qualifications.",
+  "score": 0.0,
+  "mandatory_compliance_percentage": 100.0,
+  "requirement_results": [
+    {
+      "requirement_id": "R051",
+      "requirement": "Certified healthcare technology specialists",
+      "rfp_source": "Section 9 - Vendor Qualifications",
+      "mandatory": false,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "The proposal lists team roles (Project Manager, Solution Architect, Healthcare Consultant, Developers, QA Engineer) but does not state that any team member holds certifications as healthcare technology specialists, which is required to satisfy this criterion."
+    }
+  ],
+  "summary": {
+    "requirements_evaluated": 1,
+    "full_matches": 0,
+    "partial_matches": 0,
+    "no_matches": 0,
+    "not_provided": 1
+  },
+  "strengths": [
+    "The proposal includes two Healthcare Consultants, indicating domain knowledge relevant to healthcare projects."
+  ],
+  "gaps": [
+    "No certifications for healthcare technology specialists are mentioned for any team member."
+  ],
+  "rationale": "While the vendor provides a clear team composition with roles such as Healthcare Consultants, there is no evidence of the required certified healthcare technology specialists, resulting in a NOT_PROVIDED status for the certification requirement.",
+  "confidence": "Medium"
+}

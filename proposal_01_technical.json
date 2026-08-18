@@ -1,0 +1,489 @@
+{
+  "criterion": "Technical Proposal",
+  "score": 52.66,
+  "mandatory_compliance_percentage": 55.81,
+  "requirement_results": [
+    {
+      "requirement_id": "R001",
+      "requirement": "Patient Registration",
+      "rfp_source": "Section 4.1 - Patient Management",
+      "mandatory": true,
+      "status": "FULL_MATCH",
+      "match_score": 100.0,
+      "proposal_evidence": "Patient Management Module Features list includes \"Patient Registration\".",
+      "rationale": "The proposal explicitly lists Patient Registration as a feature of the Patient Management Module, satisfying the requirement."
+    },
+    {
+      "requirement_id": "R002",
+      "requirement": "Electronic Medical Records (EMR)",
+      "rfp_source": "Section 4.1 - Patient Management",
+      "mandatory": true,
+      "status": "FULL_MATCH",
+      "match_score": 100.0,
+      "proposal_evidence": "Patient Management Module Features list includes \"Electronic Medical Records\".",
+      "rationale": "Electronic Medical Records are directly mentioned as a feature, meeting the requirement."
+    },
+    {
+      "requirement_id": "R003",
+      "requirement": "Patient History Management",
+      "rfp_source": "Section 4.1 - Patient Management",
+      "mandatory": true,
+      "status": "FULL_MATCH",
+      "match_score": 100.0,
+      "proposal_evidence": "Patient Management Module Features list includes \"Patient History Management\".",
+      "rationale": "The proposal clearly provides Patient History Management."
+    },
+    {
+      "requirement_id": "R004",
+      "requirement": "Patient Portal",
+      "rfp_source": "Section 4.1 - Patient Management",
+      "mandatory": true,
+      "status": "FULL_MATCH",
+      "match_score": 100.0,
+      "proposal_evidence": "Patient Management Module Features list includes \"Patient Portal\".",
+      "rationale": "Patient Portal is explicitly listed, fulfilling the requirement."
+    },
+    {
+      "requirement_id": "R005",
+      "requirement": "Insurance Information Management",
+      "rfp_source": "Section 4.1 - Patient Management",
+      "mandatory": true,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "The proposal contains no mention of Insurance Information Management."
+    },
+    {
+      "requirement_id": "R006",
+      "requirement": "Appointment Scheduling",
+      "rfp_source": "Section 4.2 - Appointment Management",
+      "mandatory": true,
+      "status": "FULL_MATCH",
+      "match_score": 100.0,
+      "proposal_evidence": "Appointment Management Module Features list includes \"Appointment Scheduling\".",
+      "rationale": "Appointment Scheduling is directly addressed."
+    },
+    {
+      "requirement_id": "R007",
+      "requirement": "Doctor Availability Management",
+      "rfp_source": "Section 4.2 - Appointment Management",
+      "mandatory": true,
+      "status": "FULL_MATCH",
+      "match_score": 100.0,
+      "proposal_evidence": "Appointment Management Module Features list includes \"Doctor Availability Tracking\".",
+      "rationale": "Doctor Availability Tracking satisfies the Doctor Availability Management requirement."
+    },
+    {
+      "requirement_id": "R008",
+      "requirement": "Appointment Reminders",
+      "rfp_source": "Section 4.2 - Appointment Management",
+      "mandatory": true,
+      "status": "FULL_MATCH",
+      "match_score": 100.0,
+      "proposal_evidence": "Appointment Management Module Features list includes \"Appointment Reminders\".",
+      "rationale": "Appointment Reminders are explicitly provided."
+    },
+    {
+      "requirement_id": "R009",
+      "requirement": "Online Booking",
+      "rfp_source": "Section 4.2 - Appointment Management",
+      "mandatory": true,
+      "status": "FULL_MATCH",
+      "match_score": 100.0,
+      "proposal_evidence": "Appointment Management Module Features list includes \"Online Booking\".",
+      "rationale": "Online Booking is listed as a feature."
+    },
+    {
+      "requirement_id": "R010",
+      "requirement": "Waiting List Management",
+      "rfp_source": "Section 4.2 - Appointment Management",
+      "mandatory": true,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "No evidence of Waiting List Management appears in the proposal."
+    },
+    {
+      "requirement_id": "R011",
+      "requirement": "Clinical Documentation",
+      "rfp_source": "Section 4.3 - Clinical Management",
+      "mandatory": true,
+      "status": "FULL_MATCH",
+      "match_score": 100.0,
+      "proposal_evidence": "Clinical Management Module Features list includes \"Clinical Documentation\".",
+      "rationale": "Clinical Documentation is explicitly mentioned."
+    },
+    {
+      "requirement_id": "R012",
+      "requirement": "Treatment Plans",
+      "rfp_source": "Section 4.3 - Clinical Management",
+      "mandatory": true,
+      "status": "FULL_MATCH",
+      "match_score": 100.0,
+      "proposal_evidence": "Clinical Management Module Features list includes \"Treatment Plans\".",
+      "rationale": "Treatment Plans are directly listed."
+    },
+    {
+      "requirement_id": "R013",
+      "requirement": "Diagnosis Management",
+      "rfp_source": "Section 4.3 - Clinical Management",
+      "mandatory": true,
+      "status": "FULL_MATCH",
+      "match_score": 100.0,
+      "proposal_evidence": "Clinical Management Module Features list includes \"Diagnosis Management\".",
+      "rationale": "Diagnosis Management is clearly provided."
+    },
+    {
+      "requirement_id": "R014",
+      "requirement": "Laboratory Integration",
+      "rfp_source": "Section 4.3 - Clinical Management",
+      "mandatory": true,
+      "status": "FULL_MATCH",
+      "match_score": 100.0,
+      "proposal_evidence": "Clinical Management Module Features list includes \"Laboratory Integration\".",
+      "rationale": "Laboratory Integration satisfies the requirement."
+    },
+    {
+      "requirement_id": "R015",
+      "requirement": "Radiology Integration",
+      "rfp_source": "Section 4.3 - Clinical Management",
+      "mandatory": true,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "Radiology Integration is not mentioned in the proposal."
+    },
+    {
+      "requirement_id": "R016",
+      "requirement": "Medication Management",
+      "rfp_source": "Section 4.4 - Pharmacy Management",
+      "mandatory": true,
+      "status": "FULL_MATCH",
+      "match_score": 100.0,
+      "proposal_evidence": "Pharmacy Management Module Features list includes \"Medication Management\".",
+      "rationale": "Medication Management is explicitly listed."
+    },
+    {
+      "requirement_id": "R017",
+      "requirement": "Prescription Processing",
+      "rfp_source": "Section 4.4 - Pharmacy Management",
+      "mandatory": true,
+      "status": "FULL_MATCH",
+      "match_score": 100.0,
+      "proposal_evidence": "Pharmacy Management Module Features list includes \"Prescription Processing\".",
+      "rationale": "Prescription Processing is directly provided."
+    },
+    {
+      "requirement_id": "R018",
+      "requirement": "Inventory Tracking",
+      "rfp_source": "Section 4.4 - Pharmacy Management",
+      "mandatory": true,
+      "status": "FULL_MATCH",
+      "match_score": 100.0,
+      "proposal_evidence": "Pharmacy Management Module Features list includes \"Inventory Tracking\".",
+      "rationale": "Inventory Tracking is explicitly listed."
+    },
+    {
+      "requirement_id": "R019",
+      "requirement": "Drug Interaction Alerts",
+      "rfp_source": "Section 4.4 - Pharmacy Management",
+      "mandatory": true,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "No mention of Drug Interaction Alerts."
+    },
+    {
+      "requirement_id": "R020",
+      "requirement": "Billing Management",
+      "rfp_source": "Section 4.5 - Billing & Financial Management",
+      "mandatory": true,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "Billing Management is not addressed."
+    },
+    {
+      "requirement_id": "R021",
+      "requirement": "Insurance Claims Processing",
+      "rfp_source": "Section 4.5 - Billing & Financial Management",
+      "mandatory": true,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "Insurance Claims Processing is absent from the proposal."
+    },
+    {
+      "requirement_id": "R022",
+      "requirement": "Payment Tracking",
+      "rfp_source": "Section 4.5 - Billing & Financial Management",
+      "mandatory": true,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "Payment Tracking is not mentioned."
+    },
+    {
+      "requirement_id": "R023",
+      "requirement": "Financial Reporting",
+      "rfp_source": "Section 4.5 - Billing & Financial Management",
+      "mandatory": true,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "Financial Reporting is not included in the listed features."
+    },
+    {
+      "requirement_id": "R024",
+      "requirement": "Executive Dashboards",
+      "rfp_source": "Section 4.6 - Reporting & Analytics",
+      "mandatory": true,
+      "status": "FULL_MATCH",
+      "match_score": 100.0,
+      "proposal_evidence": "Reporting & Analytics Module Features list includes \"Executive Dashboards\".",
+      "rationale": "Executive Dashboards are explicitly provided."
+    },
+    {
+      "requirement_id": "R025",
+      "requirement": "Operational Reports",
+      "rfp_source": "Section 4.6 - Reporting & Analytics",
+      "mandatory": true,
+      "status": "FULL_MATCH",
+      "match_score": 100.0,
+      "proposal_evidence": "Reporting & Analytics Module Features list includes \"Operational Reporting\".",
+      "rationale": "Operational Reporting satisfies Operational Reports."
+    },
+    {
+      "requirement_id": "R026",
+      "requirement": "KPI Monitoring",
+      "rfp_source": "Section 4.6 - Reporting & Analytics",
+      "mandatory": true,
+      "status": "FULL_MATCH",
+      "match_score": 100.0,
+      "proposal_evidence": "Reporting & Analytics Module Features list includes \"KPI Monitoring\".",
+      "rationale": "KPI Monitoring is directly listed."
+    },
+    {
+      "requirement_id": "R027",
+      "requirement": "Healthcare Analytics",
+      "rfp_source": "Section 4.6 - Reporting & Analytics",
+      "mandatory": true,
+      "status": "FULL_MATCH",
+      "match_score": 100.0,
+      "proposal_evidence": "Reporting & Analytics Module Features list includes \"Healthcare Analytics\".",
+      "rationale": "Healthcare Analytics are explicitly provided."
+    },
+    {
+      "requirement_id": "R028",
+      "requirement": "Regulatory Reporting",
+      "rfp_source": "Section 4.6 - Reporting & Analytics",
+      "mandatory": true,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "Regulatory Reporting is not referenced."
+    },
+    {
+      "requirement_id": "R029",
+      "requirement": "Cloud Enabled",
+      "rfp_source": "Section 5 - Technical Requirements",
+      "mandatory": true,
+      "status": "FULL_MATCH",
+      "match_score": 100.0,
+      "proposal_evidence": "Cloud Infrastructure lists \"Microsoft Azure\".",
+      "rationale": "Use of Microsoft Azure demonstrates that the solution is cloud‑enabled."
+    },
+    {
+      "requirement_id": "R030",
+      "requirement": "Highly Available",
+      "rfp_source": "Section 5 - Technical Requirements",
+      "mandatory": true,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "The proposal does not state that the system is highly available."
+    },
+    {
+      "requirement_id": "R031",
+      "requirement": "API Enabled",
+      "rfp_source": "Section 5 - Technical Requirements",
+      "mandatory": true,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "No mention of API enablement."
+    },
+    {
+      "requirement_id": "R032",
+      "requirement": "Mobile Accessible",
+      "rfp_source": "Section 5 - Technical Requirements",
+      "mandatory": true,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "Mobile accessibility is not addressed."
+    },
+    {
+      "requirement_id": "R033",
+      "requirement": "Scalable",
+      "rfp_source": "Section 5 - Technical Requirements",
+      "mandatory": true,
+      "status": "FULL_MATCH",
+      "match_score": 100.0,
+      "proposal_evidence": "Conclusion states the platform is \"secure, scalable, and modern\".",
+      "rationale": "Explicit claim of scalability fulfills the requirement."
+    },
+    {
+      "requirement_id": "R034",
+      "requirement": "Laboratory Information Systems",
+      "rfp_source": "Section 5 - Integration Requirements",
+      "mandatory": true,
+      "status": "PARTIAL_MATCH",
+      "match_score": 75.0,
+      "proposal_evidence": "Clinical Management Module Features include \"Laboratory Integration\".",
+      "rationale": "Integration with laboratory systems is mentioned, but the proposal does not specifically reference Laboratory Information Systems, leading to a partial match."
+    },
+    {
+      "requirement_id": "R035",
+      "requirement": "Radiology Systems",
+      "rfp_source": "Section 5 - Integration Requirements",
+      "mandatory": true,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "No reference to Radiology Systems integration."
+    },
+    {
+      "requirement_id": "R036",
+      "requirement": "Insurance Providers",
+      "rfp_source": "Section 5 - Integration Requirements",
+      "mandatory": true,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "Insurance Providers integration is not mentioned."
+    },
+    {
+      "requirement_id": "R037",
+      "requirement": "Government Health Platforms",
+      "rfp_source": "Section 5 - Integration Requirements",
+      "mandatory": true,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "Government Health Platforms are not referenced."
+    },
+    {
+      "requirement_id": "R038",
+      "requirement": "SMS Services",
+      "rfp_source": "Section 5 - Integration Requirements",
+      "mandatory": true,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "SMS Services are not included in the proposal."
+    },
+    {
+      "requirement_id": "R039",
+      "requirement": "Multi-Factor Authentication (MFA)",
+      "rfp_source": "Section 5 - Security Requirements",
+      "mandatory": true,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "Multi‑Factor Authentication is not mentioned."
+    },
+    {
+      "requirement_id": "R040",
+      "requirement": "Role-Based Access Control (RBAC)",
+      "rfp_source": "Section 5 - Security Requirements",
+      "mandatory": true,
+      "status": "FULL_MATCH",
+      "match_score": 100.0,
+      "proposal_evidence": "Security Framework lists \"Role-Based Access Control (RBAC)\".",
+      "rationale": "RBAC is explicitly described, satisfying the requirement."
+    },
+    {
+      "requirement_id": "R041",
+      "requirement": "Audit Logging",
+      "rfp_source": "Section 5 - Security Requirements",
+      "mandatory": true,
+      "status": "FULL_MATCH",
+      "match_score": 100.0,
+      "proposal_evidence": "Security Framework includes \"Audit Logging\".",
+      "rationale": "Audit Logging is directly provided."
+    },
+    {
+      "requirement_id": "R042",
+      "requirement": "Data Encryption",
+      "rfp_source": "Section 5 - Security Requirements",
+      "mandatory": true,
+      "status": "FULL_MATCH",
+      "match_score": 100.0,
+      "proposal_evidence": "Security Framework lists \"Encryption at Rest\" and \"Encryption in Transit\".",
+      "rationale": "Both at‑rest and in‑transit encryption fulfill the Data Encryption requirement."
+    },
+    {
+      "requirement_id": "R043",
+      "requirement": "Privacy Controls",
+      "rfp_source": "Section 5 - Security Requirements",
+      "mandatory": true,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "No explicit privacy controls are described."
+    },
+    {
+      "requirement_id": "R044",
+      "requirement": "99.95% Availability",
+      "rfp_source": "Section 6 - Non-Functional Requirements",
+      "mandatory": false,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "The target availability of 99.95% is not stated."
+    },
+    {
+      "requirement_id": "R045",
+      "requirement": "Support Multiple Hospitals (Scalability)",
+      "rfp_source": "Section 6 - Non-Functional Requirements",
+      "mandatory": false,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "Support for multiple hospitals (scalability) is not addressed."
+    },
+    {
+      "requirement_id": "R046",
+      "requirement": "Real-Time Access to Patient Information (Performance)",
+      "rfp_source": "Section 6 - Non-Functional Requirements",
+      "mandatory": false,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "Real‑time access performance criteria are not mentioned."
+    },
+    {
+      "requirement_id": "R047",
+      "requirement": "Disaster Recovery Support (Reliability)",
+      "rfp_source": "Section 6 - Non-Functional Requirements",
+      "mandatory": false,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "Disaster Recovery support is not described."
+    }
+  ],
+  "strengths": [
+    "Comprehensive functional coverage for patient registration, EMR, appointments, clinical documentation, pharmacy, and reporting modules.",
+    "Cloud‑based deployment on Microsoft Azure.",
+    "Implemented security controls: RBAC, encryption at rest and in transit, and audit logging.",
+    "Explicit scalability statement in the conclusion."
+  ],
+  "gaps": [
+    "Missing mandatory features such as Waiting List Management, Radiology Integration, Drug Interaction Alerts, Billing Management, Insurance Claims Processing, Payment Tracking, Financial Reporting, and Regulatory Reporting.",
+    "No evidence of high availability, API enablement, mobile access, MFA, privacy controls, or disaster recovery.",
+    "Integrations with Insurance Providers, Government Health Platforms, SMS services, and specific Laboratory Information Systems or Radiology Systems are not detailed."
+  ],
+  "rationale": "The proposal satisfies many core functional requirements and demonstrates cloud enablement and key security measures. However, it fails to address several mandatory functional areas and several critical non‑functional and integration requirements, resulting in significant gaps that would need to be remedied before the solution could be considered fully compliant."
+}

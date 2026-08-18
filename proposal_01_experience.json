@@ -1,0 +1,54 @@
+{
+  "vendor": "HealthTech Solutions",
+  "criterion": "Healthcare Experience",
+  "criterion_description": "Assessment of the vendor's past experience in delivering healthcare IT solutions.",
+  "score": 0.0,
+  "mandatory_compliance_percentage": 0.0,
+  "requirement_results": [
+    {
+      "requirement_id": "R048",
+      "requirement": "Minimum 5 years healthcare IT experience",
+      "rfp_source": "Section 9 - Vendor Qualifications",
+      "mandatory": true,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "The proposal does not contain any statement specifying the number of years the vendor has delivered healthcare IT solutions, so the requirement of a minimum of 5 years cannot be verified."
+    },
+    {
+      "requirement_id": "R049",
+      "requirement": "Hospital system implementation experience",
+      "rfp_source": "Section 9 - Vendor Qualifications",
+      "mandatory": false,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "No prior hospital system implementation projects are referenced in the proposal; only the proposed solution is described, providing no evidence of such experience."
+    },
+    {
+      "requirement_id": "R050",
+      "requirement": "Government project experience",
+      "rfp_source": "Section 9 - Vendor Qualifications",
+      "mandatory": false,
+      "status": "NOT_PROVIDED",
+      "match_score": 0.0,
+      "proposal_evidence": "Not Provided",
+      "rationale": "The proposal lacks any mention of previous government project work, therefore government project experience cannot be confirmed."
+    }
+  ],
+  "summary": {
+    "requirements_evaluated": 3,
+    "full_matches": 0,
+    "partial_matches": 0,
+    "no_matches": 0,
+    "not_provided": 3
+  },
+  "strengths": [],
+  "gaps": [
+    "No evidence of meeting the minimum 5 years healthcare IT experience requirement.",
+    "No evidence of prior hospital system implementation experience.",
+    "No evidence of government project experience."
+  ],
+  "rationale": "The vendor's proposal does not provide any verifiable information regarding past healthcare IT experience, hospital system implementations, or government projects. Consequently, none of the three requirements can be assessed as met, partially met, or not met; they are all marked as NOT_PROVIDED.",
+  "confidence": "Medium"
+}

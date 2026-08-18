@@ -1,0 +1,5 @@
+streamlit
+openai
+httpx
+oci
+oci-genai-auth
