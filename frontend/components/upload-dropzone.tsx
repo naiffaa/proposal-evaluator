@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import {
   CheckCircle2,
   FileText,
+  Plus,
   Trash2,
   UploadCloud,
 } from 'lucide-react'
@@ -16,9 +17,6 @@ export interface UploadedFile {
   name: string
   size: number
   progress: number
-
-  // Real browser File object.
-  // This is what we will send to FastAPI.
   file: File
 }
 
@@ -87,7 +85,6 @@ export function UploadDropzone({
 
           progress: 100,
 
-          // Keep the actual File object
           file,
         }),
       )
@@ -98,8 +95,6 @@ export function UploadDropzone({
         : incoming.slice(0, 1),
     )
 
-    // Reset input so the same file
-    // can be selected again after removal.
     if (inputRef.current) {
       inputRef.current.value = ''
     }
@@ -140,51 +135,170 @@ export function UploadDropzone({
           }}
           className={cn(
             `
+              group/dropzone
+              relative
               flex
+              min-h-[220px]
               w-full
               flex-col
               items-center
               justify-center
+              overflow-hidden
               rounded-xl
-              border-2
+              border
               border-dashed
               px-6
-              py-10
+              py-9
               text-center
-              transition-colors
+              outline-none
+              transition-all
+              duration-300
             `,
 
             dragging
-              ? 'border-primary bg-primary/5'
-              : 'border-border bg-muted/40 hover:border-primary/40 hover:bg-muted/70',
+              ? `
+                  scale-[1.01]
+                  border-primary
+                  bg-primary/[0.06]
+                  shadow-[0_8px_30px_rgba(22,31,86,0.10)]
+                `
+              : `
+                  border-primary/20
+                  bg-gradient-to-b
+                  from-primary/[0.025]
+                  to-slate-50/40
+                  hover:-translate-y-px
+                  hover:border-primary/45
+                  hover:bg-primary/[0.035]
+                  hover:shadow-[0_8px_26px_rgba(22,31,86,0.07)]
+                `,
           )}
         >
 
+          {/* SOFT DECORATION */}
+
+          <div
+            className="
+              pointer-events-none
+              absolute
+              -left-16
+              -top-20
+              size-44
+              rounded-full
+              bg-primary/[0.035]
+              blur-2xl
+            "
+          />
+
+          <div
+            className="
+              pointer-events-none
+              absolute
+              -bottom-20
+              -right-12
+              size-36
+              rounded-full
+              bg-primary/[0.025]
+              blur-2xl
+            "
+          />
+
+
           {/* ICON */}
 
-          <span className="flex size-11 items-center justify-center rounded-full bg-primary/5 text-primary">
-            <UploadCloud className="size-5.5" />
+          <span
+            className={cn(
+              `
+                relative
+                flex
+                size-14
+                items-center
+                justify-center
+                rounded-2xl
+                border
+                transition-all
+                duration-300
+              `,
+
+              dragging
+                ? `
+                    scale-105
+                    border-primary/20
+                    bg-primary
+                    text-white
+                    shadow-[0_8px_22px_rgba(22,31,86,0.18)]
+                  `
+                : `
+                    border-primary/10
+                    bg-white
+                    text-primary
+                    shadow-[0_5px_16px_rgba(22,31,86,0.08)]
+                    group-hover/dropzone:scale-105
+                    group-hover/dropzone:bg-primary
+                    group-hover/dropzone:text-white
+                  `,
+            )}
+          >
+            <UploadCloud className="size-6" />
           </span>
+
 
           {/* TITLE */}
 
-          <p className="mt-3 text-sm font-semibold text-foreground">
-            {title}
+          <p className="relative mt-4 text-sm font-semibold text-foreground">
+            {dragging
+              ? 'Drop files here'
+              : title}
           </p>
+
 
           {/* DESCRIPTION */}
 
-          <p className="mt-1 text-xs text-muted-foreground">
-            {description}
+          <p className="relative mt-1.5 text-xs text-muted-foreground">
+            {dragging
+              ? 'Release to add the selected document'
+              : description}
           </p>
 
-          {/* BROWSE */}
 
-          <span className="mt-4 inline-flex h-8 items-center rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground">
+          {/* DRAG INFO */}
+
+          {!dragging && (
+            <p className="relative mt-1 text-[11px] text-muted-foreground/70">
+              Drag and drop or choose from your device
+            </p>
+          )}
+
+
+          {/* BROWSE BUTTON */}
+
+          <span
+            className="
+              relative
+              mt-5
+              inline-flex
+              h-9
+              items-center
+              gap-2
+              rounded-lg
+              bg-primary
+              px-4
+              text-xs
+              font-semibold
+              text-primary-foreground
+              shadow-[0_5px_14px_rgba(22,31,86,0.14)]
+              transition-all
+              duration-200
+              group-hover/dropzone:-translate-y-px
+              group-hover/dropzone:shadow-[0_7px_18px_rgba(22,31,86,0.20)]
+            "
+          >
+            <Plus className="size-3.5" />
             Browse Files
           </span>
 
-          {/* FILE INPUT */}
+
+          {/* INPUT */}
 
           <input
             ref={inputRef}
@@ -202,6 +316,7 @@ export function UploadDropzone({
         </button>
       )}
 
+
       {/* ===================================== */}
       {/* FILE LIST */}
       {/* ===================================== */}
@@ -218,14 +333,44 @@ export function UploadDropzone({
 
             <li
               key={file.id}
-              className="flex items-center gap-3 rounded-lg border border-border bg-card p-3"
+              className="
+                group/file
+                flex
+                items-center
+                gap-3
+                rounded-xl
+                border
+                border-border
+                bg-white
+                p-3.5
+                shadow-[0_3px_12px_rgba(22,31,86,0.035)]
+                transition-all
+                duration-200
+                hover:border-primary/15
+                hover:shadow-[0_5px_16px_rgba(22,31,86,0.06)]
+              "
             >
 
               {/* FILE ICON */}
 
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-danger-muted text-danger">
+              <span
+                className="
+                  flex
+                  size-10
+                  shrink-0
+                  items-center
+                  justify-center
+                  rounded-lg
+                  bg-red-50
+                  text-red-600
+                  ring-1
+                  ring-inset
+                  ring-red-100
+                "
+              >
                 <FileText className="size-4.5" />
               </span>
+
 
               {/* FILE DETAILS */}
 
@@ -235,7 +380,7 @@ export function UploadDropzone({
                   {file.name}
                 </p>
 
-                <div className="mt-1 flex items-center gap-2">
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
 
                   <span className="text-xs text-muted-foreground">
                     {formatSize(
@@ -243,32 +388,38 @@ export function UploadDropzone({
                     )}
                   </span>
 
-                  <span className="inline-flex items-center gap-1 text-xs font-medium text-success">
+                  <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700">
                     <CheckCircle2 className="size-3.5" />
-                    Uploaded
+                    Ready
                   </span>
 
                 </div>
 
               </div>
 
+
               {/* REMOVE */}
 
               <button
                 type="button"
-                onClick={() =>
+                onClick={(event) => {
+                  event.stopPropagation()
                   onRemove(file.id)
-                }
+                }}
                 className="
                   flex
                   size-8
+                  shrink-0
                   items-center
                   justify-center
                   rounded-lg
                   text-muted-foreground
-                  transition-colors
-                  hover:bg-danger-muted
-                  hover:text-danger
+                  opacity-70
+                  transition-all
+                  duration-200
+                  hover:bg-red-50
+                  hover:text-red-600
+                  group-hover/file:opacity-100
                 "
                 aria-label={`Remove ${file.name}`}
               >

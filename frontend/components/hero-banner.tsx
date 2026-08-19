@@ -13,7 +13,6 @@ export function HeroBanner({
         backgroundColor: '#161F56',
       }}
     >
-      {/* Full background image */}
       <img
         src={backgroundImage}
         alt=""
@@ -21,7 +20,6 @@ export function HeroBanner({
         className="absolute inset-0 h-full w-full object-contain"
       />
 
-      {/* Very subtle overlay */}
       <div
         className="absolute inset-0"
         style={{
@@ -31,7 +29,6 @@ export function HeroBanner({
         aria-hidden="true"
       />
 
-      {/* English portal content */}
       <div className="relative z-10 flex h-full items-center">
         <div className="ml-[14%] w-[50%] max-w-[800px]">
           <h1 className="text-2xl font-semibold leading-[1.25] tracking-tight text-white sm:text-3xl lg:text-[34px]">

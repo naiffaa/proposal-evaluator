@@ -3,3 +3,6 @@ openai
 httpx
 oci
 oci-genai-auth
+fastapi
+uvicorn
+python-multipart

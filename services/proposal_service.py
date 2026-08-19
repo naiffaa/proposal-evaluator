@@ -1,3 +1,7 @@
+from concurrent.futures import (
+    ThreadPoolExecutor,
+    as_completed,
+)
 from pathlib import Path
 
 from agents.rfp_agent import RFPAgent
@@ -29,6 +33,8 @@ class ProposalEvaluationService:
          ↓
     Vendor proposals
          ↓
+    Concurrent vendor evaluation
+         ↓
     Specialized evaluation agents
          ↓
     Deterministic Python scoring
@@ -43,12 +49,20 @@ class ProposalEvaluationService:
 
     - The RFP is analyzed ONCE per evaluation run.
     - All vendors use the exact same frozen framework.
+    - Vendors can be evaluated concurrently.
+    - Each concurrent vendor gets its own agent clients.
     - Python determines numerical scores.
     - Python determines deterministic vendor order.
     - RankingAgent determines recommendation eligibility
       using deterministic compliance rules.
     - Top-ranked vendor is NOT automatically recommended.
     """
+
+    # =====================================================
+    # Concurrency configuration
+    # =====================================================
+
+    MAX_VENDOR_WORKERS = 3
 
     def __init__(self):
 
@@ -518,11 +532,11 @@ class ProposalEvaluationService:
         )
 
         print(
-            f"\nCriterion: {name}"
+            f"\n[{vendor_name}] Criterion: {name}"
         )
 
         print(
-            f"Agent type: {agent_type}"
+            f"[{vendor_name}] Agent type: {agent_type}"
         )
 
         # =================================================
@@ -532,6 +546,7 @@ class ProposalEvaluationService:
         if agent_type == "technical":
 
             print(
+                f"[{vendor_name}] "
                 "Running Technical Agent..."
             )
 
@@ -550,6 +565,7 @@ class ProposalEvaluationService:
         if agent_type == "experience":
 
             print(
+                f"[{vendor_name}] "
                 "Running Experience Agent..."
             )
 
@@ -570,6 +586,7 @@ class ProposalEvaluationService:
         if agent_type == "team":
 
             print(
+                f"[{vendor_name}] "
                 "Running Team Agent..."
             )
 
@@ -590,6 +607,7 @@ class ProposalEvaluationService:
         if agent_type == "financial":
 
             print(
+                f"[{vendor_name}] "
                 "Running Financial Agent..."
             )
 
@@ -610,6 +628,7 @@ class ProposalEvaluationService:
         if agent_type == "project_plan":
 
             print(
+                f"[{vendor_name}] "
                 "Running Project Plan Agent..."
             )
 
@@ -629,7 +648,6 @@ class ProposalEvaluationService:
                     "an invalid result."
                 )
 
-            # Preserve exact RFP criterion name.
             result["criterion"] = (
                 name
             )
@@ -735,8 +753,8 @@ class ProposalEvaluationService:
         # =================================================
 
         print(
-            "\nCalculating deterministic "
-            "weighted score..."
+            f"\n[{vendor_name}] "
+            "Calculating deterministic weighted score..."
         )
 
         scoring_result = (
@@ -767,6 +785,7 @@ class ProposalEvaluationService:
         if mandatory_requirements:
 
             print(
+                f"[{vendor_name}] "
                 "Running Compliance Agent..."
             )
 
@@ -789,6 +808,7 @@ class ProposalEvaluationService:
         else:
 
             print(
+                f"[{vendor_name}] "
                 "No mandatory RFP requirements found."
             )
 
@@ -801,17 +821,9 @@ class ProposalEvaluationService:
                 vendor_name
             ),
 
-            # ---------------------------------------------
-            # Deterministic ranking score
-            # ---------------------------------------------
-
             "overallScore": (
                 final_score
             ),
-
-            # ---------------------------------------------
-            # Full deterministic scoring output
-            # ---------------------------------------------
 
             "scoring": (
                 scoring_result
@@ -826,13 +838,9 @@ class ProposalEvaluationService:
             "mandatorySummary": (
                 scoring_result.get(
                     "mandatory_summary",
-                    {}
+                    {},
                 )
             ),
-
-            # ---------------------------------------------
-            # Compliance / risk output
-            # ---------------------------------------------
 
             "riskLevel": (
                 compliance_result.get(
@@ -861,14 +869,105 @@ class ProposalEvaluationService:
                 )
             ),
 
-            # ---------------------------------------------
-            # Criterion evaluations
-            # ---------------------------------------------
-
             "evaluations": (
                 evaluations
             ),
         }
+
+    # =====================================================
+    # Process one proposal in a concurrent worker
+    # =====================================================
+
+    def _process_proposal(
+        self,
+        proposal_path,
+        criteria,
+    ):
+        """
+        Parse and evaluate a single vendor proposal.
+
+        A dedicated ProposalEvaluationService instance
+        is created for this worker so agent HTTP clients
+        are not shared across concurrent vendor threads.
+        """
+
+        proposal_path = Path(
+            proposal_path
+        )
+
+        print(
+            "\n================================"
+        )
+
+        print(
+            f"PARSING PROPOSAL: "
+            f"{proposal_path.name}"
+        )
+
+        print(
+            "================================"
+        )
+
+        worker = (
+            ProposalEvaluationService()
+        )
+
+        try:
+
+            proposal_document = (
+                worker.document_parser.parse_document(
+                    proposal_path
+                )
+            )
+
+            proposal_text = str(
+                proposal_document.get(
+                    "text",
+                    "",
+                )
+            ).strip()
+
+            if not proposal_text:
+
+                raise RuntimeError(
+                    "OCI Document Understanding "
+                    f"returned empty text for "
+                    f"{proposal_path.name}."
+                )
+
+            print(
+                f"[{proposal_path.name}] "
+                "Proposal extracted successfully "
+                f"({len(proposal_text)} characters)"
+            )
+
+            # =============================================
+            # Vendor identification
+            # =============================================
+            #
+            # For now filename stem is used.
+            #
+            # Later this can be replaced by vendor-name
+            # extraction from the proposal itself.
+            # =============================================
+
+            vendor_name = (
+                proposal_path.stem
+            )
+
+            vendor_result = (
+                worker._evaluate_vendor(
+                    vendor_name=vendor_name,
+                    proposal_text=proposal_text,
+                    criteria=criteria,
+                )
+            )
+
+            return vendor_result
+
+        finally:
+
+            worker.close()
 
     # =====================================================
     # Main end-to-end evaluation
@@ -886,6 +985,9 @@ class ProposalEvaluationService:
         RFP is analyzed exactly once.
 
         All proposals use the same frozen framework.
+
+        Vendor proposals are evaluated concurrently
+        with a limited worker count.
         """
 
         # =================================================
@@ -1097,75 +1199,142 @@ class ProposalEvaluationService:
 
         # =================================================
         # STEP 3
-        # Evaluate all proposals
+        # Evaluate proposals concurrently
         # =================================================
+
+        print(
+            "\n================================"
+        )
+
+        print(
+            "STEP 3 - EVALUATING PROPOSALS"
+        )
+
+        print(
+            "================================"
+        )
 
         vendor_results = []
 
-        for proposal_path in proposal_paths:
+        worker_count = min(
+            self.MAX_VENDOR_WORKERS,
+            len(proposal_paths),
+        )
 
-            proposal_path = Path(
-                proposal_path
-            )
+        print(
+            f"Evaluating {len(proposal_paths)} "
+            f"proposal(s) with "
+            f"{worker_count} concurrent worker(s)."
+        )
 
-            print(
-                "\n================================"
-            )
+        errors = []
 
-            print(
-                f"STEP 3 - PARSING PROPOSAL: "
-                f"{proposal_path.name}"
-            )
+        with ThreadPoolExecutor(
+            max_workers=worker_count
+        ) as executor:
 
-            print(
-                "================================"
-            )
-
-            proposal_document = (
-                self.document_parser.parse_document(
+            future_map = {
+                executor.submit(
+                    self._process_proposal,
+                    proposal_path,
+                    criteria,
+                ): Path(
                     proposal_path
+                ).name
+
+                for proposal_path
+                in proposal_paths
+            }
+
+            for future in as_completed(
+                future_map
+            ):
+
+                proposal_name = (
+                    future_map[
+                        future
+                    ]
                 )
+
+                try:
+
+                    vendor_result = (
+                        future.result()
+                    )
+
+                    vendor_results.append(
+                        vendor_result
+                    )
+
+                    print(
+                        "\n================================"
+                    )
+
+                    print(
+                        f"COMPLETED VENDOR: "
+                        f"{proposal_name}"
+                    )
+
+                    print(
+                        "================================"
+                    )
+
+                except Exception as error:
+
+                    print(
+                        "\n================================"
+                    )
+
+                    print(
+                        f"FAILED VENDOR: "
+                        f"{proposal_name}"
+                    )
+
+                    print(
+                        "================================"
+                    )
+
+                    print(
+                        f"Error: {error}"
+                    )
+
+                    errors.append(
+                        {
+                            "proposal": (
+                                proposal_name
+                            ),
+
+                            "error": (
+                                str(error)
+                            ),
+                        }
+                    )
+
+        # =================================================
+        # Fail evaluation if any proposal failed
+        # =================================================
+
+        if errors:
+
+            error_summary = "; ".join(
+                (
+                    f"{item['proposal']}: "
+                    f"{item['error']}"
+                )
+                for item in errors
             )
 
-            proposal_text = str(
-                proposal_document.get(
-                    "text",
-                    "",
-                )
-            ).strip()
-
-            if not proposal_text:
-
-                raise RuntimeError(
-                    "OCI Document Understanding "
-                    f"returned empty text for "
-                    f"{proposal_path.name}."
-                )
-
-            # =================================================
-            # Vendor identification
-            # =================================================
-            #
-            # For now the filename is used.
-            #
-            # Later this can be replaced by vendor-name
-            # extraction from the proposal itself.
-            # =================================================
-
-            vendor_name = (
-                proposal_path.stem
+            raise RuntimeError(
+                "One or more vendor proposals "
+                "failed during evaluation. "
+                f"{error_summary}"
             )
 
-            vendor_result = (
-                self._evaluate_vendor(
-                    vendor_name=vendor_name,
-                    proposal_text=proposal_text,
-                    criteria=criteria,
-                )
-            )
+        if not vendor_results:
 
-            vendor_results.append(
-                vendor_result
+            raise RuntimeError(
+                "No vendor proposals were "
+                "successfully evaluated."
             )
 
         # =================================================

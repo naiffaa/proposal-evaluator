@@ -50,6 +50,17 @@ export default function EvaluationResultsPage({
           setLoading(false)
         }
       })
+      .catch((error) => {
+        console.error(
+          'Failed to load evaluation:',
+          error,
+        )
+
+        if (active) {
+          setEvaluation(null)
+          setLoading(false)
+        }
+      })
 
     return () => {
       active = false
@@ -90,10 +101,13 @@ export default function EvaluationResultsPage({
           title="Evaluation not found"
           description="We couldn't find this evaluation. It may have been removed."
           action={
-            <Button asChild>
-              <Link href="/evaluations">
-                Back to Evaluations
-              </Link>
+            <Button
+              nativeButton={false}
+              render={
+                <Link href="/evaluations" />
+              }
+            >
+              Back to Evaluations
             </Button>
           }
         />
@@ -135,35 +149,40 @@ export default function EvaluationResultsPage({
 
             <Button
               variant="outline"
-              asChild
+              nativeButton={false}
+              render={
+                <Link
+                  href={`/evaluations/${id}/rfp`}
+                />
+              }
             >
-              <Link
-                href={`/evaluations/${id}/rfp`}
-              >
-                <FileText className="size-4" />
-                RFP Framework
-              </Link>
+              <FileText className="size-4" />
+              RFP Framework
             </Button>
 
             <Button
               variant="outline"
-              asChild
+              nativeButton={false}
+              render={
+                <Link
+                  href={`/evaluations/${id}/comparison`}
+                />
+              }
             >
-              <Link
-                href={`/evaluations/${id}/comparison`}
-              >
-                <GitCompareArrows className="size-4" />
-                Compare
-              </Link>
+              <GitCompareArrows className="size-4" />
+              Compare
             </Button>
 
-            <Button asChild>
-              <Link
-                href={`/evaluations/${id}/report`}
-              >
-                <BarChart3 className="size-4" />
-                Report
-              </Link>
+            <Button
+              nativeButton={false}
+              render={
+                <Link
+                  href={`/evaluations/${id}/report`}
+                />
+              }
+            >
+              <BarChart3 className="size-4" />
+              Report
             </Button>
 
           </div>
@@ -193,7 +212,7 @@ export default function EvaluationResultsPage({
               '—'
             }
             hint={
-              evaluation.topRankedVendorScore
+              evaluation.topRankedVendorScore !== null
                 ? `${formatPercent(
                     evaluation.topRankedVendorScore,
                     1,
