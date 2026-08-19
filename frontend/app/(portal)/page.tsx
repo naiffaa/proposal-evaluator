@@ -1,4 +1,7 @@
+'use client'
+
 import Link from 'next/link'
+
 import {
   ArrowRight,
   BarChart3,
@@ -9,39 +12,82 @@ import {
 } from 'lucide-react'
 
 import { HeroBanner } from '@/components/hero-banner'
+import { useLanguage } from '@/lib/i18n/context'
+import { cn } from '@/lib/utils'
 
 
 export default function HomePage() {
+  const {
+    isArabic,
+  } = useLanguage()
+
+
   const quickAccess = [
     {
-      title: 'RFP Analysis',
-      description:
-        'Analyze an RFP and extract evaluation criteria, requirements, weights, and mandatory items.',
-      href: '/rfp-analysis',
-      icon: FileSearch,
+      title: isArabic
+        ? 'تحليل طلب العرض'
+        : 'RFP Analysis',
+
+      description: isArabic
+        ? 'حلّل طلب العرض واستخرج معايير التقييم والمتطلبات والأوزان والبنود الإلزامية.'
+        : 'Analyze an RFP and extract evaluation criteria, requirements, weights, and mandatory items.',
+
+      href:
+        '/rfp-analysis',
+
+      icon:
+        FileSearch,
     },
+
     {
-      title: 'Evaluate Proposals',
-      description:
-        'Match vendor proposals against RFP requirements and generate evidence-based scores.',
-      href: '/evaluations/new',
-      icon: ClipboardCheck,
+      title: isArabic
+        ? 'تقييم العروض'
+        : 'Evaluate Proposals',
+
+      description: isArabic
+        ? 'طابق عروض الموردين مع متطلبات طلب العرض وأنشئ درجات مبنية على الأدلة.'
+        : 'Match vendor proposals against RFP requirements and generate evidence-based scores.',
+
+      href:
+        '/evaluations/new',
+
+      icon:
+        ClipboardCheck,
     },
+
     {
-      title: 'Vendor Comparison',
-      description:
-        'Compare vendors across scoring, compliance, strengths, gaps, and overall ranking.',
-      href: '/comparison',
-      icon: GitCompareArrows,
+      title: isArabic
+        ? 'مقارنة الموردين'
+        : 'Vendor Comparison',
+
+      description: isArabic
+        ? 'قارن الموردين حسب الدرجات والامتثال ونقاط القوة والفجوات والترتيب العام.'
+        : 'Compare vendors across scoring, compliance, strengths, gaps, and overall ranking.',
+
+      href:
+        '/comparison',
+
+      icon:
+        GitCompareArrows,
     },
+
     {
-      title: 'Evaluation Reports',
-      description:
-        'Review evaluation outcomes, recommendations, risks, and procurement reports.',
-      href: '/reports',
-      icon: BarChart3,
+      title: isArabic
+        ? 'تقارير التقييم'
+        : 'Evaluation Reports',
+
+      description: isArabic
+        ? 'راجع نتائج التقييم والتوصيات والمخاطر وتقارير الشراء.'
+        : 'Review evaluation outcomes, recommendations, risks, and procurement reports.',
+
+      href:
+        '/reports',
+
+      icon:
+        BarChart3,
     },
   ]
+
 
   return (
     <div className="w-full">
@@ -51,6 +97,7 @@ export default function HomePage() {
       {/* ========================================= */}
 
       <HeroBanner />
+
 
       {/* ========================================= */}
       {/* PAGE CONTENT */}
@@ -65,20 +112,29 @@ export default function HomePage() {
         <section>
 
           <div>
+
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary/70">
-              Quick Access
+              {isArabic
+                ? 'الوصول السريع'
+                : 'Quick Access'}
             </p>
+
 
             <h2 className="mt-2 text-2xl font-semibold tracking-tight text-primary sm:text-3xl">
-              Everything you need in one place
+              {isArabic
+                ? 'كل ما تحتاجه في مكان واحد'
+                : 'Everything you need in one place'}
             </h2>
 
+
             <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
-              Manage the complete RFP and proposal evaluation process — from
-              requirement analysis and proposal matching to compliance,
-              comparison, scoring, and final reporting.
+              {isArabic
+                ? 'أدر عملية تقييم طلبات العروض والمقترحات بالكامل، بدءًا من تحليل المتطلبات ومطابقة العروض وحتى الامتثال والمقارنة والتقييم وإعداد التقرير النهائي.'
+                : 'Manage the complete RFP and proposal evaluation process — from requirement analysis and proposal matching to compliance, comparison, scoring, and final reporting.'}
             </p>
+
           </div>
+
 
           {/* ===================================== */}
           {/* QUICK ACCESS CARDS */}
@@ -86,67 +142,107 @@ export default function HomePage() {
 
           <div className="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
-            {quickAccess.map((item, index) => {
-              const Icon = item.icon
+            {quickAccess.map(
+              (
+                item,
+                index,
+              ) => {
+                const Icon =
+                  item.icon
 
-              return (
-                <Link
-                  key={item.title}
-                  href={item.href}
-                  className="group"
-                >
-                  <div
-                    className={`
-                      relative
-                      flex
-                      h-full
-                      min-h-[220px]
-                      flex-col
-                      border
-                      bg-white
-                      p-5
-                      transition-all
-                      duration-200
-                      hover:-translate-y-0.5
-                      hover:border-primary/35
-                      hover:shadow-[0_10px_28px_rgba(22,31,86,0.10)]
-                      ${
-                        index === 1
-                          ? 'border-primary/25'
-                          : 'border-border'
-                      }
-                    `}
+
+                return (
+                  <Link
+                    key={
+                      item.title
+                    }
+                    href={
+                      item.href
+                    }
+                    className="group"
                   >
-                    {/* Icon */}
 
-                    <div className="flex size-11 items-center justify-center bg-primary/[0.06] text-primary">
-                      <Icon className="size-5" />
+                    <div
+                      className={`
+                        relative
+                        flex
+                        h-full
+                        min-h-[220px]
+                        flex-col
+                        border
+                        bg-white
+                        p-5
+                        transition-all
+                        duration-200
+                        hover:-translate-y-0.5
+                        hover:border-primary/35
+                        hover:shadow-[0_10px_28px_rgba(22,31,86,0.10)]
+
+                        ${
+                          index === 1
+                            ? 'border-primary/25'
+                            : 'border-border'
+                        }
+                      `}
+                    >
+
+                      {/* ICON */}
+
+                      <div className="flex size-11 items-center justify-center bg-primary/[0.06] text-primary">
+
+                        <Icon className="size-5" />
+
+                      </div>
+
+
+                      {/* TITLE */}
+
+                      <h3 className="mt-5 text-[15px] font-semibold text-primary">
+
+                        {item.title}
+
+                      </h3>
+
+
+                      {/* DESCRIPTION */}
+
+                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
+
+                        {item.description}
+
+                      </p>
+
+
+                      {/* ARROW */}
+
+                      <div className="mt-auto pt-5">
+
+                        <ArrowRight
+                          className={cn(
+                            `
+                              size-4
+                              text-primary
+                              transition-transform
+                              duration-200
+                            `,
+
+                            isArabic
+                              ? 'rotate-180 group-hover:-translate-x-1'
+                              : 'group-hover:translate-x-1',
+                          )}
+                        />
+
+                      </div>
+
                     </div>
 
-                    {/* Title */}
-
-                    <h3 className="mt-5 text-[15px] font-semibold text-primary">
-                      {item.title}
-                    </h3>
-
-                    {/* Description */}
-
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      {item.description}
-                    </p>
-
-                    {/* Arrow */}
-
-                    <div className="mt-auto pt-5">
-                      <ArrowRight className="size-4 text-primary transition-transform duration-200 group-hover:translate-x-1" />
-                    </div>
-
-                  </div>
-                </Link>
-              )
-            })}
+                  </Link>
+                )
+              },
+            )}
 
           </div>
+
 
           {/* ===================================== */}
           {/* MAIN CTA */}
@@ -156,29 +252,38 @@ export default function HomePage() {
 
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
 
-              {/* CTA content */}
+              {/* CTA CONTENT */}
 
               <div className="flex items-start gap-4">
 
                 <div className="flex size-11 shrink-0 items-center justify-center bg-white/10">
+
                   <Plus className="size-5" />
+
                 </div>
 
+
                 <div>
+
                   <h3 className="text-base font-semibold">
-                    Start a New Proposal Evaluation
+                    {isArabic
+                      ? 'ابدأ تقييمًا جديدًا للعروض'
+                      : 'Start a New Proposal Evaluation'}
                   </h3>
 
+
                   <p className="mt-1 max-w-2xl text-sm leading-6 text-white/70">
-                    Upload an RFP and one or more vendor proposals to begin
-                    requirement matching, compliance assessment, scoring,
-                    ranking, and recommendation.
+                    {isArabic
+                      ? 'ارفع طلب عرض وواحدًا أو أكثر من عروض الموردين لبدء مطابقة المتطلبات وتقييم الامتثال وحساب الدرجات والترتيب وإعداد التوصية.'
+                      : 'Upload an RFP and one or more vendor proposals to begin requirement matching, compliance assessment, scoring, ranking, and recommendation.'}
                   </p>
+
                 </div>
 
               </div>
 
-              {/* CTA button */}
+
+              {/* CTA BUTTON */}
 
               <Link
                 href="/evaluations/new"
@@ -198,8 +303,21 @@ export default function HomePage() {
                   hover:bg-white/90
                 "
               >
-                Start Evaluation
-                <ArrowRight className="size-4" />
+
+                {isArabic
+                  ? 'بدء التقييم'
+                  : 'Start Evaluation'}
+
+
+                <ArrowRight
+                  className={cn(
+                    'size-4',
+
+                    isArabic &&
+                      'rotate-180',
+                  )}
+                />
+
               </Link>
 
             </div>

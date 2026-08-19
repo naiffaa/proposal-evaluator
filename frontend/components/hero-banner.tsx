@@ -1,10 +1,21 @@
+'use client'
+
+import { useLanguage } from '@/lib/i18n/context'
+
+
 interface HeroBannerProps {
   backgroundImage?: string
 }
 
+
 export function HeroBanner({
   backgroundImage = '/images/portal-hero.png',
 }: HeroBannerProps) {
+  const {
+    isArabic,
+  } = useLanguage()
+
+
   return (
     <section
       className="relative w-full overflow-hidden text-white"
@@ -20,28 +31,50 @@ export function HeroBanner({
         className="absolute inset-0 h-full w-full object-contain"
       />
 
+
       <div
         className="absolute inset-0"
         style={{
-          background:
-            'linear-gradient(90deg, rgba(22,31,86,0.10) 0%, rgba(22,31,86,0.05) 50%, rgba(22,31,86,0.02) 100%)',
+          background: isArabic
+            ? 'linear-gradient(270deg, rgba(22,31,86,0.10) 0%, rgba(22,31,86,0.05) 50%, rgba(22,31,86,0.02) 100%)'
+            : 'linear-gradient(90deg, rgba(22,31,86,0.10) 0%, rgba(22,31,86,0.05) 50%, rgba(22,31,86,0.02) 100%)',
         }}
         aria-hidden="true"
       />
 
+
       <div className="relative z-10 flex h-full items-center">
-        <div className="ml-[14%] w-[50%] max-w-[800px]">
+
+        <div
+          className={`
+            w-[50%]
+            max-w-[800px]
+
+            ${
+              isArabic
+                ? 'mr-[14%]'
+                : 'ml-[14%]'
+            }
+          `}
+        >
+
           <h1 className="text-2xl font-semibold leading-[1.25] tracking-tight text-white sm:text-3xl lg:text-[34px]">
-            Proposal Evaluation Portal
+            {isArabic
+              ? 'بوابة تقييم العروض'
+              : 'Proposal Evaluation Portal'}
           </h1>
 
+
           <p className="mt-4 max-w-[740px] text-sm leading-7 text-white/85 sm:text-[15px] lg:text-base">
-            Analyze RFPs, compare vendor proposals, assess compliance,
-            and review evaluation outcomes through an AI-assisted
-            procurement workflow.
+            {isArabic
+              ? 'حلّل طلبات العروض، وقارن عروض الموردين، وقيّم الامتثال، وراجع نتائج التقييم من خلال سير عمل للمشتريات مدعوم بالذكاء الاصطناعي.'
+              : 'Analyze RFPs, compare vendor proposals, assess compliance, and review evaluation outcomes through an AI-assisted procurement workflow.'}
           </p>
+
         </div>
+
       </div>
+
     </section>
   )
 }

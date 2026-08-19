@@ -21,41 +21,28 @@ class ProposalEvaluationService:
     """
     End-to-end proposal evaluation service.
 
-    Flow:
-
-        RFP
-         ↓
-    OCI Document Understanding
-         ↓
-    RFP Agent
-         ↓
-    Frozen evaluation framework
-         ↓
-    Vendor proposals
-         ↓
-    Concurrent vendor evaluation
-         ↓
-    Specialized evaluation agents
-         ↓
-    Deterministic Python scoring
-         ↓
-    Compliance / Risk
-         ↓
-    Ranking Agent
-         ↓
-    Final structured result
-
     Important:
 
-    - The RFP is analyzed ONCE per evaluation run.
-    - All vendors use the exact same frozen framework.
-    - Vendors can be evaluated concurrently.
-    - Each concurrent vendor gets its own agent clients.
-    - Python determines numerical scores.
-    - Python determines deterministic vendor order.
-    - RankingAgent determines recommendation eligibility
-      using deterministic compliance rules.
-    - Top-ranked vendor is NOT automatically recommended.
+    - The RFP is analyzed once per evaluation.
+    - All vendors use the same frozen RFP framework.
+    - Vendors are evaluated concurrently.
+    - Criteria inside each vendor are also evaluated concurrently.
+    - Compliance can run alongside criterion evaluation.
+    - Python performs deterministic scoring.
+    - Python determines vendor order.
+    - RankingAgent determines recommendation eligibility.
+
+    Criterion requirements:
+
+    - Technical / Financial / Project Plan criteria currently
+      require explicit RFP requirements.
+
+    - Experience and Team criteria may validly contain an
+      empty requirements list when the RFP provides only an
+      explicit weighted criterion without detailed thresholds.
+
+      In that case their agents perform criterion-level
+      evaluation instead of requirement-level evaluation.
     """
 
     # =====================================================
@@ -64,27 +51,31 @@ class ProposalEvaluationService:
 
     MAX_VENDOR_WORKERS = 3
 
-    def __init__(self):
+    # Maximum concurrent AI tasks inside ONE vendor.
+    #
+    # Example with 3 vendors:
+    # 3 vendors x 2 tasks = about 6 simultaneous tasks.
+    #
+    # Keep this conservative to reduce OCI rate-limit risk.
+    MAX_VENDOR_TASK_WORKERS = 2
 
-        # =================================================
-        # OCI document processing
-        # =================================================
+    # Agents currently capable of evaluating a criterion
+    # even when the RFP does not provide detailed
+    # sub-requirements.
+    CRITERION_LEVEL_AGENT_TYPES = {
+        "experience",
+        "team",
+    }
+
+    def __init__(self):
 
         self.document_parser = (
             DocumentParser()
         )
 
-        # =================================================
-        # RFP analysis
-        # =================================================
-
         self.rfp_agent = (
             RFPAgent()
         )
-
-        # =================================================
-        # Proposal evaluation agents
-        # =================================================
 
         self.technical_agent = (
             TechnicalAgent()
@@ -106,17 +97,9 @@ class ProposalEvaluationService:
             FinancialAgent()
         )
 
-        # =================================================
-        # Compliance / Risk
-        # =================================================
-
         self.compliance_agent = (
             ComplianceAgent()
         )
-
-        # =================================================
-        # Ranking / Recommendation
-        # =================================================
 
         self.ranking_agent = (
             RankingAgent()
@@ -145,16 +128,6 @@ class ProposalEvaluationService:
         self,
         criterion,
     ):
-        """
-        Determine which specialized agent should evaluate
-        a criterion.
-
-        The criterion itself comes dynamically from
-        the RFP.
-
-        No criterion is invented here.
-        """
-
         if not isinstance(
             criterion,
             dict,
@@ -181,9 +154,9 @@ class ProposalEvaluationService:
             f"{name} {description}"
         )
 
-        # =================================================
-        # Financial / Commercial
-        # =================================================
+        # -------------------------------------------------
+        # Financial
+        # -------------------------------------------------
 
         financial_keywords = [
             "financial",
@@ -205,9 +178,9 @@ class ProposalEvaluationService:
         ):
             return "financial"
 
-        # =================================================
-        # Team / Personnel
-        # =================================================
+        # -------------------------------------------------
+        # Team
+        # -------------------------------------------------
 
         team_keywords = [
             "team qualification",
@@ -233,9 +206,9 @@ class ProposalEvaluationService:
         ):
             return "team"
 
-        # =================================================
+        # -------------------------------------------------
         # Experience
-        # =================================================
+        # -------------------------------------------------
 
         experience_keywords = [
             "experience",
@@ -258,9 +231,9 @@ class ProposalEvaluationService:
         ):
             return "experience"
 
-        # =================================================
-        # Project Plan / Delivery
-        # =================================================
+        # -------------------------------------------------
+        # Project plan
+        # -------------------------------------------------
 
         project_keywords = [
             "project plan",
@@ -282,9 +255,9 @@ class ProposalEvaluationService:
         ):
             return "project_plan"
 
-        # =================================================
+        # -------------------------------------------------
         # Technical
-        # =================================================
+        # -------------------------------------------------
 
         technical_keywords = [
             "technical",
@@ -309,10 +282,6 @@ class ProposalEvaluationService:
         ):
             return "technical"
 
-        # =================================================
-        # Unknown criterion
-        # =================================================
-
         return "unknown"
 
     # =====================================================
@@ -323,13 +292,6 @@ class ProposalEvaluationService:
         self,
         criteria,
     ):
-        """
-        Collect mandatory requirements directly from
-        requirement objects.
-
-        Mandatory is NOT determined from the criterion.
-        """
-
         mandatory_requirements = []
 
         for criterion in criteria:
@@ -413,6 +375,18 @@ class ProposalEvaluationService:
         self,
         criterion,
     ):
+        """
+        Validate one frozen RFP criterion.
+
+        Empty requirements are allowed ONLY for criterion
+        types whose evaluation agents explicitly support
+        criterion-level evaluation.
+
+        Current supported types:
+        - experience
+        - team
+        """
+
         if not isinstance(
             criterion,
             dict,
@@ -420,6 +394,10 @@ class ProposalEvaluationService:
             raise ValueError(
                 "Each RFP criterion must be an object."
             )
+
+        # -------------------------------------------------
+        # Name
+        # -------------------------------------------------
 
         name = str(
             criterion.get(
@@ -433,9 +411,15 @@ class ProposalEvaluationService:
                 "RFP criterion is missing a name."
             )
 
-        requirements = criterion.get(
-            "requirements",
-            [],
+        # -------------------------------------------------
+        # Requirements
+        # -------------------------------------------------
+
+        requirements = (
+            criterion.get(
+                "requirements",
+                [],
+            )
         )
 
         if not isinstance(
@@ -447,14 +431,56 @@ class ProposalEvaluationService:
                 f"'{name}' must be a list."
             )
 
-        if not requirements:
+        # -------------------------------------------------
+        # Agent type
+        # -------------------------------------------------
+
+        agent_type = (
+            self._classify_criterion(
+                criterion
+            )
+        )
+
+        if agent_type == "unknown":
             raise ValueError(
-                f"Criterion '{name}' has no "
-                "evaluation requirements."
+                "No evaluation agent is currently "
+                f"configured for criterion '{name}'."
             )
 
-        try:
+        # -------------------------------------------------
+        # Empty requirement handling
+        # -------------------------------------------------
 
+        if not requirements:
+
+            if (
+                agent_type
+                in self.CRITERION_LEVEL_AGENT_TYPES
+            ):
+                print(
+                    f"Criterion '{name}' has no "
+                    "detailed RFP requirements."
+                )
+
+                print(
+                    f"Using {agent_type} "
+                    "criterion-level evaluation."
+                )
+
+            else:
+                raise ValueError(
+                    f"Criterion '{name}' has no "
+                    "evaluation requirements, and "
+                    f"agent type '{agent_type}' does not "
+                    "currently support criterion-level "
+                    "evaluation."
+                )
+
+        # -------------------------------------------------
+        # Weight
+        # -------------------------------------------------
+
+        try:
             weight = float(
                 criterion.get(
                     "weight",
@@ -473,10 +499,15 @@ class ProposalEvaluationService:
             ) from error
 
         if weight < 0:
-
             raise ValueError(
                 f"Criterion weight cannot be "
                 f"negative: {name}"
+            )
+
+        if weight > 100:
+            raise ValueError(
+                f"Criterion weight cannot exceed "
+                f"100: {name}"
             )
 
         return criterion
@@ -491,14 +522,6 @@ class ProposalEvaluationService:
         proposal_text,
         vendor_name,
     ):
-        """
-        Route one RFP criterion to its specialized agent.
-
-        The criterion name, requirements, IDs,
-        mandatory flags and weights remain exactly
-        as produced by the RFP framework.
-        """
-
         criterion = (
             self._validate_criterion(
                 criterion
@@ -532,109 +555,283 @@ class ProposalEvaluationService:
         )
 
         print(
-            f"\n[{vendor_name}] Criterion: {name}"
+            f"\n[{vendor_name}] "
+            f"Criterion: {name}"
         )
 
         print(
-            f"[{vendor_name}] Agent type: {agent_type}"
+            f"[{vendor_name}] "
+            f"Agent type: {agent_type}"
         )
 
-        # =================================================
-        # Technical
-        # =================================================
-
-        if agent_type == "technical":
-
+        if requirements:
             print(
                 f"[{vendor_name}] "
-                "Running Technical Agent..."
+                f"Evaluation mode: requirement-level "
+                f"({len(requirements)} requirement(s))"
             )
 
-            return (
-                self.technical_agent.evaluate(
-                    criterion=name,
-                    requirements=requirements,
-                    proposal_text=proposal_text,
+        else:
+            print(
+                f"[{vendor_name}] "
+                "Evaluation mode: criterion-level"
+            )
+
+        # =================================================
+        # IMPORTANT:
+        #
+        # Create an isolated agent for this task.
+        #
+        # This avoids sharing one HTTP/OpenAI client between
+        # multiple concurrent criterion threads.
+        # =================================================
+
+        agent = None
+
+        try:
+
+            # =================================================
+            # Technical
+            # =================================================
+
+            if agent_type == "technical":
+
+                print(
+                    f"[{vendor_name}] "
+                    "Running Technical Agent..."
                 )
-            )
 
-        # =================================================
-        # Experience
-        # =================================================
-
-        if agent_type == "experience":
-
-            print(
-                f"[{vendor_name}] "
-                "Running Experience Agent..."
-            )
-
-            return (
-                self.experience_agent.evaluate(
-                    requirements=requirements,
-                    proposal_text=proposal_text,
-                    vendor_name=vendor_name,
-                    criterion=name,
-                    criterion_description=description,
+                agent = (
+                    TechnicalAgent()
                 )
-            )
 
-        # =================================================
-        # Team
-        # =================================================
-
-        if agent_type == "team":
-
-            print(
-                f"[{vendor_name}] "
-                "Running Team Agent..."
-            )
-
-            return (
-                self.team_agent.evaluate(
-                    requirements=requirements,
-                    proposal_text=proposal_text,
-                    vendor_name=vendor_name,
-                    criterion=name,
-                    criterion_description=description,
+                result = (
+                    agent.evaluate(
+                        criterion=name,
+                        requirements=requirements,
+                        proposal_text=proposal_text,
+                    )
                 )
-            )
 
-        # =================================================
-        # Financial
-        # =================================================
+            # =================================================
+            # Experience
+            # =================================================
 
-        if agent_type == "financial":
+            elif agent_type == "experience":
 
-            print(
-                f"[{vendor_name}] "
-                "Running Financial Agent..."
-            )
-
-            return (
-                self.financial_agent.evaluate(
-                    requirements=requirements,
-                    proposal_text=proposal_text,
-                    vendor_name=vendor_name,
-                    criterion=name,
-                    criterion_description=description,
+                print(
+                    f"[{vendor_name}] "
+                    "Running Experience Agent..."
                 )
-            )
 
-        # =================================================
-        # Project Plan
-        # =================================================
+                agent = (
+                    ExperienceAgent()
+                )
 
-        if agent_type == "project_plan":
+                result = (
+                    agent.evaluate(
+                        requirements=requirements,
+                        proposal_text=proposal_text,
+                        vendor_name=vendor_name,
+                        criterion=name,
+                        criterion_description=description,
+                    )
+                )
+
+            # =================================================
+            # Team
+            # =================================================
+
+            elif agent_type == "team":
+
+                print(
+                    f"[{vendor_name}] "
+                    "Running Team Agent..."
+                )
+
+                agent = (
+                    TeamAgent()
+                )
+
+                result = (
+                    agent.evaluate(
+                        requirements=requirements,
+                        proposal_text=proposal_text,
+                        vendor_name=vendor_name,
+                        criterion=name,
+                        criterion_description=description,
+                    )
+                )
+
+            # =================================================
+            # Financial
+            # =================================================
+
+            elif agent_type == "financial":
+
+                print(
+                    f"[{vendor_name}] "
+                    "Running Financial Agent..."
+                )
+
+                agent = (
+                    FinancialAgent()
+                )
+
+                result = (
+                    agent.evaluate(
+                        requirements=requirements,
+                        proposal_text=proposal_text,
+                        vendor_name=vendor_name,
+                        criterion=name,
+                        criterion_description=description,
+                    )
+                )
+
+            # =================================================
+            # Project plan
+            # =================================================
+
+            elif agent_type == "project_plan":
+
+                print(
+                    f"[{vendor_name}] "
+                    "Running Project Plan Agent..."
+                )
+
+                agent = (
+                    ProjectPlanAgent()
+                )
+
+                result = (
+                    agent.evaluate(
+                        requirements=requirements,
+                        proposal_text=proposal_text,
+                    )
+                )
+
+                if not isinstance(
+                    result,
+                    dict,
+                ):
+                    raise ValueError(
+                        "Project Plan Agent returned "
+                        "an invalid result."
+                    )
+
+                result[
+                    "criterion"
+                ] = name
+
+            # =================================================
+            # Unknown
+            # =================================================
+
+            else:
+
+                raise ValueError(
+                    "No evaluation agent is currently "
+                    f"configured for criterion '{name}'. "
+                    "A generic criterion evaluator is "
+                    "required for this criterion type."
+                )
+
+            # =================================================
+            # Validate agent result
+            # =================================================
+
+            if not isinstance(
+                result,
+                dict,
+            ):
+                raise ValueError(
+                    f"Agent returned invalid result "
+                    f"for criterion: {name}"
+                )
 
             print(
                 f"[{vendor_name}] "
-                "Running Project Plan Agent..."
+                f"Completed criterion: {name}"
             )
+
+            print(
+                f"[{vendor_name}] "
+                f"Criterion score: "
+                f"{result.get('score', 'Unknown')}"
+            )
+
+            return result
+
+        finally:
+
+            if agent is not None:
+
+                close_method = getattr(
+                    agent,
+                    "close",
+                    None,
+                )
+
+                if callable(
+                    close_method
+                ):
+                    close_method()
+
+    # =====================================================
+    # Compliance task
+    # =====================================================
+
+    def _evaluate_compliance(
+        self,
+        mandatory_requirements,
+        proposal_text,
+        vendor_name,
+    ):
+        """
+        Run compliance independently so it can execute
+        concurrently with criterion evaluation.
+
+        If the RFP contains no true mandatory eligibility
+        gates, compliance must not automatically reject the
+        vendor.
+        """
+
+        if not mandatory_requirements:
+
+            print(
+                f"[{vendor_name}] "
+                "No mandatory RFP eligibility "
+                "requirements found."
+            )
+
+            return {
+                "riskLevel": "Low",
+                "compliant": True,
+                "missingRequirements": [],
+                "rationale": (
+                    "The RFP framework contains no "
+                    "explicit mandatory eligibility gates."
+                ),
+            }
+
+        print(
+            f"[{vendor_name}] "
+            f"Running Compliance Agent against "
+            f"{len(mandatory_requirements)} "
+            "mandatory requirement(s)..."
+        )
+
+        agent = (
+            ComplianceAgent()
+        )
+
+        try:
 
             result = (
-                self.project_plan_agent.evaluate(
-                    requirements=requirements,
+                agent.evaluate(
+                    mandatory_requirements=(
+                        mandatory_requirements
+                    ),
                     proposal_text=proposal_text,
                 )
             )
@@ -643,27 +840,27 @@ class ProposalEvaluationService:
                 result,
                 dict,
             ):
-                raise ValueError(
-                    "Project Plan Agent returned "
-                    "an invalid result."
-                )
+                return {}
 
-            result["criterion"] = (
-                name
+            print(
+                f"[{vendor_name}] "
+                "Compliance completed."
             )
 
             return result
 
-        # =================================================
-        # Unsupported criterion
-        # =================================================
+        finally:
 
-        raise ValueError(
-            "No evaluation agent is currently "
-            f"configured for criterion '{name}'. "
-            "A generic criterion evaluator is required "
-            "for this criterion type."
-        )
+            close_method = getattr(
+                agent,
+                "close",
+                None,
+            )
+
+            if callable(
+                close_method
+            ):
+                close_method()
 
     # =====================================================
     # Evaluate one vendor
@@ -675,17 +872,14 @@ class ProposalEvaluationService:
         proposal_text,
         criteria,
     ):
-        """
-        Evaluate one vendor against the exact frozen
-        RFP evaluation framework.
-        """
-
         vendor_name = str(
             vendor_name
         ).strip()
 
         if not vendor_name:
-            vendor_name = "Vendor"
+            vendor_name = (
+                "Vendor"
+            )
 
         if not isinstance(
             proposal_text,
@@ -696,11 +890,11 @@ class ProposalEvaluationService:
             )
 
         proposal_text = (
-            proposal_text.strip()
+            proposal_text
+            .strip()
         )
 
         if not proposal_text:
-
             raise ValueError(
                 f"Proposal text is empty for "
                 f"vendor: {vendor_name}"
@@ -720,32 +914,222 @@ class ProposalEvaluationService:
         )
 
         # =================================================
-        # Evaluate every RFP criterion
+        # Mandatory requirements
+        # =================================================
+
+        mandatory_requirements = (
+            self._get_mandatory_requirements(
+                criteria
+            )
+        )
+
+        print(
+            f"[{vendor_name}] "
+            f"Mandatory eligibility gates: "
+            f"{len(mandatory_requirements)}"
+        )
+
+        # =================================================
+        # Concurrent vendor tasks
+        #
+        # Tasks:
+        # - each criterion
+        # - compliance
+        # =================================================
+
+        evaluations_by_index = {}
+
+        compliance_result = {}
+
+        total_tasks = (
+            len(criteria) + 1
+        )
+
+        worker_count = min(
+            self.MAX_VENDOR_TASK_WORKERS,
+            total_tasks,
+        )
+
+        print(
+            f"[{vendor_name}] "
+            f"Running {len(criteria)} criteria "
+            f"+ compliance with "
+            f"{worker_count} concurrent worker(s)."
+        )
+
+        with ThreadPoolExecutor(
+            max_workers=worker_count
+        ) as executor:
+
+            future_map = {}
+
+            # =============================================
+            # Criterion tasks
+            # =============================================
+
+            for (
+                index,
+                criterion,
+            ) in enumerate(
+                criteria
+            ):
+
+                future = (
+                    executor.submit(
+                        self._evaluate_criterion,
+                        criterion,
+                        proposal_text,
+                        vendor_name,
+                    )
+                )
+
+                future_map[
+                    future
+                ] = {
+                    "type": "criterion",
+                    "index": index,
+                    "name": str(
+                        criterion.get(
+                            "name",
+                            "",
+                        )
+                    ),
+                }
+
+            # =============================================
+            # Compliance task
+            # =============================================
+
+            compliance_future = (
+                executor.submit(
+                    self._evaluate_compliance,
+                    mandatory_requirements,
+                    proposal_text,
+                    vendor_name,
+                )
+            )
+
+            future_map[
+                compliance_future
+            ] = {
+                "type": "compliance",
+                "index": None,
+                "name": "Compliance",
+            }
+
+            # =============================================
+            # Collect results as tasks finish
+            # =============================================
+
+            for future in as_completed(
+                future_map
+            ):
+
+                task_info = (
+                    future_map[
+                        future
+                    ]
+                )
+
+                task_type = (
+                    task_info[
+                        "type"
+                    ]
+                )
+
+                try:
+
+                    result = (
+                        future.result()
+                    )
+
+                except Exception as error:
+
+                    task_name = (
+                        task_info.get(
+                            "name",
+                            "Unknown",
+                        )
+                    )
+
+                    raise RuntimeError(
+                        f"{task_name} task failed "
+                        f"for vendor "
+                        f"'{vendor_name}': "
+                        f"{error}"
+                    ) from error
+
+                if (
+                    task_type ==
+                    "criterion"
+                ):
+
+                    index = (
+                        task_info[
+                            "index"
+                        ]
+                    )
+
+                    if not isinstance(
+                        result,
+                        dict,
+                    ):
+                        raise ValueError(
+                            "Evaluation agent returned "
+                            "an invalid result."
+                        )
+
+                    evaluations_by_index[
+                        index
+                    ] = result
+
+                elif (
+                    task_type ==
+                    "compliance"
+                ):
+
+                    if isinstance(
+                        result,
+                        dict,
+                    ):
+                        compliance_result = (
+                            result
+                        )
+
+        # =================================================
+        # Restore exact RFP criterion order
         # =================================================
 
         evaluations = []
 
-        for criterion in criteria:
+        for index in range(
+            len(criteria)
+        ):
 
-            result = (
-                self._evaluate_criterion(
-                    criterion=criterion,
-                    proposal_text=proposal_text,
-                    vendor_name=vendor_name,
-                )
-            )
-
-            if not isinstance(
-                result,
-                dict,
+            if (
+                index
+                not in evaluations_by_index
             ):
-                raise ValueError(
-                    "Evaluation agent returned "
-                    "an invalid result."
+
+                criterion_name = str(
+                    criteria[
+                        index
+                    ].get(
+                        "name",
+                        "",
+                    )
+                )
+
+                raise RuntimeError(
+                    "Missing evaluation result "
+                    f"for criterion: "
+                    f"{criterion_name}"
                 )
 
             evaluations.append(
-                result
+                evaluations_by_index[
+                    index
+                ]
             )
 
         # =================================================
@@ -754,7 +1138,8 @@ class ProposalEvaluationService:
 
         print(
             f"\n[{vendor_name}] "
-            "Calculating deterministic weighted score..."
+            "Calculating deterministic "
+            "weighted score..."
         )
 
         scoring_result = (
@@ -770,47 +1155,11 @@ class ProposalEvaluationService:
             ]
         )
 
-        # =================================================
-        # Compliance / Risk
-        # =================================================
-
-        mandatory_requirements = (
-            self._get_mandatory_requirements(
-                criteria
-            )
+        print(
+            f"[{vendor_name}] "
+            f"Final weighted score: "
+            f"{final_score}"
         )
-
-        compliance_result = {}
-
-        if mandatory_requirements:
-
-            print(
-                f"[{vendor_name}] "
-                "Running Compliance Agent..."
-            )
-
-            compliance_result = (
-                self.compliance_agent.evaluate(
-                    mandatory_requirements=(
-                        mandatory_requirements
-                    ),
-                    proposal_text=proposal_text,
-                )
-            )
-
-            if not isinstance(
-                compliance_result,
-                dict,
-            ):
-
-                compliance_result = {}
-
-        else:
-
-            print(
-                f"[{vendor_name}] "
-                "No mandatory RFP requirements found."
-            )
 
         # =================================================
         # Vendor result
@@ -875,7 +1224,7 @@ class ProposalEvaluationService:
         }
 
     # =====================================================
-    # Process one proposal in a concurrent worker
+    # Process one proposal
     # =====================================================
 
     def _process_proposal(
@@ -883,14 +1232,6 @@ class ProposalEvaluationService:
         proposal_path,
         criteria,
     ):
-        """
-        Parse and evaluate a single vendor proposal.
-
-        A dedicated ProposalEvaluationService instance
-        is created for this worker so agent HTTP clients
-        are not shared across concurrent vendor threads.
-        """
-
         proposal_path = Path(
             proposal_path
         )
@@ -908,6 +1249,7 @@ class ProposalEvaluationService:
             "================================"
         )
 
+        # Dedicated service per vendor.
         worker = (
             ProposalEvaluationService()
         )
@@ -928,7 +1270,6 @@ class ProposalEvaluationService:
             ).strip()
 
             if not proposal_text:
-
                 raise RuntimeError(
                     "OCI Document Understanding "
                     f"returned empty text for "
@@ -940,16 +1281,6 @@ class ProposalEvaluationService:
                 "Proposal extracted successfully "
                 f"({len(proposal_text)} characters)"
             )
-
-            # =============================================
-            # Vendor identification
-            # =============================================
-            #
-            # For now filename stem is used.
-            #
-            # Later this can be replaced by vendor-name
-            # extraction from the proposal itself.
-            # =============================================
 
             vendor_name = (
                 proposal_path.stem
@@ -970,7 +1301,7 @@ class ProposalEvaluationService:
             worker.close()
 
     # =====================================================
-    # Main end-to-end evaluation
+    # Main evaluation
     # =====================================================
 
     def evaluate(
@@ -979,19 +1310,8 @@ class ProposalEvaluationService:
         proposal_paths=None,
         **kwargs,
     ):
-        """
-        Complete end-to-end proposal evaluation.
-
-        RFP is analyzed exactly once.
-
-        All proposals use the same frozen framework.
-
-        Vendor proposals are evaluated concurrently
-        with a limited worker count.
-        """
-
         # =================================================
-        # Support alternate parameter names
+        # Alternate parameter names
         # =================================================
 
         if rfp_path is None:
@@ -1030,13 +1350,11 @@ class ProposalEvaluationService:
         # =================================================
 
         if rfp_path is None:
-
             raise ValueError(
                 "RFP file path is required."
             )
 
         if proposal_paths is None:
-
             raise ValueError(
                 "At least one vendor proposal "
                 "is required."
@@ -1044,9 +1362,11 @@ class ProposalEvaluationService:
 
         if isinstance(
             proposal_paths,
-            (str, Path),
+            (
+                str,
+                Path,
+            ),
         ):
-
             proposal_paths = [
                 proposal_paths
             ]
@@ -1056,7 +1376,6 @@ class ProposalEvaluationService:
         )
 
         if not proposal_paths:
-
             raise ValueError(
                 "At least one vendor proposal "
                 "is required."
@@ -1093,7 +1412,6 @@ class ProposalEvaluationService:
         ).strip()
 
         if not rfp_text:
-
             raise RuntimeError(
                 "OCI Document Understanding "
                 "returned empty RFP text."
@@ -1106,7 +1424,7 @@ class ProposalEvaluationService:
 
         # =================================================
         # STEP 2
-        # Analyze RFP ONCE
+        # Analyze RFP once
         # =================================================
 
         print(
@@ -1131,7 +1449,6 @@ class ProposalEvaluationService:
             rfp_analysis,
             dict,
         ):
-
             raise RuntimeError(
                 "RFP Agent returned "
                 "an invalid result."
@@ -1151,7 +1468,6 @@ class ProposalEvaluationService:
             )
             or not criteria
         ):
-
             raise RuntimeError(
                 "RFP Agent did not return "
                 "evaluation criteria."
@@ -1160,6 +1476,18 @@ class ProposalEvaluationService:
         # =================================================
         # Validate frozen framework
         # =================================================
+
+        print(
+            "\n================================"
+        )
+
+        print(
+            "VALIDATING RFP FRAMEWORK"
+        )
+
+        print(
+            "================================"
+        )
 
         for criterion in criteria:
 
@@ -1174,22 +1502,50 @@ class ProposalEvaluationService:
                     0,
                 )
             )
-            for criterion in criteria
+            for criterion
+            in criteria
         )
 
         if abs(
-            total_weight - 100.0
+            total_weight -
+            100.0
         ) > 0.01:
-
             raise RuntimeError(
                 "RFP criteria weights must total 100. "
                 f"Current total: "
                 f"{round(total_weight, 2)}"
             )
 
+        total_requirements = sum(
+            len(
+                criterion.get(
+                    "requirements",
+                    [],
+                )
+            )
+            for criterion
+            in criteria
+        )
+
+        mandatory_requirements = (
+            self._get_mandatory_requirements(
+                criteria
+            )
+        )
+
         print(
             f"RFP framework frozen with "
             f"{len(criteria)} criteria."
+        )
+
+        print(
+            f"Total requirements: "
+            f"{total_requirements}"
+        )
+
+        print(
+            f"Mandatory eligibility gates: "
+            f"{len(mandatory_requirements)}"
         )
 
         print(
@@ -1199,7 +1555,7 @@ class ProposalEvaluationService:
 
         # =================================================
         # STEP 3
-        # Evaluate proposals concurrently
+        # Evaluate vendors concurrently
         # =================================================
 
         print(
@@ -1224,7 +1580,8 @@ class ProposalEvaluationService:
         print(
             f"Evaluating {len(proposal_paths)} "
             f"proposal(s) with "
-            f"{worker_count} concurrent worker(s)."
+            f"{worker_count} concurrent "
+            f"vendor worker(s)."
         )
 
         errors = []
@@ -1311,7 +1668,7 @@ class ProposalEvaluationService:
                     )
 
         # =================================================
-        # Fail evaluation if any proposal failed
+        # Failure handling
         # =================================================
 
         if errors:
@@ -1331,7 +1688,6 @@ class ProposalEvaluationService:
             )
 
         if not vendor_results:
-
             raise RuntimeError(
                 "No vendor proposals were "
                 "successfully evaluated."
@@ -1339,7 +1695,7 @@ class ProposalEvaluationService:
 
         # =================================================
         # STEP 4
-        # Deterministic numerical ranking
+        # Deterministic sorting
         # =================================================
 
         print(
@@ -1364,18 +1720,21 @@ class ProposalEvaluationService:
             reverse=True,
         )
 
-        for index, vendor in enumerate(
+        for (
+            index,
+            vendor,
+        ) in enumerate(
             vendor_results,
             start=1,
         ):
 
-            vendor["rank"] = (
-                index
-            )
+            vendor[
+                "rank"
+            ] = index
 
         # =================================================
         # STEP 5
-        # Ranking and eligibility
+        # Ranking / eligibility
         # =================================================
 
         print(
@@ -1400,25 +1759,10 @@ class ProposalEvaluationService:
             ranking,
             dict,
         ):
-
             raise RuntimeError(
                 "Ranking Agent returned "
                 "an invalid result."
             )
-
-        # =================================================
-        # IMPORTANT:
-        #
-        # Do NOT fallback to highest-scoring vendor.
-        #
-        # RankingAgent may intentionally return:
-        #
-        # recommendedVendor = None
-        #
-        # when no compliant vendor exists.
-        #
-        # Top-ranked and recommended are separate.
-        # =================================================
 
         recommended_vendor = (
             ranking.get(
@@ -1453,7 +1797,7 @@ class ProposalEvaluationService:
 
         # =================================================
         # STEP 6
-        # Final structured result
+        # Final result
         # =================================================
 
         final_result = {
@@ -1486,10 +1830,6 @@ class ProposalEvaluationService:
                 ),
             },
 
-            # =================================================
-            # Vendor evaluation data
-            # =================================================
-
             "totalVendors": (
                 len(
                     vendor_results
@@ -1500,15 +1840,10 @@ class ProposalEvaluationService:
                 vendor_results
             ),
 
-            # =================================================
-            # Ranking / advisory decision
-            # =================================================
-
             "ranking": (
                 ranking
             ),
 
-            # Highest numerical score
             "topRankedVendor": (
                 top_ranked_vendor
             ),
@@ -1517,7 +1852,6 @@ class ProposalEvaluationService:
                 top_ranked_vendor_score
             ),
 
-            # Recommendation may intentionally be None.
             "recommendedVendor": (
                 recommended_vendor
             ),
@@ -1537,10 +1871,6 @@ class ProposalEvaluationService:
                 )
             ),
         }
-
-        # =================================================
-        # Logging
-        # =================================================
 
         print(
             "\n================================"
@@ -1578,10 +1908,6 @@ class ProposalEvaluationService:
     def close(
         self,
     ):
-        """
-        Close HTTP clients used by agents.
-        """
-
         agents = [
             self.rfp_agent,
             self.technical_agent,
@@ -1604,5 +1930,4 @@ class ProposalEvaluationService:
             if callable(
                 close_method
             ):
-
                 close_method()

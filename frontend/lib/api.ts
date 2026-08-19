@@ -37,7 +37,9 @@ export async function request<T>(
     init?.body instanceof FormData
 
   const headers =
-    new Headers(init?.headers)
+    new Headers(
+      init?.headers,
+    )
 
   if (!isFormData) {
     headers.set(
@@ -56,6 +58,7 @@ export async function request<T>(
       },
     )
 
+
   if (!response.ok) {
     let message =
       `API request failed: ${response.status} ${response.statusText}`
@@ -66,7 +69,8 @@ export async function request<T>(
 
       if (
         errorData &&
-        typeof errorData.detail === 'string'
+        typeof errorData.detail ===
+          'string'
       ) {
         message =
           errorData.detail
@@ -79,6 +83,7 @@ export async function request<T>(
       message,
     )
   }
+
 
   return response.json() as Promise<T>
 }
@@ -96,6 +101,7 @@ interface BackendRequirement {
   mandatory_evidence?: string
 }
 
+
 interface BackendCriterion {
   name?: string
   description?: string
@@ -103,6 +109,7 @@ interface BackendCriterion {
   weight?: number
   requirements?: BackendRequirement[]
 }
+
 
 interface BackendRfp {
   fileName?: string
@@ -125,6 +132,7 @@ interface BackendRfp {
   totalWeight?: number
 }
 
+
 interface BackendRequirementResult {
   requirement_id?: string
   requirement?: string
@@ -142,15 +150,19 @@ interface BackendRequirementResult {
   rationale?: string
 }
 
+
 interface BackendEvaluationResult {
   criterion?: string
   score?: number
-  mandatory_compliance_percentage?: number | null
-  requirement_results?: BackendRequirementResult[]
+  mandatory_compliance_percentage?:
+    number | null
+  requirement_results?:
+    BackendRequirementResult[]
   strengths?: string[]
   gaps?: string[]
   rationale?: string
 }
+
 
 interface BackendCriterionScore {
   criterion?: string
@@ -159,26 +171,36 @@ interface BackendCriterionScore {
   weighted_score?: number
 }
 
+
 interface BackendVendor {
   vendor?: string
   rank?: number
   overallScore?: number
-  overallMandatoryCompliance?: number | null
+
+  overallMandatoryCompliance?:
+    number | null
+
   riskLevel?: string
-  compliant?: boolean | null
+
+  compliant?:
+    boolean | null
 
   missingRequirements?: Array<
-    string | Record<string, unknown>
+    string |
+    Record<string, unknown>
   >
 
   complianceRationale?: string
 
-  evaluations?: BackendEvaluationResult[]
+  evaluations?:
+    BackendEvaluationResult[]
 
   scoring?: {
-    criterion_scores?: BackendCriterionScore[]
+    criterion_scores?:
+      BackendCriterionScore[]
   }
 }
+
 
 interface BackendEvaluationResultRoot {
   rfp?: BackendRfp
@@ -187,14 +209,23 @@ interface BackendEvaluationResultRoot {
 
   vendors?: BackendVendor[]
 
-  topRankedVendor?: string | null
-  topRankedVendorScore?: number | null
+  topRankedVendor?:
+    string | null
 
-  recommendedVendor?: string | null
-  recommendedVendorScore?: number | null
+  topRankedVendorScore?:
+    number | null
 
-  recommendationStatus?: string | null
-  humanReviewRequired?: boolean
+  recommendedVendor?:
+    string | null
+
+  recommendedVendorScore?:
+    number | null
+
+  recommendationStatus?:
+    string | null
+
+  humanReviewRequired?:
+    boolean
 
   ranking?: {
     finalRecommendation?: string
@@ -203,16 +234,38 @@ interface BackendEvaluationResultRoot {
   }
 }
 
+
 interface BackendStoredEvaluation {
   id: string
-  status: string
+
+  status:
+    | 'DRAFT'
+    | 'PROCESSING'
+    | 'COMPLETED'
+    | 'REQUIRES_REVIEW'
+    | 'FAILED'
+
   createdDate: string
-  result: BackendEvaluationResultRoot
+
+  completedDate?:
+    string | null
+
+  error?:
+    string | null
+
+  request?: {
+    rfpName?: string
+    vendorCount?: number
+    proposalNames?: string[]
+  }
+
+  result:
+    BackendEvaluationResultRoot
 }
 
 
 // =========================================================
-// RUN EVALUATION
+// RUN EVALUATION TYPES
 // =========================================================
 
 export interface RunEvaluationPayload {
@@ -220,10 +273,37 @@ export interface RunEvaluationPayload {
   proposals: File[]
 }
 
+
 export interface RunEvaluationResponse {
   id: string
-  status: 'completed'
-  result: BackendEvaluationResultRoot
+  status: 'PROCESSING'
+}
+
+
+// =========================================================
+// PROCESSING STATUS TYPES
+// =========================================================
+
+export type EvaluationProcessingStatus =
+  | 'PROCESSING'
+  | 'COMPLETED'
+  | 'FAILED'
+
+
+export interface EvaluationStatusResponse {
+  id: string
+
+  status:
+    EvaluationProcessingStatus
+
+  createdDate:
+    string | null
+
+  completedDate:
+    string | null
+
+  error:
+    string | null
 }
 
 
@@ -284,11 +364,17 @@ function normalizeRiskLevel(
   const normalized =
     value?.toUpperCase()
 
-  if (normalized === 'LOW') {
+  if (
+    normalized ===
+    'LOW'
+  ) {
     return 'LOW'
   }
 
-  if (normalized === 'MEDIUM') {
+  if (
+    normalized ===
+    'MEDIUM'
+  ) {
     return 'MEDIUM'
   }
 
@@ -300,19 +386,22 @@ function normalizeMatchStatus(
   value?: string,
 ): RequirementMatchStatus {
   if (
-    value === 'FULL_MATCH'
+    value ===
+    'FULL_MATCH'
   ) {
     return 'FULL_MATCH'
   }
 
   if (
-    value === 'PARTIAL_MATCH'
+    value ===
+    'PARTIAL_MATCH'
   ) {
     return 'PARTIAL_MATCH'
   }
 
   if (
-    value === 'NO_MATCH'
+    value ===
+    'NO_MATCH'
   ) {
     return 'NO_MATCH'
   }
@@ -337,7 +426,10 @@ function makeVendorId(
         '',
       )
 
-  return slug || `vendor-${index + 1}`
+  return (
+    slug ||
+    `vendor-${index + 1}`
+  )
 }
 
 
@@ -346,17 +438,27 @@ function makeVendorId(
 // =========================================================
 
 function adaptRfp(
-  backendRfp: BackendRfp | undefined,
-  createdDate: string,
+  backendRfp:
+    BackendRfp | undefined,
+
+  createdDate:
+    string,
 ): RfpFramework {
   const rawCriteria =
     backendRfp?.criteria ??
-    backendRfp?.analysis?.criteria ??
+    backendRfp
+      ?.analysis
+      ?.criteria ??
     []
 
-  const criteria: RfpCriterion[] =
+
+  const criteria:
+    RfpCriterion[] =
     rawCriteria.map(
-      (criterion, index) => ({
+      (
+        criterion,
+        index,
+      ) => ({
         id:
           `criterion-${index + 1}`,
 
@@ -366,11 +468,13 @@ function adaptRfp(
 
         weight:
           Number(
-            criterion.weight ?? 0,
+            criterion.weight ??
+            0,
           ),
 
         description:
-          criterion.description ?? '',
+          criterion.description ??
+          '',
 
         requirements:
           (
@@ -399,73 +503,105 @@ function adaptRfp(
                 ),
 
               mandatoryEvidence:
-                requirement.mandatory_evidence ??
+                requirement
+                  .mandatory_evidence ??
                 '',
             }),
           ),
       }),
     )
 
+
   const totalRequirements =
     criteria.reduce(
-      (total, criterion) =>
+      (
+        total,
+        criterion,
+      ) =>
         total +
-        criterion.requirements.length,
+        criterion
+          .requirements
+          .length,
       0,
     )
+
 
   const mandatoryRequirements =
     criteria.reduce(
-      (total, criterion) =>
+      (
+        total,
+        criterion,
+      ) =>
         total +
-        criterion.requirements.filter(
-          (requirement) =>
-            requirement.mandatory,
-        ).length,
+        criterion
+          .requirements
+          .filter(
+            (
+              requirement,
+            ) =>
+              requirement
+                .mandatory,
+          )
+          .length,
       0,
     )
+
 
   const calculatedWeight =
     criteria.reduce(
-      (total, criterion) =>
-        total + criterion.weight,
+      (
+        total,
+        criterion,
+      ) =>
+        total +
+        criterion.weight,
       0,
     )
 
+
   return {
     fileName:
-      backendRfp?.fileName ??
+      backendRfp
+        ?.fileName ??
       'RFP Document',
 
     summary:
-      backendRfp?.analysis
-        ?.rfp_summary ?? '',
+      backendRfp
+        ?.analysis
+        ?.rfp_summary ??
+      '',
 
     processedDate:
       createdDate,
 
     totalCriteria:
-      backendRfp?.totalCriteria ??
-      backendRfp?.analysis
+      backendRfp
+        ?.totalCriteria ??
+      backendRfp
+        ?.analysis
         ?.metadata
         ?.criteria_count ??
       criteria.length,
 
     totalRequirements:
-      backendRfp?.analysis
+      backendRfp
+        ?.analysis
         ?.metadata
         ?.requirement_count ??
       totalRequirements,
 
     mandatoryRequirements:
-      backendRfp?.analysis
+      backendRfp
+        ?.analysis
         ?.metadata
         ?.mandatory_requirement_count ??
       mandatoryRequirements,
 
     totalWeight:
-      backendRfp?.totalWeight ??
-      backendRfp?.analysis
+      backendRfp
+        ?.totalWeight ??
+      backendRfp
+        ?.analysis
         ?.metadata
         ?.total_weight ??
       calculatedWeight,
@@ -480,12 +616,16 @@ function adaptRfp(
 // =========================================================
 
 function adaptVendor(
-  backendVendor: BackendVendor,
-  index: number,
+  backendVendor:
+    BackendVendor,
+
+  index:
+    number,
 ): Vendor {
   const name =
     backendVendor.vendor ??
     `Vendor ${index + 1}`
+
 
   const id =
     makeVendorId(
@@ -493,20 +633,26 @@ function adaptVendor(
       index,
     )
 
+
   const evaluations =
     backendVendor.evaluations ??
     []
 
+
   const requirementResults:
     VendorRequirementResult[] =
     evaluations.flatMap(
-      (evaluation) =>
+      (
+        evaluation,
+      ) =>
         (
           evaluation
             .requirement_results ??
           []
         ).map(
-          (requirement) => ({
+          (
+            requirement,
+          ) => ({
             requirementId:
               requirement
                 .requirement_id ??
@@ -534,12 +680,14 @@ function adaptVendor(
 
             mandatory:
               Boolean(
-                requirement.mandatory,
+                requirement
+                  .mandatory,
               ),
 
             status:
               normalizeMatchStatus(
-                requirement.status,
+                requirement
+                  .status,
               ),
 
             matchScore:
@@ -562,10 +710,12 @@ function adaptVendor(
         ),
     )
 
+
   const criterionScores:
     VendorCriterionScore[] =
     (
-      backendVendor.scoring
+      backendVendor
+        .scoring
         ?.criterion_scores ??
       []
     ).map(
@@ -574,21 +724,25 @@ function adaptVendor(
         criterionIndex,
       ) => ({
         criterionId:
-          criterion.criterion ??
+          criterion
+            .criterion ??
           `criterion-${criterionIndex + 1}`,
 
         criterionName:
-          criterion.criterion ??
+          criterion
+            .criterion ??
           `Criterion ${criterionIndex + 1}`,
 
         score:
           Number(
-            criterion.score ?? 0,
+            criterion.score ??
+            0,
           ),
 
         weight:
           Number(
-            criterion.weight ?? 0,
+            criterion.weight ??
+            0,
           ),
 
         contribution:
@@ -600,6 +754,7 @@ function adaptVendor(
       }),
     )
 
+
   const missingRequirements:
     MissingRequirement[] =
     (
@@ -607,9 +762,13 @@ function adaptVendor(
         .missingRequirements ??
       []
     ).map(
-      (item, missingIndex) => {
+      (
+        item,
+        missingIndex,
+      ) => {
         if (
-          typeof item === 'string'
+          typeof item ===
+          'string'
         ) {
           return {
             requirementId:
@@ -629,25 +788,32 @@ function adaptVendor(
           }
         }
 
+
         return {
           requirementId:
             String(
-              item.requirementId ??
-              item.requirement_id ??
+              item
+                .requirementId ??
+              item
+                .requirement_id ??
               `missing-${missingIndex + 1}`,
             ),
 
           requirement:
             String(
-              item.requirement ??
-              item.text ??
+              item
+                .requirement ??
+              item
+                .text ??
               'Missing requirement',
             ),
 
           criterionName:
             String(
-              item.criterionName ??
-              item.criterion ??
+              item
+                .criterionName ??
+              item
+                .criterion ??
               '',
             ),
 
@@ -666,28 +832,38 @@ function adaptVendor(
       },
     )
 
+
   const strengths =
     evaluations.flatMap(
-      (evaluation) =>
+      (
+        evaluation,
+      ) =>
         evaluation.strengths ??
         [],
     )
 
+
   const gaps =
     evaluations.flatMap(
-      (evaluation) =>
+      (
+        evaluation,
+      ) =>
         evaluation.gaps ??
         [],
     )
 
+
   const summary =
     evaluations
       .map(
-        (evaluation) =>
+        (
+          evaluation,
+        ) =>
           evaluation.rationale,
       )
       .filter(Boolean)
       .join(' ')
+
 
   return {
     id,
@@ -716,11 +892,13 @@ function adaptVendor(
 
     riskLevel:
       normalizeRiskLevel(
-        backendVendor.riskLevel,
+        backendVendor
+          .riskLevel,
       ),
 
     eligible:
-      backendVendor.compliant ===
+      backendVendor
+        .compliant ===
       true,
 
     strengths,
@@ -748,10 +926,13 @@ function adaptVendor(
 // =========================================================
 
 function adaptEvaluation(
-  stored: BackendStoredEvaluation,
+  stored:
+    BackendStoredEvaluation,
 ): Evaluation {
   const result =
-    stored.result ?? {}
+    stored.result ??
+    {}
+
 
   const rfp =
     adaptRfp(
@@ -759,31 +940,42 @@ function adaptEvaluation(
       stored.createdDate,
     )
 
+
   const vendors =
     (
       result.vendors ??
       []
     ).map(
-      (vendor, index) =>
+      (
+        vendor,
+        index,
+      ) =>
         adaptVendor(
           vendor,
           index,
         ),
     )
 
+
   const recommendationStatus =
     normalizeRecommendationStatus(
-      result.recommendationStatus,
+      result
+        .recommendationStatus,
     )
 
+
   const advisoryRecommendation =
-    result.ranking
+    result
+      .ranking
       ?.finalRecommendation ??
-    result.ranking
+    result
+      .ranking
       ?.final_recommendation ??
-    result.ranking
+    result
+      .ranking
       ?.rationale ??
     ''
+
 
   return {
     id:
@@ -801,7 +993,8 @@ function adaptEvaluation(
       ),
 
     topRankedVendor:
-      result.topRankedVendor ??
+      result
+        .topRankedVendor ??
       null,
 
     recommendationStatus,
@@ -844,7 +1037,10 @@ export const evaluationsApi = {
   // GET /api/evaluations
   // =======================================================
 
-  list(): Promise<EvaluationSummary[]> {
+  list():
+    Promise<
+      EvaluationSummary[]
+    > {
     return request<
       EvaluationSummary[]
     >(
@@ -876,36 +1072,70 @@ export const evaluationsApi = {
 
   // =======================================================
   // REAL
+  // GET /api/evaluations/{id}/status
+  // =======================================================
+
+  getStatus(
+    id: string,
+  ): Promise<EvaluationStatusResponse> {
+    return request<
+      EvaluationStatusResponse
+    >(
+      `/evaluations/${id}/status`,
+    )
+  },
+
+
+  // =======================================================
+  // REAL
   // POST /api/evaluations/run
+  //
+  // Backend now returns immediately with:
+  //
+  // {
+  //   id: "EVAL-...",
+  //   status: "PROCESSING"
+  // }
+  //
+  // Actual evaluation continues in the background.
   // =======================================================
 
   async runEvaluation(
-    payload: RunEvaluationPayload,
+    payload:
+      RunEvaluationPayload,
   ): Promise<RunEvaluationResponse> {
 
-    if (!payload.rfp) {
+    if (
+      !payload.rfp
+    ) {
       throw new Error(
         'RFP file is required.',
       )
     }
 
+
     if (
       !payload.proposals ||
-      payload.proposals.length === 0
+      payload
+        .proposals
+        .length === 0
     ) {
       throw new Error(
         'At least one vendor proposal is required.',
       )
     }
 
+
     const formData =
       new FormData()
+
 
     formData.append(
       'rfp',
       payload.rfp,
       payload.rfp.name,
     )
+
 
     for (
       const proposal
@@ -918,13 +1148,17 @@ export const evaluationsApi = {
       )
     }
 
+
     return request<
       RunEvaluationResponse
     >(
       '/evaluations/run',
       {
-        method: 'POST',
-        body: formData,
+        method:
+          'POST',
+
+        body:
+          formData,
       },
     )
   },
@@ -932,34 +1166,39 @@ export const evaluationsApi = {
 
   // =======================================================
   // REAL
-  // GET /api/evaluations/{id}/rfp
-  //
-  // We use get(id) so the raw backend RFP is transformed
-  // to the RfpFramework expected by the frontend.
+  // GET RFP
   // =======================================================
 
   async getRfp(
     id: string,
   ): Promise<RfpFramework> {
     const evaluation =
-      await this.get(id)
+      await this.get(
+        id,
+      )
 
-    return evaluation.rfp
+    return (
+      evaluation.rfp
+    )
   },
 
 
   // =======================================================
   // REAL
-  // GET /api/evaluations/{id}/vendors
+  // GET VENDORS
   // =======================================================
 
   async getVendors(
     id: string,
   ): Promise<Vendor[]> {
     const evaluation =
-      await this.get(id)
+      await this.get(
+        id,
+      )
 
-    return evaluation.vendors
+    return (
+      evaluation.vendors
+    )
   },
 
 
@@ -971,13 +1210,20 @@ export const evaluationsApi = {
   async getVendor(
     id: string,
     vendorId: string,
-  ): Promise<Vendor | undefined> {
+  ): Promise<
+    Vendor | undefined
+  > {
     const vendors =
-      await this.getVendors(id)
+      await this.getVendors(
+        id,
+      )
 
     return vendors.find(
-      (vendor) =>
-        vendor.id === vendorId,
+      (
+        vendor,
+      ) =>
+        vendor.id ===
+        vendorId,
     )
   },
 
@@ -990,19 +1236,17 @@ export const evaluationsApi = {
   async getComparison(
     id: string,
   ): Promise<Vendor[]> {
-    return this.getVendors(id)
+    return (
+      this.getVendors(
+        id,
+      )
+    )
   },
 }
 
 
 // =========================================================
 // DASHBOARD
-// =========================================================
-//
-// Keep dashboard stats mocked temporarily.
-// We will replace these after the evaluation pages
-// are confirmed working with real FastAPI data.
-//
 // =========================================================
 
 export const dashboardApi = {

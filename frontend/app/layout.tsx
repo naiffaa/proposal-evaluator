@@ -1,19 +1,64 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
-import { Inter, Geist_Mono } from 'next/font/google'
+import localFont from 'next/font/local'
+import { Geist_Mono } from 'next/font/google'
 import './globals.css'
 
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
+
+const ksfText = localFont({
+  src: [
+    {
+      path: '../fonts/KSFText-Thin.ttf',
+      weight: '100',
+      style: 'normal',
+    },
+    {
+      path: '../fonts/KSFText-ExtraLight.ttf',
+      weight: '200',
+      style: 'normal',
+    },
+    {
+      path: '../fonts/KSFText-Light.ttf',
+      weight: '300',
+      style: 'normal',
+    },
+    {
+      path: '../fonts/KSFText-Regular.ttf',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../fonts/KSFText-Medium.ttf',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: '../fonts/KSFText-SemiBold.ttf',
+      weight: '600',
+      style: 'normal',
+    },
+    {
+      path: '../fonts/KSFText-Bold.ttf',
+      weight: '700',
+      style: 'normal',
+    },
+    {
+      path: '../fonts/KSFText-Heavy.ttf',
+      weight: '800',
+      style: 'normal',
+    },
+  ],
+  variable: '--font-ksf-text',
   display: 'swap',
 })
+
 
 const geistMono = Geist_Mono({
   subsets: ['latin'],
   variable: '--font-geist-mono',
   display: 'swap',
 })
+
 
 export const metadata: Metadata = {
   title: 'Proposal Intelligence Portal',
@@ -22,10 +67,12 @@ export const metadata: Metadata = {
   generator: 'v0.app',
 }
 
+
 export const viewport: Viewport = {
   colorScheme: 'light',
   themeColor: '#161f56',
 }
+
 
 export default function RootLayout({
   children,
@@ -33,10 +80,16 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${geistMono.variable} bg-background`}>
+    <html
+      lang="en"
+      className={`${ksfText.variable} ${geistMono.variable} bg-background`}
+    >
       <body className="font-sans antialiased">
         {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+
+        {process.env.NODE_ENV === 'production' && (
+          <Analytics />
+        )}
       </body>
     </html>
   )

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
+import { useLanguage } from '@/lib/i18n/context'
 
 
 export interface UploadedFile {
@@ -55,6 +56,10 @@ export function UploadDropzone({
   onAdd,
   onRemove,
 }: UploadDropzoneProps) {
+  const {
+    isArabic,
+  } = useLanguage()
+
   const inputRef =
     useRef<HTMLInputElement>(null)
 
@@ -247,7 +252,9 @@ export function UploadDropzone({
 
           <p className="relative mt-4 text-sm font-semibold text-foreground">
             {dragging
-              ? 'Drop files here'
+              ? isArabic
+                ? 'أفلت الملفات هنا'
+                : 'Drop files here'
               : title}
           </p>
 
@@ -256,7 +263,9 @@ export function UploadDropzone({
 
           <p className="relative mt-1.5 text-xs text-muted-foreground">
             {dragging
-              ? 'Release to add the selected document'
+              ? isArabic
+                ? 'أفلت لإضافة المستند المحدد'
+                : 'Release to add the selected document'
               : description}
           </p>
 
@@ -265,7 +274,9 @@ export function UploadDropzone({
 
           {!dragging && (
             <p className="relative mt-1 text-[11px] text-muted-foreground/70">
-              Drag and drop or choose from your device
+              {isArabic
+                ? 'اسحب وأفلت أو اختر من جهازك'
+                : 'Drag and drop or choose from your device'}
             </p>
           )}
 
@@ -294,7 +305,10 @@ export function UploadDropzone({
             "
           >
             <Plus className="size-3.5" />
-            Browse Files
+
+            {isArabic
+              ? 'اختيار الملفات'
+              : 'Browse Files'}
           </span>
 
 
@@ -380,6 +394,7 @@ export function UploadDropzone({
                   {file.name}
                 </p>
 
+
                 <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
 
                   <span className="text-xs text-muted-foreground">
@@ -388,9 +403,13 @@ export function UploadDropzone({
                     )}
                   </span>
 
+
                   <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700">
                     <CheckCircle2 className="size-3.5" />
-                    Ready
+
+                    {isArabic
+                      ? 'جاهز'
+                      : 'Ready'}
                   </span>
 
                 </div>
@@ -421,7 +440,11 @@ export function UploadDropzone({
                   hover:text-red-600
                   group-hover/file:opacity-100
                 "
-                aria-label={`Remove ${file.name}`}
+                aria-label={
+                  isArabic
+                    ? `حذف ${file.name}`
+                    : `Remove ${file.name}`
+                }
               >
                 <Trash2 className="size-4" />
               </button>

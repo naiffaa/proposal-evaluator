@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+
 import {
   ArrowLeft,
   ArrowRight,
@@ -15,52 +16,98 @@ import {
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+
 import {
   UploadDropzone,
   type UploadedFile,
 } from '@/components/upload-dropzone'
 
 import { evaluationsApi } from '@/lib/api'
-
-
-const STEPS = [
-  {
-    number: 1,
-    title: 'Upload RFP',
-    description: 'Add the RFP document.',
-  },
-  {
-    number: 2,
-    title: 'Upload Proposals',
-    description: 'Add one or more vendor proposals.',
-  },
-  {
-    number: 3,
-    title: 'Review & Submit',
-    description: 'Confirm the documents and start the evaluation.',
-  },
-]
+import { useLanguage } from '@/lib/i18n/context'
 
 
 export default function NewEvaluationPage() {
-  const router = useRouter()
+  const router =
+    useRouter()
 
-  const [currentStep, setCurrentStep] =
+  const {
+    isArabic,
+  } = useLanguage()
+
+
+  const steps = [
+    {
+      number: 1,
+
+      title: isArabic
+        ? 'رفع طلب العرض'
+        : 'Upload RFP',
+
+      description: isArabic
+        ? 'أضف مستند طلب العرض.'
+        : 'Add the RFP document.',
+    },
+
+    {
+      number: 2,
+
+      title: isArabic
+        ? 'رفع عروض الموردين'
+        : 'Upload Proposals',
+
+      description: isArabic
+        ? 'أضف عرضًا واحدًا أو أكثر من الموردين.'
+        : 'Add one or more vendor proposals.',
+    },
+
+    {
+      number: 3,
+
+      title: isArabic
+        ? 'المراجعة والإرسال'
+        : 'Review & Submit',
+
+      description: isArabic
+        ? 'راجع المستندات وابدأ عملية التقييم.'
+        : 'Confirm the documents and start the evaluation.',
+    },
+  ]
+
+
+  const [
+    currentStep,
+    setCurrentStep,
+  ] =
     useState(0)
 
-  const [transitioning, setTransitioning] =
+  const [
+    transitioning,
+    setTransitioning,
+  ] =
     useState(false)
 
-  const [rfp, setRfp] =
+  const [
+    rfp,
+    setRfp,
+  ] =
     useState<UploadedFile[]>([])
 
-  const [proposals, setProposals] =
+  const [
+    proposals,
+    setProposals,
+  ] =
     useState<UploadedFile[]>([])
 
-  const [submitting, setSubmitting] =
+  const [
+    submitting,
+    setSubmitting,
+  ] =
     useState(false)
 
-  const [error, setError] =
+  const [
+    error,
+    setError,
+  ] =
     useState<string | null>(null)
 
 
@@ -71,28 +118,45 @@ export default function NewEvaluationPage() {
     proposals.length >= 1
 
 
-  function changeStep(nextStep: number) {
+  function changeStep(
+    nextStep: number,
+  ) {
     if (
-      nextStep === currentStep ||
+      nextStep ===
+        currentStep ||
       transitioning
     ) {
       return
     }
 
     setError(null)
-    setTransitioning(true)
 
-    window.setTimeout(() => {
-      setCurrentStep(nextStep)
+    setTransitioning(
+      true,
+    )
 
-      window.requestAnimationFrame(() => {
-        setTransitioning(false)
-      })
-    }, 160)
+    window.setTimeout(
+      () => {
+        setCurrentStep(
+          nextStep,
+        )
+
+        window.requestAnimationFrame(
+          () => {
+            setTransitioning(
+              false,
+            )
+          },
+        )
+      },
+      160,
+    )
   }
 
 
-  function goToStep(step: number) {
+  function goToStep(
+    step: number,
+  ) {
     changeStep(step)
   }
 
@@ -115,10 +179,12 @@ export default function NewEvaluationPage() {
     const nextStep =
       Math.min(
         currentStep + 1,
-        STEPS.length - 1,
+        steps.length - 1,
       )
 
-    changeStep(nextStep)
+    changeStep(
+      nextStep,
+    )
   }
 
 
@@ -129,7 +195,9 @@ export default function NewEvaluationPage() {
         0,
       )
 
-    changeStep(previousStep)
+    changeStep(
+      previousStep,
+    )
   }
 
 
@@ -142,44 +210,67 @@ export default function NewEvaluationPage() {
       return
     }
 
-    setSubmitting(true)
-    setError(null)
+    setSubmitting(
+      true,
+    )
+
+    setError(
+      null,
+    )
+
 
     try {
       const response =
         await evaluationsApi.runEvaluation({
-          rfp: rfp[0].file,
+          rfp:
+            rfp[0].file,
 
-          proposals: proposals.map(
-            (proposal) =>
-              proposal.file,
-          ),
+          proposals:
+            proposals.map(
+              (
+                proposal,
+              ) =>
+                proposal.file,
+            ),
         })
 
-      if (!response.id) {
+
+      if (
+        !response.id
+      ) {
         throw new Error(
-          'The evaluation completed, but no evaluation ID was returned.',
+          isArabic
+            ? 'بدأ التقييم، ولكن لم يتم إرجاع رقم التقييم.'
+            : 'The evaluation started, but no evaluation ID was returned.',
         )
       }
 
+
       router.push(
-        `/evaluations/${response.id}`,
+        `/evaluations/${response.id}/processing`,
       )
 
-    } catch (error) {
+    } catch (
+      error
+    ) {
       console.error(
         'Evaluation failed:',
         error,
       )
 
+
       setError(
-        error instanceof Error
-          ? error.message
-          : 'Proposal evaluation failed.',
+        isArabic
+          ? 'تعذر بدء تقييم العروض. يرجى المحاولة مرة أخرى.'
+          : error instanceof Error
+            ? error.message
+            : 'Proposal evaluation failed.',
       )
 
     } finally {
-      setSubmitting(false)
+      setSubmitting(
+        false,
+      )
     }
   }
 
@@ -187,26 +278,38 @@ export default function NewEvaluationPage() {
   return (
     <div className="mx-auto w-full max-w-[1380px] px-4 py-8 md:px-6 lg:py-10">
 
+      {/* ===================================== */}
       {/* PAGE INTRO */}
+      {/* ===================================== */}
 
       <div className="mb-7">
 
         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary/60">
-          Proposal Evaluation
+          {isArabic
+            ? 'تقييم العروض'
+            : 'Proposal Evaluation'}
         </p>
 
+
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-          New Evaluation
+          {isArabic
+            ? 'تقييم جديد'
+            : 'New Evaluation'}
         </h1>
 
+
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Add the required documents, review them, and start the evaluation.
+          {isArabic
+            ? 'أضف المستندات المطلوبة، وراجعها، ثم ابدأ عملية التقييم.'
+            : 'Add the required documents, review them, and start the evaluation.'}
         </p>
 
       </div>
 
 
+      {/* ===================================== */}
       {/* WIZARD */}
+      {/* ===================================== */}
 
       <div
         className="
@@ -222,7 +325,9 @@ export default function NewEvaluationPage() {
         "
       >
 
-        {/* LEFT PANEL */}
+        {/* ================================= */}
+        {/* SIDE PANEL */}
+        {/* ================================= */}
 
         <aside className="relative bg-[#161F56] px-8 py-10 text-white">
 
@@ -231,11 +336,16 @@ export default function NewEvaluationPage() {
             <div>
 
               <h2 className="text-lg font-semibold">
-                Evaluation Setup
+                {isArabic
+                  ? 'إعداد التقييم'
+                  : 'Evaluation Setup'}
               </h2>
 
+
               <p className="mt-2 text-sm leading-6 text-white/55">
-                Complete each step before starting the proposal evaluation.
+                {isArabic
+                  ? 'أكمل جميع الخطوات قبل بدء عملية تقييم العروض.'
+                  : 'Complete each step before starting the proposal evaluation.'}
               </p>
 
             </div>
@@ -245,13 +355,18 @@ export default function NewEvaluationPage() {
 
             <div className="mt-10">
 
-              {STEPS.map(
-                (step, index) => {
+              {steps.map(
+                (
+                  step,
+                  index,
+                ) => {
                   const active =
-                    index === currentStep
+                    index ===
+                    currentStep
 
                   const completed =
-                    index < currentStep
+                    index <
+                    currentStep
 
                   const accessible =
                     index === 0 ||
@@ -268,15 +383,21 @@ export default function NewEvaluationPage() {
 
                   return (
                     <button
-                      key={step.number}
+                      key={
+                        step.number
+                      }
                       type="button"
                       disabled={
                         !accessible ||
                         transitioning
                       }
                       onClick={() => {
-                        if (accessible) {
-                          goToStep(index)
+                        if (
+                          accessible
+                        ) {
+                          goToStep(
+                            index,
+                          )
                         }
                       }}
                       className="
@@ -285,7 +406,7 @@ export default function NewEvaluationPage() {
                         w-full
                         gap-4
                         pb-10
-                        text-left
+                        text-start
                         last:pb-0
                         disabled:cursor-default
                       "
@@ -294,16 +415,22 @@ export default function NewEvaluationPage() {
                       {/* CONNECTOR */}
 
                       {index <
-                        STEPS.length - 1 && (
+                        steps.length -
+                          1 && (
                         <div
                           className={`
                             absolute
-                            left-[17px]
                             top-10
                             h-[calc(100%-28px)]
                             w-px
                             transition-colors
                             duration-300
+
+                            ${
+                              isArabic
+                                ? 'right-[17px]'
+                                : 'left-[17px]'
+                            }
 
                             ${
                               completed
@@ -369,8 +496,11 @@ export default function NewEvaluationPage() {
                             }
                           `}
                         >
-                          {step.title}
+                          {
+                            step.title
+                          }
                         </p>
+
 
                         <p
                           className={`
@@ -389,7 +519,9 @@ export default function NewEvaluationPage() {
                             }
                           `}
                         >
-                          {step.description}
+                          {
+                            step.description
+                          }
                         </p>
 
                       </div>
@@ -403,8 +535,9 @@ export default function NewEvaluationPage() {
 
 
             <div className="mt-auto border-t border-white/10 pt-5 text-xs leading-5 text-white/40">
-              The evaluation begins only after you review and submit
-              the selected documents.
+              {isArabic
+                ? 'لن تبدأ عملية التقييم إلا بعد مراجعة المستندات المحددة وإرسالها.'
+                : 'The evaluation begins only after you review and submit the selected documents.'}
             </div>
 
           </div>
@@ -412,7 +545,9 @@ export default function NewEvaluationPage() {
         </aside>
 
 
+        {/* ================================= */}
         {/* RIGHT PANEL */}
+        {/* ================================= */}
 
         <main className="flex min-w-0 flex-col">
 
@@ -432,37 +567,58 @@ export default function NewEvaluationPage() {
 
                 ${
                   transitioning
-                    ? 'translate-x-2 opacity-0'
+                    ? isArabic
+                      ? '-translate-x-2 opacity-0'
+                      : 'translate-x-2 opacity-0'
                     : 'translate-x-0 opacity-100'
                 }
               `}
             >
 
-              {currentStep === 0 && (
+              {currentStep ===
+                0 && (
                 <StepOne
-                  rfp={rfp}
-                  setRfp={setRfp}
+                  rfp={
+                    rfp
+                  }
+                  setRfp={
+                    setRfp
+                  }
                 />
               )}
 
 
-              {currentStep === 1 && (
+              {currentStep ===
+                1 && (
                 <StepTwo
-                  proposals={proposals}
-                  setProposals={setProposals}
+                  proposals={
+                    proposals
+                  }
+                  setProposals={
+                    setProposals
+                  }
                 />
               )}
 
 
-              {currentStep === 2 && (
+              {currentStep ===
+                2 && (
                 <StepThree
-                  rfp={rfp}
-                  proposals={proposals}
+                  rfp={
+                    rfp
+                  }
+                  proposals={
+                    proposals
+                  }
                   onEditRfp={() =>
-                    goToStep(0)
+                    goToStep(
+                      0,
+                    )
                   }
                   onEditProposals={() =>
-                    goToStep(1)
+                    goToStep(
+                      1,
+                    )
                   }
                 />
               )}
@@ -479,7 +635,9 @@ export default function NewEvaluationPage() {
           </div>
 
 
+          {/* ================================= */}
           {/* FOOTER */}
+          {/* ================================= */}
 
           <div
             className="
@@ -497,19 +655,24 @@ export default function NewEvaluationPage() {
             "
           >
 
-            {/* LEFT */}
+            {/* BACK / CANCEL */}
 
-            {currentStep === 0 ? (
+            {currentStep ===
+              0 ? (
               <Button
                 variant="ghost"
                 size="lg"
-                nativeButton={false}
+                nativeButton={
+                  false
+                }
                 render={
                   <Link href="/evaluations" />
                 }
                 className="text-muted-foreground"
               >
-                Cancel
+                {isArabic
+                  ? 'إلغاء'
+                  : 'Cancel'}
               </Button>
             ) : (
               <Button
@@ -524,15 +687,25 @@ export default function NewEvaluationPage() {
                 }
                 className="gap-2 text-muted-foreground"
               >
-                <ArrowLeft className="size-4" />
-                Back
+                <ArrowLeft
+                  className={`size-4 ${
+                    isArabic
+                      ? 'rotate-180'
+                      : ''
+                  }`}
+                />
+
+                {isArabic
+                  ? 'رجوع'
+                  : 'Back'}
               </Button>
             )}
 
 
-            {/* RIGHT */}
+            {/* NEXT / SUBMIT */}
 
-            {currentStep < 2 ? (
+            {currentStep <
+            2 ? (
               <Button
                 size="lg"
                 onClick={
@@ -541,15 +714,25 @@ export default function NewEvaluationPage() {
                 disabled={
                   transitioning ||
                   (
-                    currentStep === 0
+                    currentStep ===
+                    0
                       ? !hasRfp
                       : !hasProposals
                   )
                 }
                 className="min-w-[150px]"
               >
-                Continue
-                <ArrowRight className="size-4" />
+                {isArabic
+                  ? 'متابعة'
+                  : 'Continue'}
+
+                <ArrowRight
+                  className={`size-4 ${
+                    isArabic
+                      ? 'rotate-180'
+                      : ''
+                  }`}
+                />
               </Button>
             ) : (
               <Button
@@ -568,12 +751,24 @@ export default function NewEvaluationPage() {
                 {submitting ? (
                   <>
                     <LoaderCircle className="size-4 animate-spin" />
-                    Evaluating...
+
+                    {isArabic
+                      ? 'جارٍ بدء التقييم...'
+                      : 'Starting Evaluation...'}
                   </>
                 ) : (
                   <>
-                    Start Evaluation
-                    <ArrowRight className="size-4" />
+                    {isArabic
+                      ? 'بدء التقييم'
+                      : 'Start Evaluation'}
+
+                    <ArrowRight
+                      className={`size-4 ${
+                        isArabic
+                          ? 'rotate-180'
+                          : ''
+                      }`}
+                    />
                   </>
                 )}
               </Button>
@@ -590,24 +785,44 @@ export default function NewEvaluationPage() {
 }
 
 
+/* ========================================== */
 /* STEP 1 */
+/* ========================================== */
 
 function StepOne({
   rfp,
   setRfp,
 }: {
   rfp: UploadedFile[]
+
   setRfp: React.Dispatch<
-    React.SetStateAction<UploadedFile[]>
+    React.SetStateAction<
+      UploadedFile[]
+    >
   >
 }) {
+  const {
+    isArabic,
+  } = useLanguage()
+
+
   return (
     <div className="mx-auto max-w-3xl">
 
       <StepHeader
         number={1}
-        title="Upload RFP"
-        description="Upload the RFP document that defines the evaluation requirements and criteria."
+
+        title={
+          isArabic
+            ? 'رفع طلب العرض'
+            : 'Upload RFP'
+        }
+
+        description={
+          isArabic
+            ? 'ارفع مستند طلب العرض الذي يحدد متطلبات ومعايير التقييم.'
+            : 'Upload the RFP document that defines the evaluation requirements and criteria.'
+        }
       />
 
 
@@ -619,14 +834,20 @@ function StepOne({
             <FileCheck2 className="size-5" />
           </span>
 
+
           <div>
 
             <h3 className="text-sm font-semibold text-slate-900">
-              RFP Document
+              {isArabic
+                ? 'مستند طلب العرض'
+                : 'RFP Document'}
             </h3>
 
+
             <p className="mt-0.5 text-xs text-muted-foreground">
-              One PDF document is required
+              {isArabic
+                ? 'مطلوب مستند PDF واحد'
+                : 'One PDF document is required'}
             </p>
 
           </div>
@@ -635,12 +856,30 @@ function StepOne({
 
 
         <UploadDropzone
-          title="Upload RFP"
-          description="PDF - Maximum 50 MB"
-          files={rfp}
-          onAdd={(files) =>
-            setRfp(files)
+          title={
+            isArabic
+              ? 'رفع طلب العرض'
+              : 'Upload RFP'
           }
+
+          description={
+            isArabic
+              ? 'PDF - الحد الأقصى 50 ميجابايت'
+              : 'PDF - Maximum 50 MB'
+          }
+
+          files={
+            rfp
+          }
+
+          onAdd={(
+            files,
+          ) =>
+            setRfp(
+              files,
+            )
+          }
+
           onRemove={() =>
             setRfp([])
           }
@@ -650,12 +889,16 @@ function StepOne({
         <div className="mt-5 rounded-xl bg-slate-50 px-4 py-4">
 
           <p className="text-xs font-semibold text-slate-700">
-            What happens next?
+            {isArabic
+              ? 'ماذا سيحدث بعد ذلك؟'
+              : 'What happens next?'}
           </p>
 
+
           <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
-            The system will use this document to identify evaluation
-            criteria, requirements, mandatory items, and scoring weights.
+            {isArabic
+              ? 'سيستخدم النظام هذا المستند لاستخراج معايير التقييم والمتطلبات والبنود الإلزامية وأوزان التقييم.'
+              : 'The system will use this document to identify evaluation criteria, requirements, mandatory items, and scoring weights.'}
           </p>
 
         </div>
@@ -667,24 +910,46 @@ function StepOne({
 }
 
 
+/* ========================================== */
 /* STEP 2 */
+/* ========================================== */
 
 function StepTwo({
   proposals,
   setProposals,
 }: {
-  proposals: UploadedFile[]
-  setProposals: React.Dispatch<
-    React.SetStateAction<UploadedFile[]>
-  >
+  proposals:
+    UploadedFile[]
+
+  setProposals:
+    React.Dispatch<
+      React.SetStateAction<
+        UploadedFile[]
+      >
+    >
 }) {
+  const {
+    isArabic,
+  } = useLanguage()
+
+
   return (
     <div className="mx-auto max-w-3xl">
 
       <StepHeader
         number={2}
-        title="Upload Vendor Proposals"
-        description="Add the proposals that will be evaluated against the RFP."
+
+        title={
+          isArabic
+            ? 'رفع عروض الموردين'
+            : 'Upload Vendor Proposals'
+        }
+
+        description={
+          isArabic
+            ? 'أضف العروض التي سيتم تقييمها مقابل طلب العرض.'
+            : 'Add the proposals that will be evaluated against the RFP.'
+        }
       />
 
 
@@ -698,14 +963,20 @@ function StepTwo({
               <Files className="size-5" />
             </span>
 
+
             <div>
 
               <h3 className="text-sm font-semibold text-slate-900">
-                Vendor Proposals
+                {isArabic
+                  ? 'عروض الموردين'
+                  : 'Vendor Proposals'}
               </h3>
 
+
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Upload one PDF for each vendor
+                {isArabic
+                  ? 'ارفع ملف PDF واحدًا لكل مورد'
+                  : 'Upload one PDF for each vendor'}
               </p>
 
             </div>
@@ -713,9 +984,12 @@ function StepTwo({
           </div>
 
 
-          {proposals.length > 0 && (
+          {proposals.length >
+            0 && (
             <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
-              {proposals.length} uploaded
+              {isArabic
+                ? `تم رفع ${proposals.length}`
+                : `${proposals.length} uploaded`}
             </span>
           )}
 
@@ -723,24 +997,50 @@ function StepTwo({
 
 
         <UploadDropzone
-          title="Upload Vendor Proposals"
-          description="PDF - Multiple files allowed"
+          title={
+            isArabic
+              ? 'رفع عروض الموردين'
+              : 'Upload Vendor Proposals'
+          }
+
+          description={
+            isArabic
+              ? 'PDF - يمكن رفع عدة ملفات'
+              : 'PDF - Multiple files allowed'
+          }
+
           multiple
-          files={proposals}
-          onAdd={(files) =>
+
+          files={
+            proposals
+          }
+
+          onAdd={(
+            files,
+          ) =>
             setProposals(
-              (previous) => [
+              (
+                previous,
+              ) => [
                 ...previous,
                 ...files,
               ],
             )
           }
-          onRemove={(id) =>
+
+          onRemove={(
+            id,
+          ) =>
             setProposals(
-              (previous) =>
+              (
+                previous,
+              ) =>
                 previous.filter(
-                  (proposal) =>
-                    proposal.id !== id,
+                  (
+                    proposal,
+                  ) =>
+                    proposal.id !==
+                    id,
                 ),
             )
           }
@@ -750,12 +1050,16 @@ function StepTwo({
         <div className="mt-5 rounded-xl bg-slate-50 px-4 py-4">
 
           <p className="text-xs font-semibold text-slate-700">
-            Consistent evaluation
+            {isArabic
+              ? 'تقييم موحد'
+              : 'Consistent evaluation'}
           </p>
 
+
           <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
-            Every proposal will be evaluated against the same extracted
-            RFP framework to ensure consistent scoring and comparison.
+            {isArabic
+              ? 'سيتم تقييم جميع العروض باستخدام نفس إطار التقييم المستخرج من طلب العرض لضمان اتساق الدرجات والمقارنة.'
+              : 'Every proposal will be evaluated against the same extracted RFP framework to ensure consistent scoring and comparison.'}
           </p>
 
         </div>
@@ -767,7 +1071,9 @@ function StepTwo({
 }
 
 
+/* ========================================== */
 /* STEP 3 */
+/* ========================================== */
 
 function StepThree({
   rfp,
@@ -775,58 +1081,130 @@ function StepThree({
   onEditRfp,
   onEditProposals,
 }: {
-  rfp: UploadedFile[]
-  proposals: UploadedFile[]
-  onEditRfp: () => void
-  onEditProposals: () => void
+  rfp:
+    UploadedFile[]
+
+  proposals:
+    UploadedFile[]
+
+  onEditRfp:
+    () => void
+
+  onEditProposals:
+    () => void
 }) {
+  const {
+    isArabic,
+  } = useLanguage()
+
+
   return (
     <div className="mx-auto max-w-3xl">
 
       <StepHeader
         number={3}
-        title="Review & Submit"
-        description="Confirm the selected documents before starting the evaluation."
+
+        title={
+          isArabic
+            ? 'المراجعة والإرسال'
+            : 'Review & Submit'
+        }
+
+        description={
+          isArabic
+            ? 'تأكد من المستندات المحددة قبل بدء عملية التقييم.'
+            : 'Confirm the selected documents before starting the evaluation.'
+        }
       />
 
 
       <div className="mt-8 space-y-5">
 
         <ReviewSection
-          title="RFP Document"
-          count="1 document"
-          icon={FileCheck2}
-          onEdit={onEditRfp}
+          title={
+            isArabic
+              ? 'مستند طلب العرض'
+              : 'RFP Document'
+          }
+
+          count={
+            isArabic
+              ? 'مستند واحد'
+              : '1 document'
+          }
+
+          icon={
+            FileCheck2
+          }
+
+          onEdit={
+            onEditRfp
+          }
         >
 
-          {rfp.map((file) => (
-            <ReviewFile
-              key={file.id}
-              file={file}
-            />
-          ))}
+          {rfp.map(
+            (
+              file,
+            ) => (
+              <ReviewFile
+                key={
+                  file.id
+                }
+                file={
+                  file
+                }
+              />
+            ),
+          )}
 
         </ReviewSection>
 
 
         <ReviewSection
-          title="Vendor Proposals"
-          count={`${proposals.length} proposal${
-            proposals.length === 1
-              ? ''
-              : 's'
-          }`}
-          icon={Files}
-          onEdit={onEditProposals}
+          title={
+            isArabic
+              ? 'عروض الموردين'
+              : 'Vendor Proposals'
+          }
+
+          count={
+            isArabic
+              ? `${proposals.length} ${
+                  proposals.length ===
+                  1
+                    ? 'عرض'
+                    : 'عروض'
+                }`
+              : `${proposals.length} proposal${
+                  proposals.length ===
+                  1
+                    ? ''
+                    : 's'
+                }`
+          }
+
+          icon={
+            Files
+          }
+
+          onEdit={
+            onEditProposals
+          }
         >
 
           <div className="divide-y divide-border">
 
             {proposals.map(
-              (file) => (
+              (
+                file,
+              ) => (
                 <ReviewFile
-                  key={file.id}
-                  file={file}
+                  key={
+                    file.id
+                  }
+                  file={
+                    file
+                  }
                 />
               ),
             )}
@@ -852,15 +1230,20 @@ function StepThree({
 
           <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-emerald-700" />
 
+
           <div>
 
             <p className="text-sm font-semibold text-emerald-900">
-              Ready to evaluate
+              {isArabic
+                ? 'جاهز للتقييم'
+                : 'Ready to evaluate'}
             </p>
 
+
             <p className="mt-1 text-xs leading-5 text-emerald-800/70">
-              The RFP will be analyzed first, then every vendor proposal
-              will be evaluated against the same extracted framework.
+              {isArabic
+                ? 'سيتم تحليل طلب العرض أولًا، ثم تقييم كل عرض من عروض الموردين باستخدام نفس إطار التقييم المستخرج.'
+                : 'The RFP will be analyzed first, then every vendor proposal will be evaluated against the same extracted framework.'}
             </p>
 
           </div>
@@ -874,7 +1257,9 @@ function StepThree({
 }
 
 
+/* ========================================== */
 /* SHARED */
+/* ========================================== */
 
 function StepHeader({
   number,
@@ -912,6 +1297,7 @@ function StepHeader({
           {title}
         </h2>
 
+
         <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
           {description}
         </p>
@@ -922,6 +1308,10 @@ function StepHeader({
   )
 }
 
+
+/* ========================================== */
+/* REVIEW SECTION */
+/* ========================================== */
 
 function ReviewSection({
   title,
@@ -936,6 +1326,11 @@ function ReviewSection({
   onEdit: () => void
   children: React.ReactNode
 }) {
+  const {
+    isArabic,
+  } = useLanguage()
+
+
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-white">
 
@@ -947,11 +1342,13 @@ function ReviewSection({
             <Icon className="size-4" />
           </span>
 
+
           <div>
 
             <p className="text-sm font-semibold text-slate-900">
               {title}
             </p>
+
 
             <p className="mt-0.5 text-xs text-muted-foreground">
               {count}
@@ -964,10 +1361,14 @@ function ReviewSection({
 
         <button
           type="button"
-          onClick={onEdit}
+          onClick={
+            onEdit
+          }
           className="text-xs font-semibold text-primary transition-colors hover:text-primary/70"
         >
-          Edit
+          {isArabic
+            ? 'تعديل'
+            : 'Edit'}
         </button>
 
       </div>
@@ -982,10 +1383,15 @@ function ReviewSection({
 }
 
 
+/* ========================================== */
+/* REVIEW FILE */
+/* ========================================== */
+
 function ReviewFile({
   file,
 }: {
-  file: UploadedFile
+  file:
+    UploadedFile
 }) {
   return (
     <div className="flex items-center gap-3 px-4 py-3.5">
@@ -1001,8 +1407,11 @@ function ReviewFile({
           {file.name}
         </p>
 
+
         <p className="mt-0.5 text-xs text-muted-foreground">
-          {formatSize(file.size)}
+          {formatSize(
+            file.size,
+          )}
         </p>
 
       </div>
@@ -1015,24 +1424,41 @@ function ReviewFile({
 }
 
 
+/* ========================================== */
+/* FORMAT SIZE */
+/* ========================================== */
+
 function formatSize(
   bytes: number,
 ) {
-  if (bytes < 1024) {
+  if (
+    bytes <
+    1024
+  ) {
     return `${bytes} B`
   }
+
 
   if (
     bytes <
     1024 * 1024
   ) {
     return `${(
-      bytes / 1024
-    ).toFixed(0)} KB`
+      bytes /
+      1024
+    ).toFixed(
+      0,
+    )} KB`
   }
+
 
   return `${(
     bytes /
-    (1024 * 1024)
-  ).toFixed(1)} MB`
+    (
+      1024 *
+      1024
+    )
+  ).toFixed(
+    1,
+  )} MB`
 }

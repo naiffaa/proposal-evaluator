@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+
 import {
   ChevronDown,
   FileText,
@@ -8,7 +9,11 @@ import {
 } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
-import type { RfpCriterion } from '@/lib/types'
+import { useLanguage } from '@/lib/i18n/context'
+
+import type {
+  RfpCriterion,
+} from '@/lib/types'
 
 
 export function RfpCriterionCard({
@@ -16,17 +21,38 @@ export function RfpCriterionCard({
 }: {
   criterion: RfpCriterion
 }) {
-  const [open, setOpen] = useState(false)
+  const {
+    isArabic,
+  } = useLanguage()
+
+
+  const [
+    open,
+    setOpen,
+  ] =
+    useState(false)
+
 
   const mandatoryCount =
     criterion.requirements.filter(
-      (requirement) => requirement.mandatory,
+      (
+        requirement,
+      ) =>
+        requirement.mandatory,
     ).length
+
 
   return (
     <div
       className={cn(
-        'overflow-hidden border bg-white transition-all duration-200',
+        `
+          overflow-hidden
+          border
+          bg-white
+          transition-all
+          duration-200
+        `,
+
         open
           ? 'border-primary/25 shadow-[0_8px_24px_rgba(22,31,86,0.06)]'
           : 'border-border',
@@ -40,9 +66,16 @@ export function RfpCriterionCard({
       <button
         type="button"
         onClick={() =>
-          setOpen((value) => !value)
+          setOpen(
+            (
+              value,
+            ) =>
+              !value,
+          )
         }
-        aria-expanded={open}
+        aria-expanded={
+          open
+        }
         className="
           flex
           w-full
@@ -50,7 +83,7 @@ export function RfpCriterionCard({
           gap-4
           px-5
           py-5
-          text-left
+          text-start
           transition-colors
           hover:bg-primary/[0.025]
           sm:px-6
@@ -71,14 +104,20 @@ export function RfpCriterionCard({
             text-primary
           "
         >
+
           <span className="text-lg font-semibold leading-none">
             {criterion.weight}
           </span>
 
+
           <span className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-primary/60">
-            Weight %
+            {isArabic
+              ? 'الوزن %'
+              : 'Weight %'}
           </span>
+
         </div>
+
 
         {/* CRITERION DETAILS */}
 
@@ -88,30 +127,40 @@ export function RfpCriterionCard({
             {criterion.name}
           </p>
 
+
           <p className="mt-1 line-clamp-2 text-sm leading-5 text-muted-foreground">
             {criterion.description}
           </p>
 
         </div>
 
+
         {/* STATS */}
 
         <div className="hidden shrink-0 items-center gap-7 lg:flex">
 
-          <div className="text-right">
+          <div className="text-end">
+
             <p className="text-sm font-semibold text-foreground">
               {criterion.requirements.length}
             </p>
 
+
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              Requirements
+              {isArabic
+                ? 'المتطلبات'
+                : 'Requirements'}
             </p>
+
           </div>
 
-          <div className="text-right">
+
+          <div className="text-end">
+
             <p
               className={cn(
                 'text-sm font-semibold',
+
                 mandatoryCount > 0
                   ? 'text-amber-700'
                   : 'text-foreground',
@@ -120,19 +169,24 @@ export function RfpCriterionCard({
               {mandatoryCount}
             </p>
 
+
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              Mandatory
+              {isArabic
+                ? 'إلزامي'
+                : 'Mandatory'}
             </p>
+
           </div>
 
         </div>
+
 
         {/* EXPAND */}
 
         <div
           className={cn(
             `
-              ml-1
+              ms-1
               flex
               size-9
               shrink-0
@@ -141,20 +195,30 @@ export function RfpCriterionCard({
               border
               transition-colors
             `,
+
             open
               ? 'border-primary/20 bg-primary/[0.06] text-primary'
               : 'border-border text-muted-foreground',
           )}
         >
+
           <ChevronDown
             className={cn(
-              'size-4 transition-transform duration-200',
-              open && 'rotate-180',
+              `
+                size-4
+                transition-transform
+                duration-200
+              `,
+
+              open &&
+                'rotate-180',
             )}
           />
+
         </div>
 
       </button>
+
 
       {/* ===================================== */}
       {/* REQUIREMENTS */}
@@ -168,28 +232,45 @@ export function RfpCriterionCard({
           <div className="flex flex-col gap-2 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
 
             <div>
+
               <p className="text-sm font-semibold text-foreground">
-                Requirements
+                {isArabic
+                  ? 'المتطلبات'
+                  : 'Requirements'}
               </p>
 
+
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Extracted requirements under this evaluation criterion.
+                {isArabic
+                  ? 'المتطلبات المستخرجة تحت معيار التقييم هذا.'
+                  : 'Extracted requirements under this evaluation criterion.'}
               </p>
+
             </div>
+
 
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
 
               <span>
-                {criterion.requirements.length} total
+                {isArabic
+                  ? `${criterion.requirements.length} إجمالي`
+                  : `${criterion.requirements.length} total`}
               </span>
+
 
               {mandatoryCount > 0 && (
                 <>
                   <span className="h-3 w-px bg-border" />
 
+
                   <span className="flex items-center gap-1.5 font-medium text-amber-700">
+
                     <ShieldAlert className="size-3.5" />
-                    {mandatoryCount} mandatory
+
+                    {isArabic
+                      ? `${mandatoryCount} إلزامي`
+                      : `${mandatoryCount} mandatory`}
+
                   </span>
                 </>
               )}
@@ -198,14 +279,20 @@ export function RfpCriterionCard({
 
           </div>
 
+
           {/* REQUIREMENTS LIST */}
 
           <ul className="divide-y divide-border">
 
             {criterion.requirements.map(
-              (requirement, index) => (
+              (
+                requirement,
+                index,
+              ) => (
                 <li
-                  key={requirement.id}
+                  key={
+                    requirement.id
+                  }
                   className="
                     flex
                     gap-4
@@ -238,6 +325,7 @@ export function RfpCriterionCard({
                     {index + 1}
                   </div>
 
+
                   {/* CONTENT */}
 
                   <div className="min-w-0 flex-1">
@@ -247,6 +335,7 @@ export function RfpCriterionCard({
                       <p className="flex-1 text-sm leading-6 text-foreground">
                         {requirement.requirement}
                       </p>
+
 
                       {requirement.mandatory && (
                         <span
@@ -268,28 +357,40 @@ export function RfpCriterionCard({
                             ring-amber-200
                           "
                         >
+
                           <ShieldAlert className="size-3" />
-                          Mandatory
+
+                          {isArabic
+                            ? 'إلزامي'
+                            : 'Mandatory'}
+
                         </span>
                       )}
 
                     </div>
 
+
                     {/* SOURCE */}
 
-                    <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                    {requirement.source && (
+                      <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
 
-                      <FileText className="size-3.5 shrink-0" />
+                        <FileText className="size-3.5 shrink-0" />
 
-                      <span className="font-medium">
-                        Source:
-                      </span>
 
-                      <span className="truncate">
-                        {requirement.source}
-                      </span>
+                        <span className="font-medium">
+                          {isArabic
+                            ? 'المصدر:'
+                            : 'Source:'}
+                        </span>
 
-                    </div>
+
+                        <span className="truncate">
+                          {requirement.source}
+                        </span>
+
+                      </div>
+                    )}
 
                   </div>
 

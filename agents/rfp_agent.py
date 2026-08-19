@@ -11,7 +11,9 @@ class RFPAgent:
     Important:
     - Evaluation criteria are taken from the RFP.
     - Requirements are atomic: one requirement per object.
-    - Mandatory requirements require explicit RFP evidence.
+    - All requirements may be scored.
+    - Mandatory means a true eligibility / pass-fail gate.
+    - Mandatory classification requires explicit gate evidence.
     - Final weight validation is deterministic in Python.
     """
 
@@ -22,20 +24,36 @@ class RFPAgent:
     # JSON cleanup
     # =====================================================
 
-    def _clean_json_response(self, response_text):
-        if not isinstance(response_text, str):
+    def _clean_json_response(
+        self,
+        response_text,
+    ):
+        if not isinstance(
+            response_text,
+            str,
+        ):
             raise ValueError(
                 "RFP Agent response must be text."
             )
 
-        text = response_text.strip()
+        text = (
+            response_text
+            .strip()
+        )
 
-        if text.startswith("```json"):
+        if text.startswith(
+            "```json"
+        ):
             text = text[7:]
-        elif text.startswith("```"):
+
+        elif text.startswith(
+            "```"
+        ):
             text = text[3:]
 
-        if text.endswith("```"):
+        if text.endswith(
+            "```"
+        ):
             text = text[:-3]
 
         return text.strip()
@@ -44,12 +62,25 @@ class RFPAgent:
     # Boolean normalization
     # =====================================================
 
-    def _normalize_boolean(self, value):
-        if isinstance(value, bool):
+    def _normalize_boolean(
+        self,
+        value,
+    ):
+        if isinstance(
+            value,
+            bool,
+        ):
             return value
 
-        if isinstance(value, str):
-            normalized = value.strip().lower()
+        if isinstance(
+            value,
+            str,
+        ):
+            normalized = (
+                value
+                .strip()
+                .lower()
+            )
 
             if normalized in {
                 "true",
@@ -65,8 +96,16 @@ class RFPAgent:
             }:
                 return False
 
-        if isinstance(value, (int, float)):
-            return bool(value)
+        if isinstance(
+            value,
+            (
+                int,
+                float,
+            ),
+        ):
+            return bool(
+                value
+            )
 
         raise ValueError(
             f"Invalid boolean value: {value}"
@@ -76,16 +115,100 @@ class RFPAgent:
     # Weight source
     # =====================================================
 
-    def _normalize_weight_source(self, value):
-        if not isinstance(value, str):
+    def _normalize_weight_source(
+        self,
+        value,
+    ):
+        if not isinstance(
+            value,
+            str,
+        ):
             return "inferred"
 
-        value = value.strip().lower()
+        value = (
+            value
+            .strip()
+            .lower()
+        )
 
         if value == "explicit":
             return "explicit"
 
         return "inferred"
+
+    # =====================================================
+    # Mandatory gate validation
+    # =====================================================
+
+    def _has_strong_mandatory_evidence(
+        self,
+        evidence,
+    ):
+        """
+        Determine whether the evidence supports treating
+        a requirement as a true eligibility / pass-fail gate.
+
+        Important:
+        Generic contractual language such as:
+
+        - shall provide
+        - shall support
+        - shall integrate
+        - shall be
+
+        is NOT enough by itself to make the requirement
+        an eligibility gate.
+
+        These requirements remain valid scored requirements.
+        """
+
+        if not isinstance(
+            evidence,
+            str,
+        ):
+            return False
+
+        normalized = (
+            evidence
+            .strip()
+            .lower()
+        )
+
+        if not normalized:
+            return False
+
+        strong_indicators = [
+            "mandatory",
+            "must",
+            "required",
+            "minimum",
+            "compulsory",
+            "pass/fail",
+            "pass fail",
+            "eligibility",
+            "eligible",
+            "ineligible",
+            "not eligible",
+            "disqualify",
+            "disqualified",
+            "disqualification",
+            "shall not be considered",
+            "will not be considered",
+            "proposal will be rejected",
+            "proposal shall be rejected",
+            "failure to comply",
+            "failure to meet",
+            "condition of award",
+            "condition for award",
+            "prerequisite",
+        ]
+
+        return any(
+            indicator
+            in normalized
+            for indicator
+            in strong_indicators
+        )
 
     # =====================================================
     # Requirement normalization
@@ -99,9 +222,17 @@ class RFPAgent:
     ):
         """
         Normalize one atomic RFP requirement.
+
+        All requirements are preserved for scoring.
+
+        mandatory=True is reserved only for requirements
+        supported by explicit eligibility / pass-fail evidence.
         """
 
-        if not isinstance(requirement, dict):
+        if not isinstance(
+            requirement,
+            dict,
+        ):
             raise ValueError(
                 f"Criterion {criterion_index}, "
                 f"requirement {requirement_index} "
@@ -122,10 +253,12 @@ class RFPAgent:
             )
         ).strip()
 
-        mandatory = self._normalize_boolean(
-            requirement.get(
-                "mandatory",
-                False,
+        requested_mandatory = (
+            self._normalize_boolean(
+                requirement.get(
+                    "mandatory",
+                    False,
+                )
             )
         )
 
@@ -146,11 +279,42 @@ class RFPAgent:
         if not source:
             source = "Not Provided"
 
-        if mandatory and not mandatory_evidence:
-            raise ValueError(
-                f"Mandatory requirement '{text}' "
-                "does not contain mandatory_evidence."
-            )
+        # -------------------------------------------------
+        # Mandatory classification safety gate
+        # -------------------------------------------------
+        #
+        # The LLM may still occasionally over-classify
+        # generic "shall provide" wording as mandatory.
+        #
+        # Python enforces the stricter procurement meaning:
+        # mandatory = eligibility / pass-fail gate.
+        # -------------------------------------------------
+
+        mandatory = False
+
+        if requested_mandatory:
+            if self._has_strong_mandatory_evidence(
+                mandatory_evidence
+            ):
+                mandatory = True
+
+            else:
+                print(
+                    "Downgrading requirement from "
+                    "mandatory gate to scored requirement:"
+                )
+
+                print(
+                    f"- {text}"
+                )
+
+                print(
+                    "Evidence was not strong enough:"
+                )
+
+                print(
+                    f"- {mandatory_evidence or 'None'}"
+                )
 
         if not mandatory:
             mandatory_evidence = ""
@@ -159,14 +323,19 @@ class RFPAgent:
             "requirement": text,
             "source": source,
             "mandatory": mandatory,
-            "mandatory_evidence": mandatory_evidence,
+            "mandatory_evidence": (
+                mandatory_evidence
+            ),
         }
 
     # =====================================================
     # Weight validation
     # =====================================================
 
-    def _normalize_weights(self, criteria):
+    def _normalize_weights(
+        self,
+        criteria,
+    ):
         """
         Validate the total weight.
 
@@ -178,9 +347,12 @@ class RFPAgent:
 
         total_weight = sum(
             float(
-                criterion["weight"]
+                criterion[
+                    "weight"
+                ]
             )
-            for criterion in criteria
+            for criterion
+            in criteria
         )
 
         if total_weight <= 0:
@@ -189,14 +361,17 @@ class RFPAgent:
             )
 
         if abs(
-            total_weight - 100.0
+            total_weight -
+            100.0
         ) < 0.01:
             return criteria
 
         all_explicit = all(
-            criterion["weight_source"]
-            == "explicit"
-            for criterion in criteria
+            criterion[
+                "weight_source"
+            ] == "explicit"
+            for criterion
+            in criteria
         )
 
         if all_explicit:
@@ -217,9 +392,13 @@ class RFPAgent:
         )
 
         for criterion in criteria:
-            criterion["weight"] = round(
+            criterion[
+                "weight"
+            ] = round(
                 (
-                    criterion["weight"]
+                    criterion[
+                        "weight"
+                    ]
                     / total_weight
                 )
                 * 100,
@@ -227,18 +406,29 @@ class RFPAgent:
             )
 
         new_total = sum(
-            criterion["weight"]
-            for criterion in criteria
+            criterion[
+                "weight"
+            ]
+            for criterion
+            in criteria
         )
 
         difference = round(
-            100.0 - new_total,
+            100.0 -
+            new_total,
             2,
         )
 
-        if criteria and difference != 0:
-            criteria[-1]["weight"] = round(
-                criteria[-1]["weight"]
+        if (
+            criteria and
+            difference != 0
+        ):
+            criteria[-1][
+                "weight"
+            ] = round(
+                criteria[-1][
+                    "weight"
+                ]
                 + difference,
                 2,
             )
@@ -249,8 +439,14 @@ class RFPAgent:
     # Result validation
     # =====================================================
 
-    def _validate_result(self, data):
-        if not isinstance(data, dict):
+    def _validate_result(
+        self,
+        data,
+    ):
+        if not isinstance(
+            data,
+            dict,
+        ):
             raise ValueError(
                 "RFP Agent response must be a JSON object."
             )
@@ -279,7 +475,10 @@ class RFPAgent:
             "criteria"
         )
 
-        if not isinstance(criteria, list):
+        if not isinstance(
+            criteria,
+            list,
+        ):
             raise ValueError(
                 "RFP Agent response does not contain "
                 "a valid criteria list."
@@ -292,11 +491,17 @@ class RFPAgent:
 
         cleaned_criteria = []
 
-        for criterion_index, criterion in enumerate(
+        for (
+            criterion_index,
+            criterion,
+        ) in enumerate(
             criteria,
             start=1,
         ):
-            if not isinstance(criterion, dict):
+            if not isinstance(
+                criterion,
+                dict,
+            ):
                 raise ValueError(
                     f"Criterion {criterion_index} "
                     "must be an object."
@@ -335,6 +540,11 @@ class RFPAgent:
                     "has no description."
                 )
 
+            if not source:
+                source = (
+                    "Not Provided"
+                )
+
             # ---------------------------------------------
             # Weight
             # ---------------------------------------------
@@ -355,7 +565,11 @@ class RFPAgent:
                     "has an invalid weight."
                 ) from error
 
-            if not 0 <= weight <= 100:
+            if not (
+                0 <=
+                weight <=
+                100
+            ):
                 raise ValueError(
                     f"Criterion {criterion_index} "
                     "weight must be between 0 and 100."
@@ -373,9 +587,11 @@ class RFPAgent:
             # Requirements
             # ---------------------------------------------
 
-            requirements = criterion.get(
-                "requirements",
-                [],
+            requirements = (
+                criterion.get(
+                    "requirements",
+                    [],
+                )
             )
 
             if not isinstance(
@@ -389,7 +605,10 @@ class RFPAgent:
 
             normalized_requirements = []
 
-            for requirement_index, requirement in enumerate(
+            for (
+                requirement_index,
+                requirement,
+            ) in enumerate(
                 requirements,
                 start=1,
             ):
@@ -401,24 +620,47 @@ class RFPAgent:
                     )
                 )
 
-            if not normalized_requirements:
-                normalized_requirements = [
-                    {
-                        "requirement": "Not Provided",
-                        "source": source,
-                        "mandatory": False,
-                        "mandatory_evidence": "",
-                    }
-                ]
+            # -------------------------------------------------
+            # IMPORTANT
+            # -------------------------------------------------
+            #
+            # Do NOT create a fake "Not Provided" requirement
+            # when the RFP defines a criterion but does not
+            # provide detailed sub-requirements.
+            #
+            # Example:
+            #
+            # Evaluation Criteria:
+            # - Team Qualifications 10%
+            #
+            # If no specific team qualification threshold is
+            # stated elsewhere, requirements should remain [].
+            #
+            # The downstream criterion evaluator may still
+            # evaluate the proposal's team information, but the
+            # vendor must not be penalized for an invented RFP
+            # requirement.
+            # -------------------------------------------------
 
             cleaned_criteria.append(
                 {
                     "name": name,
-                    "description": description,
+
+                    "description": (
+                        description
+                    ),
+
                     "source": source,
+
                     "weight": weight,
-                    "weight_source": weight_source,
-                    "requirements": normalized_requirements,
+
+                    "weight_source": (
+                        weight_source
+                    ),
+
+                    "requirements": (
+                        normalized_requirements
+                    ),
                 }
             )
 
@@ -442,7 +684,9 @@ class RFPAgent:
             for requirement in criterion[
                 "requirements"
             ]:
-                requirement["id"] = (
+                requirement[
+                    "id"
+                ] = (
                     f"R{requirement_id:03d}"
                 )
 
@@ -460,26 +704,39 @@ class RFPAgent:
             for requirement in criterion[
                 "requirements"
             ]:
-                if requirement["mandatory"]:
+                if requirement[
+                    "mandatory"
+                ]:
                     mandatory_requirements.append(
                         {
                             "id": (
                                 f"M{mandatory_id:03d}"
                             ),
+
                             "requirement_id": (
-                                requirement["id"]
+                                requirement[
+                                    "id"
+                                ]
                             ),
+
                             "requirement": (
                                 requirement[
                                     "requirement"
                                 ]
                             ),
+
                             "criterion": (
-                                criterion["name"]
+                                criterion[
+                                    "name"
+                                ]
                             ),
+
                             "source": (
-                                requirement["source"]
+                                requirement[
+                                    "source"
+                                ]
                             ),
+
                             "mandatory_evidence": (
                                 requirement[
                                     "mandatory_evidence"
@@ -496,27 +753,45 @@ class RFPAgent:
 
         total_weight = round(
             sum(
-                criterion["weight"]
-                for criterion in cleaned_criteria
+                criterion[
+                    "weight"
+                ]
+                for criterion
+                in cleaned_criteria
             ),
             2,
         )
 
         return {
-            "rfp_summary": rfp_summary,
-            "criteria": cleaned_criteria,
-            "mandatory_requirements": mandatory_requirements,
+            "rfp_summary": (
+                rfp_summary
+            ),
+
+            "criteria": (
+                cleaned_criteria
+            ),
+
+            "mandatory_requirements": (
+                mandatory_requirements
+            ),
+
             "metadata": {
                 "criteria_count": len(
                     cleaned_criteria
                 ),
+
                 "requirement_count": (
-                    requirement_id - 1
+                    requirement_id -
+                    1
                 ),
+
                 "mandatory_requirement_count": len(
                     mandatory_requirements
                 ),
-                "total_weight": total_weight,
+
+                "total_weight": (
+                    total_weight
+                ),
             },
         }
 
@@ -524,7 +799,10 @@ class RFPAgent:
     # Main analysis
     # =====================================================
 
-    def analyze(self, rfp_text):
+    def analyze(
+        self,
+        rfp_text,
+    ):
         """
         Analyze RFP text extracted using
         OCI Document Understanding.
@@ -543,7 +821,10 @@ class RFPAgent:
                 "RFP text must be a string."
             )
 
-        rfp_text = rfp_text.strip()
+        rfp_text = (
+            rfp_text
+            .strip()
+        )
 
         if not rfp_text:
             raise ValueError(
@@ -597,10 +878,11 @@ EVALUATION CRITERIA
    - Set weight_source to "explicit".
 
 9. Requirements found elsewhere in the RFP must be mapped
-   into the most relevant evaluation criterion.
+   into the most relevant explicit evaluation criterion.
 
 10. A requirement does NOT become a separate evaluation
-    criterion merely because it appears in the RFP.
+    criterion merely because it appears in another RFP
+    section.
 
 11. Only when the RFP contains NO explicit evaluation
     criteria may you construct reasonable criteria.
@@ -610,27 +892,55 @@ EVALUATION CRITERIA
     "weight_source": "inferred"
 
 ==================================================
-ATOMIC REQUIREMENTS — CRITICAL
+IMPORTANT CONCEPTUAL DISTINCTION
 ==================================================
 
-13. EVERY requirement object must contain exactly ONE
+13. Distinguish between:
+
+A. SCORED REQUIREMENTS
+B. MANDATORY ELIGIBILITY GATES
+
+Most RFP requirements are scored requirements.
+
+A scored requirement contributes to the vendor's
+technical or commercial score.
+
+Failure to fully demonstrate a scored requirement may
+reduce the vendor's score, but DOES NOT automatically
+make the vendor ineligible.
+
+A mandatory eligibility gate is different.
+
+Failure to meet a mandatory gate may cause the vendor
+to be classified as not eligible.
+
+Therefore:
+
+DO NOT use mandatory=true merely because something is
+a requirement.
+
+==================================================
+ATOMIC REQUIREMENTS
+==================================================
+
+14. EVERY requirement object must contain exactly ONE
     independently testable requirement.
 
-14. NEVER combine multiple capabilities into one
+15. NEVER combine multiple capabilities into one
     requirement object.
 
 WRONG:
 
 {{
   "requirement":
-  "Cloud Enabled, Highly Available, API Enabled,
+  "Cloud Native, Highly Available, API Enabled,
    Mobile Accessible, Scalable"
 }}
 
 CORRECT:
 
 {{
-  "requirement": "Cloud Enabled"
+  "requirement": "Cloud Native"
 }}
 
 {{
@@ -649,172 +959,308 @@ CORRECT:
   "requirement": "Scalable"
 }}
 
-15. Lists appearing under one RFP sentence must still be
-    split into separate atomic requirements.
+16. Lists under one RFP sentence must still be split
+    into separate atomic requirements.
 
-For example:
+Example:
 
 "The platform shall provide:
-Patient Registration
-Electronic Medical Records
-Patient Portal"
+Traffic Monitoring
+Congestion Detection
+Traffic Forecasting"
 
-must become THREE separate requirement objects.
+must become THREE separate requirements.
 
-16. Each integration must be a separate requirement.
+17. Each integration must be separate.
 
-Example:
+18. Each security capability must be separate.
 
-- Laboratory Information Systems
-- Radiology Systems
-- Insurance Providers
-- Government Health Platforms
-- SMS Services
+19. Each functional capability must be separate.
 
-must become FIVE separate requirements.
+20. Each measurable non-functional target must be
+    separate.
 
-17. Each security capability must be separate.
-
-Example:
-
-- MFA
-- RBAC
-- Audit Logging
-- Data Encryption
-- Privacy Controls
-
-must become FIVE separate requirements.
-
-18. Each functional capability must also be separate.
-
-This atomic structure is required because later every
-vendor proposal will be scored requirement-by-requirement.
+This structure is required because vendor proposals
+will later be evaluated requirement-by-requirement.
 
 ==================================================
 REQUIREMENT STRUCTURE
 ==================================================
 
-19. Every requirement must contain:
+21. Every requirement must contain:
 
 - requirement
 - source
 - mandatory
 - mandatory_evidence
 
-20. Keep requirement wording concise and faithful to the
+22. Keep requirement wording concise and faithful to the
     original RFP.
 
-21. The source must identify the RFP section or heading.
+23. The source must identify the RFP section or heading.
+
+24. Do not create requirements that are not explicitly
+    supported by the RFP.
 
 ==================================================
-MANDATORY CLASSIFICATION
+MANDATORY CLASSIFICATION — CRITICAL
 ==================================================
 
-22. Mark mandatory=true ONLY when the RFP contains clear
-    language establishing that the requirement is
-    non-optional.
+25. In this system:
 
-Strong evidence includes:
+mandatory=true means:
 
-- shall
+"Failure to satisfy this requirement can make the
+vendor ineligible or cause a pass/fail failure."
+
+It does NOT simply mean:
+
+"The RFP expects this capability."
+
+26. Mark mandatory=true ONLY when the RFP contains clear
+    evidence of an eligibility threshold, mandatory gate,
+    minimum threshold, pass/fail condition, or explicit
+    required condition.
+
+Strong examples include wording such as:
+
+- mandatory
 - must
 - required
-- mandatory
 - compulsory
 - minimum
 - pass/fail
+- prerequisite
+- eligibility requirement
+- failure to comply will result in rejection
+- proposal will not be considered
+- vendor will be disqualified
+- condition of award
 
-23. Requirements under phrases such as:
+27. Generic obligation wording is NOT sufficient by
+    itself to create an eligibility gate.
 
-"The platform shall provide"
-"The solution shall support"
-"The platform shall integrate with"
-"The solution shall be"
+The following phrases normally describe scored RFP
+requirements:
 
-are mandatory.
+- shall provide
+- shall support
+- shall integrate with
+- shall include
+- shall enable
+- shall be
+- should provide
+- should support
 
-24. If mandatory=true, mandatory_evidence MUST contain the
-    short phrase from the RFP proving that classification.
+Therefore:
 
-Examples:
+"The platform shall provide Interactive Maps"
+
+should normally be:
+
+"mandatory": false
+
+unless the RFP separately states that Interactive Maps
+are a mandatory, minimum, pass/fail, eligibility, or
+disqualification condition.
+
+28. Do NOT make every item under Scope of Work or
+    Technical Requirements mandatory.
+
+They should still be extracted as scored requirements.
+
+29. Importance is NOT the same as mandatory eligibility.
+
+A requirement may be important and heavily influence
+the Technical Proposal score while still having:
+
+"mandatory": false
+
+30. If mandatory=true:
+
+mandatory_evidence MUST contain the short RFP wording
+that proves the eligibility / pass-fail classification.
+
+31. Do not use generic evidence such as:
 
 "shall provide"
 "shall support"
 "shall integrate with"
 "shall be"
-"Minimum 5 years"
 
-25. Do NOT classify something as mandatory merely because
-    it appears important.
+as the only mandatory_evidence.
+
+==================================================
+CRITERIA WITHOUT DETAILED REQUIREMENTS
+==================================================
+
+32. An explicit evaluation criterion may exist even when
+    the RFP provides no detailed sub-requirements.
+
+Example:
+
+Evaluation Criteria:
+
+- Team Qualifications 10%
+
+If the RFP does not state specific team thresholds,
+experience minimums, certifications, roles, or other
+detailed requirements:
+
+return:
+
+"requirements": []
+
+DO NOT create:
+
+"requirement": "Not Provided"
+
+DO NOT invent a team qualification requirement.
+
+DO NOT treat the absence of detailed RFP requirements as
+a vendor deficiency.
+
+The criterion may still be evaluated later using proposal
+information relevant to the criterion.
 
 ==================================================
 NON-FUNCTIONAL REQUIREMENTS
 ==================================================
 
-26. Include measurable or stated non-functional
-    requirements such as:
+33. Include stated non-functional requirements such as:
 
 - availability
 - scalability
 - performance
 - reliability
+- disaster recovery
 
-27. Do not automatically mark them mandatory unless the
-    RFP wording clearly makes them mandatory.
+34. Preserve measurable targets exactly.
+
+Example:
+
+"99.95% Availability"
+
+35. Do NOT classify a non-functional target as an
+    eligibility gate unless the RFP explicitly makes
+    failure to meet it disqualifying, minimum, mandatory,
+    required, or pass/fail.
 
 ==================================================
 FINANCIAL REQUIREMENTS
 ==================================================
 
-28. Financial information must be mapped to the
+36. Financial information must be mapped to the
     Financial Proposal criterion.
 
-29. Preserve qualifiers exactly.
+37. Preserve qualifiers exactly.
 
 Examples:
 
 "Estimated Budget"
 "Maximum Budget"
-"Not-to-Exceed"
+"Not-to-Exceed Budget"
 
-30. Never turn:
+38. Never transform:
 
-"Estimated Budget: SAR 4,500,000"
+"Estimated Budget: SAR 5,000,000"
 
 into:
 
-"Proposal must not exceed SAR 4,500,000"
+"Proposal must not exceed SAR 5,000,000"
 
 unless the RFP explicitly states that.
 
+39. An estimated budget is normally a scored commercial
+    reference, not an automatic eligibility gate.
+
 ==================================================
-VENDOR QUALIFICATIONS
+VENDOR EXPERIENCE
 ==================================================
 
-31. Vendor qualification requirements must be mapped to
-    the relevant explicit evaluation criterion.
+40. Experience requirements must be mapped to the
+    relevant explicit evaluation criterion.
 
-32. "Minimum X years" is mandatory because the word
-    "Minimum" explicitly establishes a threshold.
+41. If the RFP only lists:
 
-33. Other qualifications are mandatory only when the
-    source wording establishes that.
+"Smart City Experience - 20%"
+
+and does not provide a minimum number of years,
+minimum projects, references, or other threshold:
+
+do not invent those requirements.
+
+The criterion may have:
+
+"requirements": []
+
+or only requirements explicitly found elsewhere.
+
+==================================================
+TEAM QUALIFICATIONS
+==================================================
+
+42. Team qualification requirements must be mapped to the
+    Team Qualifications criterion.
+
+43. If the RFP contains only:
+
+"Team Qualifications - 10%"
+
+and no specific team qualification requirements:
+
+return an empty requirements list for that criterion.
+
+Do not create a fake "Not Provided" requirement.
+
+44. If the RFP states:
+
+"Minimum 5 years of experience"
+
+then that requirement may be mandatory because
+"Minimum" establishes a threshold.
 
 ==================================================
 WEIGHTS
 ==================================================
 
-34. Preserve explicit RFP evaluation weights exactly.
+45. Preserve explicit RFP evaluation weights exactly.
 
-35. Set:
+46. Set:
 
 "weight_source": "explicit"
 
-when the weight is stated by the RFP.
+when the weight is explicitly stated by the RFP.
 
-36. Only infer weights if the RFP does not provide them.
+47. Only infer weights if the RFP does not provide them.
 
-37. Python will perform final mathematical validation.
+48. Python will perform final mathematical validation.
+
+==================================================
+QUALITY CONTROL BEFORE OUTPUT
+==================================================
+
+49. Before returning JSON, review every requirement marked
+    mandatory=true.
+
+Ask:
+
+"If a vendor fails this requirement, does the RFP
+clearly indicate that the vendor may be rejected,
+disqualified, fail a pass/fail gate, or fail an explicit
+minimum/required condition?"
+
+If NO:
+
+change mandatory to false.
+
+50. A high number of mandatory requirements should be
+    treated with caution.
+
+Do not assume that most requirements are eligibility
+gates unless the RFP explicitly supports that conclusion.
+
+51. Never invent evidence.
 
 ==================================================
 OUTPUT
@@ -835,24 +1281,33 @@ Use this exact structure:
     {{
       "name": "Technical Proposal",
       "description": "What this criterion evaluates",
-      "source": "Section 11 - Evaluation Criteria",
+      "source": "Section 10 - Evaluation Criteria",
       "weight": 50,
       "weight_source": "explicit",
 
       "requirements": [
         {{
-          "requirement": "Cloud Enabled",
+          "requirement": "Cloud Native",
           "source": "Section 5 - Technical Requirements",
-          "mandatory": true,
-          "mandatory_evidence": "shall be"
+          "mandatory": false,
+          "mandatory_evidence": ""
         }},
         {{
-          "requirement": "Highly Available",
-          "source": "Section 5 - Technical Requirements",
-          "mandatory": true,
-          "mandatory_evidence": "shall be"
+          "requirement": "99.95% Availability",
+          "source": "Section 6 - Non-Functional Requirements",
+          "mandatory": false,
+          "mandatory_evidence": ""
         }}
       ]
+    }},
+
+    {{
+      "name": "Team Qualifications",
+      "description": "Evaluation of proposed team qualifications",
+      "source": "Section 10 - Evaluation Criteria",
+      "weight": 10,
+      "weight_source": "explicit",
+      "requirements": []
     }}
   ]
 }}

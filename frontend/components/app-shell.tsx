@@ -1,6 +1,7 @@
 'use client'
 
 import { AppHeader } from '@/components/app-header'
+import { LanguageProvider } from '@/lib/i18n/context'
 
 export function AppShell({
   children,
@@ -8,12 +9,14 @@ export function AppShell({
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-dvh w-full bg-background">
-      <AppHeader />
+    <LanguageProvider>
+      <div className="min-h-dvh w-full bg-background">
+        <AppHeader />
 
-      <main className="min-h-[calc(100dvh-72px)]">
-        {children}
-      </main>
-    </div>
+        <main className="min-h-[calc(100dvh-72px)]">
+          {children}
+        </main>
+      </div>
+    </LanguageProvider>
   )
 }

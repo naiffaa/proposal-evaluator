@@ -1,12 +1,19 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
+
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+
 import {
   Bell,
   ChevronDown,
   CircleHelp,
+  Languages,
   LogOut,
   Menu,
   Settings,
@@ -15,22 +22,12 @@ import {
 } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
+import { useLanguage } from '@/lib/i18n/context'
 
 
 interface AppHeaderProps {
   onOpenMobileNav?: () => void
 }
-
-
-const desktopNavItems = [
-  { label: 'Home', href: '/' },
-  { label: 'New Evaluation', href: '/evaluations/new' },
-  { label: 'Evaluations', href: '/evaluations' },
-  { label: 'RFP Analysis', href: '/rfp-analysis' },
-  { label: 'Vendor Comparison', href: '/comparison' },
-  { label: 'Compliance', href: '/compliance' },
-  { label: 'Reports', href: '/reports' },
-]
 
 
 function isActivePath(
@@ -41,23 +38,39 @@ function isActivePath(
     return pathname === '/'
   }
 
-  if (href === '/evaluations/new') {
-    return pathname === '/evaluations/new'
+  if (
+    href ===
+    '/evaluations/new'
+  ) {
+    return (
+      pathname ===
+      '/evaluations/new'
+    )
   }
 
-  if (href === '/evaluations') {
+  if (
+    href ===
+    '/evaluations'
+  ) {
     return (
-      pathname === '/evaluations' ||
+      pathname ===
+        '/evaluations' ||
       (
-        pathname.startsWith('/evaluations/') &&
-        !pathname.startsWith('/evaluations/new')
+        pathname.startsWith(
+          '/evaluations/',
+        ) &&
+        !pathname.startsWith(
+          '/evaluations/new',
+        )
       )
     )
   }
 
   return (
     pathname === href ||
-    pathname.startsWith(`${href}/`)
+    pathname.startsWith(
+      `${href}/`,
+    )
   )
 }
 
@@ -65,7 +78,16 @@ function isActivePath(
 export function AppHeader({
   onOpenMobileNav,
 }: AppHeaderProps) {
-  const pathname = usePathname()
+  const pathname =
+    usePathname()
+
+  const {
+    t,
+    language,
+    toggleLanguage,
+    isArabic,
+  } = useLanguage()
+
 
   const isHome =
     pathname === '/'
@@ -81,6 +103,27 @@ export function AppHeader({
 
   const menuRef =
     useRef<HTMLDivElement>(null)
+
+
+  const desktopNavItems = [
+    {
+      label: t.header.home,
+      href: '/',
+      width: 'min-w-[140px]',
+    },
+    {
+      label:
+        t.header.newEvaluation,
+      href: '/evaluations/new',
+      width: 'min-w-[170px]',
+    },
+    {
+      label:
+        t.header.evaluations,
+      href: '/evaluations',
+      width: 'min-w-[155px]',
+    },
+  ]
 
 
   useEffect(() => {
@@ -99,7 +142,9 @@ export function AppHeader({
     window.addEventListener(
       'scroll',
       handleScroll,
-      { passive: true },
+      {
+        passive: true,
+      },
     )
 
     return () => {
@@ -140,7 +185,8 @@ export function AppHeader({
 
 
   const darkHeader =
-    isHome && !isScrolled
+    isHome &&
+    !isScrolled
 
 
   return (
@@ -163,25 +209,40 @@ export function AppHeader({
         style={
           darkHeader
             ? {
-                backgroundColor: '#161F56',
+                backgroundColor:
+                  '#161F56',
 
-                backgroundImage: `
-                  linear-gradient(
-                    to right,
-                    rgba(22, 31, 86, 0) 0%,
-                    rgba(22, 31, 86, 0.08) 30%,
-                    rgba(22, 31, 86, 0.35) 55%,
-                    rgba(22, 31, 86, 0.72) 78%,
-                    #161F56 100%
-                  ),
-                  url("/images/navbar-bg.png")
-                `,
+                backgroundImage: isArabic
+                  ? `
+                    linear-gradient(
+                      to left,
+                      rgba(22, 31, 86, 0) 0%,
+                      rgba(22, 31, 86, 0.08) 30%,
+                      rgba(22, 31, 86, 0.35) 55%,
+                      rgba(22, 31, 86, 0.72) 78%,
+                      #161F56 100%
+                    ),
+                    url("/images/navbar-bg.png")
+                  `
+                  : `
+                    linear-gradient(
+                      to right,
+                      rgba(22, 31, 86, 0) 0%,
+                      rgba(22, 31, 86, 0.08) 30%,
+                      rgba(22, 31, 86, 0.35) 55%,
+                      rgba(22, 31, 86, 0.72) 78%,
+                      #161F56 100%
+                    ),
+                    url("/images/navbar-bg.png")
+                  `,
 
                 backgroundSize:
                   '340px 100%, 340px 100%',
 
                 backgroundPosition:
-                  'left center, left center',
+                  isArabic
+                    ? 'right center, right center'
+                    : 'left center, left center',
 
                 backgroundRepeat:
                   'no-repeat, no-repeat',
@@ -205,6 +266,7 @@ export function AppHeader({
               className="h-[62px] w-[62px] shrink-0 object-contain"
             />
 
+
             <div className="hidden min-w-0 leading-tight md:block">
 
               <p
@@ -222,19 +284,23 @@ export function AppHeader({
                     : 'text-[#161F56]',
                 )}
               >
-                KSF Proposal Evaluation
+                {t.header.brand}
               </p>
 
               <p
                 className={cn(
-                  'mt-1 text-xs transition-colors',
+                  `
+                    mt-1
+                    text-xs
+                    transition-colors
+                  `,
 
                   darkHeader
                     ? 'text-white/70'
                     : 'text-muted-foreground',
                 )}
               >
-                Portal
+                {t.header.portal}
               </p>
 
             </div>
@@ -246,7 +312,7 @@ export function AppHeader({
 
           <nav className="hidden min-w-0 flex-1 items-center justify-center lg:flex">
 
-            <div className="flex min-w-0 items-center gap-1">
+            <div className="flex min-w-0 items-center gap-3">
 
               {desktopNavItems.map(
                 (item) => {
@@ -262,24 +328,48 @@ export function AppHeader({
                       href={item.href}
                       className={cn(
                         `
+                          flex
+                          items-center
+                          justify-center
                           whitespace-nowrap
-                          rounded-md
-                          px-3
-                          py-2.5
-                          text-[13px]
+                          rounded-xl
+                          px-6
+                          py-3
+                          text-[14px]
                           font-medium
                           leading-none
                           transition-all
                           duration-200
+                          ease-out
                         `,
+
+                        item.width,
 
                         active
                           ? darkHeader
-                            ? 'bg-white/15 text-white'
-                            : 'bg-[#161F56] text-white'
+                            ? `
+                                bg-white/15
+                                text-white
+                                shadow-sm
+                              `
+                            : `
+                                bg-[#161F56]
+                                text-white
+                                shadow-[0_6px_18px_rgba(22,31,86,0.18)]
+                              `
                           : darkHeader
-                            ? 'text-white/80 hover:bg-white/10 hover:text-white'
-                            : 'text-slate-600 hover:bg-slate-100 hover:text-[#161F56]',
+                            ? `
+                                text-white/80
+                                hover:-translate-y-[1px]
+                                hover:bg-white/10
+                                hover:text-white
+                              `
+                            : `
+                                text-slate-600
+                                hover:-translate-y-[1px]
+                                hover:bg-[#F3F6FC]
+                                hover:text-[#161F56]
+                              `,
                       )}
                     >
                       {item.label}
@@ -295,12 +385,67 @@ export function AppHeader({
 
           {/* RIGHT SIDE */}
 
-          <div className="ml-auto flex shrink-0 items-center gap-1">
+          <div className="ms-auto flex shrink-0 items-center gap-1">
+
+            {/* LANGUAGE BUTTON */}
+
+            <button
+              type="button"
+              onClick={
+                toggleLanguage
+              }
+              className={cn(
+                `
+                  me-1
+                  flex
+                  items-center
+                  gap-2
+                  rounded-lg
+                  px-3
+                  py-2
+                  text-sm
+                  font-medium
+                  transition-all
+                  duration-200
+                `,
+
+                darkHeader
+                  ? `
+                      text-white/85
+                      hover:bg-white/10
+                      hover:text-white
+                    `
+                  : `
+                      text-slate-600
+                      hover:bg-[#F3F6FC]
+                      hover:text-[#161F56]
+                    `,
+              )}
+              aria-label={
+                t.common.language
+              }
+              title={
+                t.common.language
+              }
+            >
+              <Languages className="size-4" />
+
+              <span className="hidden sm:inline">
+                {language === 'en'
+                  ? 'العربية'
+                  : 'English'}
+              </span>
+            </button>
+
 
             <HeaderIconButton
-              label="Notifications"
+              label={
+                t.header.notifications
+              }
               badge
-              darkHeader={darkHeader}
+              darkHeader={
+                darkHeader
+              }
             >
               <Bell className="size-5" />
             </HeaderIconButton>
@@ -309,7 +454,7 @@ export function AppHeader({
             {/* USER */}
 
             <div
-              className="relative ml-1"
+              className="relative ms-1"
               ref={menuRef}
             >
 
@@ -317,7 +462,8 @@ export function AppHeader({
                 type="button"
                 onClick={() =>
                   setMenuOpen(
-                    (value) => !value,
+                    (value) =>
+                      !value,
                   )
                 }
                 className={cn(
@@ -325,17 +471,24 @@ export function AppHeader({
                     flex
                     items-center
                     gap-1.5
-                    rounded-md
+                    rounded-lg
                     p-1
-                    transition-colors
+                    transition-all
+                    duration-200
                   `,
 
                   darkHeader
-                    ? 'hover:bg-white/10'
-                    : 'hover:bg-slate-100',
+                    ? `
+                        hover:bg-white/10
+                      `
+                    : `
+                        hover:bg-[#F3F6FC]
+                      `,
                 )}
                 aria-haspopup="menu"
-                aria-expanded={menuOpen}
+                aria-expanded={
+                  menuOpen
+                }
               >
 
                 <span
@@ -352,12 +505,19 @@ export function AppHeader({
                     `,
 
                     darkHeader
-                      ? 'bg-white text-[#161F56]'
-                      : 'bg-[#161F56] text-white',
+                      ? `
+                          bg-white
+                          text-[#161F56]
+                        `
+                      : `
+                          bg-[#161F56]
+                          text-white
+                        `,
                   )}
                 >
                   NA
                 </span>
+
 
                 <ChevronDown
                   className={cn(
@@ -381,28 +541,32 @@ export function AppHeader({
               {menuOpen && (
                 <div
                   role="menu"
-                  className="
-                    absolute
-                    right-0
-                    top-[calc(100%+10px)]
-                    w-60
-                    overflow-hidden
-                    rounded-xl
-                    border
-                    border-border
-                    bg-white
-                    shadow-[0_16px_40px_rgba(22,31,86,0.15)]
-                  "
+                  className={cn(
+                    `
+                      absolute
+                      top-[calc(100%+10px)]
+                      w-60
+                      overflow-hidden
+                      rounded-xl
+                      border
+                      border-border
+                      bg-white
+                      shadow-[0_16px_40px_rgba(22,31,86,0.15)]
+                    `,
+                    isArabic
+                      ? 'left-0'
+                      : 'right-0',
+                  )}
                 >
 
                   <div className="border-b border-border p-4">
 
                     <p className="text-sm font-semibold text-foreground">
-                      Naifa Alarifi
+                      {t.header.userName}
                     </p>
 
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      Procurement Analyst
+                      {t.header.userRole}
                     </p>
 
                   </div>
@@ -412,18 +576,24 @@ export function AppHeader({
 
                     <MenuLink
                       icon={User}
-                      label="Profile"
+                      label={
+                        t.header.profile
+                      }
                     />
 
                     <MenuLink
                       icon={Settings}
-                      label="Settings"
+                      label={
+                        t.header.settings
+                      }
                       href="/settings"
                     />
 
                     <MenuLink
                       icon={CircleHelp}
-                      label="Help & Support"
+                      label={
+                        t.header.helpSupport
+                      }
                     />
 
                   </div>
@@ -433,7 +603,9 @@ export function AppHeader({
 
                     <MenuLink
                       icon={LogOut}
-                      label="Sign out"
+                      label={
+                        t.header.signOut
+                      }
                       tone="danger"
                     />
 
@@ -445,15 +617,19 @@ export function AppHeader({
             </div>
 
 
-            {/* MOBILE MENU */}
+            {/* MOBILE MENU BUTTON */}
 
             <button
               type="button"
               onClick={() => {
-                if (onOpenMobileNav) {
+                if (
+                  onOpenMobileNav
+                ) {
                   onOpenMobileNav()
                 } else {
-                  setMobileOpen(true)
+                  setMobileOpen(
+                    true,
+                  )
                 }
               }}
               className={cn(
@@ -462,16 +638,24 @@ export function AppHeader({
                   size-9
                   items-center
                   justify-center
-                  rounded-md
+                  rounded-lg
                   transition-colors
                   lg:hidden
                 `,
 
                 darkHeader
-                  ? 'text-white hover:bg-white/10'
-                  : 'text-[#161F56] hover:bg-slate-100',
+                  ? `
+                      text-white
+                      hover:bg-white/10
+                    `
+                  : `
+                      text-[#161F56]
+                      hover:bg-[#F3F6FC]
+                    `,
               )}
-              aria-label="Open navigation"
+              aria-label={
+                t.header.openNavigation
+              }
             >
               <Menu className="size-5" />
             </button>
@@ -491,17 +675,53 @@ export function AppHeader({
 
             <button
               type="button"
-              aria-label="Close navigation"
-              className="absolute inset-0 bg-[#161F56]/40 backdrop-blur-sm"
+              aria-label={
+                t.header.closeNavigation
+              }
+              className="
+                absolute
+                inset-0
+                bg-[#161F56]/40
+                backdrop-blur-sm
+              "
               onClick={() =>
-                setMobileOpen(false)
+                setMobileOpen(
+                  false,
+                )
               }
             />
 
 
-            <div className="absolute right-0 top-0 flex h-full w-[320px] max-w-[90vw] flex-col bg-white shadow-2xl">
+            <div
+              className={cn(
+                `
+                  absolute
+                  top-0
+                  flex
+                  h-full
+                  w-[320px]
+                  max-w-[90vw]
+                  flex-col
+                  bg-white
+                  shadow-2xl
+                `,
+                isArabic
+                  ? 'left-0'
+                  : 'right-0',
+              )}
+            >
 
-              <div className="flex h-[82px] items-center justify-between border-b border-border px-5">
+              <div
+                className="
+                  flex
+                  h-[82px]
+                  items-center
+                  justify-between
+                  border-b
+                  border-border
+                  px-5
+                "
+              >
 
                 <div className="flex items-center gap-3">
 
@@ -514,11 +734,11 @@ export function AppHeader({
                   <div className="leading-tight">
 
                     <p className="text-sm font-semibold text-[#161F56]">
-                      KSF Proposal Evaluation
+                      {t.header.brand}
                     </p>
 
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Portal
+                      {t.header.portal}
                     </p>
 
                   </div>
@@ -529,19 +749,24 @@ export function AppHeader({
                 <button
                   type="button"
                   onClick={() =>
-                    setMobileOpen(false)
+                    setMobileOpen(
+                      false,
+                    )
                   }
                   className="
                     flex
                     size-9
                     items-center
                     justify-center
-                    rounded-md
+                    rounded-lg
                     text-muted-foreground
+                    transition-colors
                     hover:bg-muted
                     hover:text-foreground
                   "
-                  aria-label="Close navigation"
+                  aria-label={
+                    t.header.closeNavigation
+                  }
                 >
                   <X className="size-5" />
                 </button>
@@ -551,7 +776,7 @@ export function AppHeader({
 
               <nav className="flex-1 overflow-y-auto p-4">
 
-                <ul className="flex flex-col gap-1">
+                <ul className="flex flex-col gap-2">
 
                   {desktopNavItems.map(
                     (item) => {
@@ -567,23 +792,33 @@ export function AppHeader({
                           <Link
                             href={item.href}
                             onClick={() =>
-                              setMobileOpen(false)
+                              setMobileOpen(
+                                false,
+                              )
                             }
                             className={cn(
                               `
                                 flex
                                 items-center
-                                rounded-md
+                                rounded-lg
                                 px-4
                                 py-3
                                 text-sm
                                 font-medium
-                                transition-colors
+                                transition-all
+                                duration-200
                               `,
 
                               active
-                                ? 'bg-[#161F56] text-white'
-                                : 'text-muted-foreground hover:bg-muted hover:text-[#161F56]',
+                                ? `
+                                    bg-[#161F56]
+                                    text-white
+                                  `
+                                : `
+                                    text-muted-foreground
+                                    hover:bg-[#F3F6FC]
+                                    hover:text-[#161F56]
+                                  `,
                             )}
                           >
                             {item.label}
@@ -596,6 +831,40 @@ export function AppHeader({
 
                 </ul>
 
+
+                <div className="mt-4 border-t border-border pt-4">
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      toggleLanguage()
+                      setMobileOpen(false)
+                    }}
+                    className="
+                      flex
+                      w-full
+                      items-center
+                      gap-3
+                      rounded-lg
+                      px-4
+                      py-3
+                      text-sm
+                      font-medium
+                      text-muted-foreground
+                      transition-colors
+                      hover:bg-[#F3F6FC]
+                      hover:text-[#161F56]
+                    "
+                  >
+                    <Languages className="size-4" />
+
+                    {language === 'en'
+                      ? 'العربية'
+                      : 'English'}
+                  </button>
+
+                </div>
+
               </nav>
 
             </div>
@@ -607,6 +876,10 @@ export function AppHeader({
   )
 }
 
+
+/* ========================================== */
+/* HEADER ICON BUTTON */
+/* ========================================== */
 
 function HeaderIconButton({
   children,
@@ -630,18 +903,27 @@ function HeaderIconButton({
           size-9
           items-center
           justify-center
-          rounded-md
+          rounded-lg
           transition-all
           duration-300
         `,
 
         darkHeader
-          ? 'text-white/80 hover:bg-white/10 hover:text-white'
-          : 'text-slate-500 hover:bg-slate-100 hover:text-[#161F56]',
+          ? `
+              text-white/80
+              hover:bg-white/10
+              hover:text-white
+            `
+          : `
+              text-slate-500
+              hover:bg-[#F3F6FC]
+              hover:text-[#161F56]
+            `,
       )}
     >
 
       {children}
+
 
       {badge && (
         <span
@@ -667,6 +949,10 @@ function HeaderIconButton({
 }
 
 
+/* ========================================== */
+/* MENU LINK */
+/* ========================================== */
+
 function MenuLink({
   icon: Icon,
   label,
@@ -678,24 +964,32 @@ function MenuLink({
   href?: string
   tone?: 'default' | 'danger'
 }) {
-  const className = cn(
-    `
-      flex
-      w-full
-      items-center
-      gap-2.5
-      rounded-md
-      px-3
-      py-2
-      text-sm
-      font-medium
-      transition-colors
-    `,
+  const className =
+    cn(
+      `
+        flex
+        w-full
+        items-center
+        gap-2.5
+        rounded-lg
+        px-3
+        py-2
+        text-sm
+        font-medium
+        transition-colors
+      `,
 
-    tone === 'danger'
-      ? 'text-danger hover:bg-danger-muted'
-      : 'text-foreground hover:bg-muted',
-  )
+      tone === 'danger'
+        ? `
+            text-danger
+            hover:bg-danger-muted
+          `
+        : `
+            text-foreground
+            hover:bg-muted
+          `,
+    )
+
 
   const content = (
     <>

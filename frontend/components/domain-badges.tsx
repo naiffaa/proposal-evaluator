@@ -1,11 +1,15 @@
+'use client'
+
 import { Badge } from '@/components/ui/badge'
 
 import {
-  evaluationStatusLabel,
-  matchStatusLabel,
-  recommendationStatusLabel,
-  riskLevelLabel,
+  getEvaluationStatusLabel,
+  getMatchStatusLabel,
+  getRecommendationStatusLabel,
+  getRiskLevelLabel,
 } from '@/lib/labels'
+
+import { useLanguage } from '@/lib/i18n/context'
 
 import type {
   EvaluationStatus,
@@ -42,13 +46,19 @@ export function StatusBadge({
   status: EvaluationStatus
   size?: 'sm' | 'md'
 }) {
+  const { language } =
+    useLanguage()
+
   return (
     <Badge
       tone={statusTone[status]}
       size={size}
       dot
     >
-      {evaluationStatusLabel[status]}
+      {getEvaluationStatusLabel(
+        status,
+        language,
+      )}
     </Badge>
   )
 }
@@ -71,13 +81,26 @@ export function RiskBadge({
   risk: RiskLevel
   size?: 'sm' | 'md'
 }) {
+  const {
+    language,
+    isArabic,
+  } = useLanguage()
+
   return (
     <Badge
       tone={riskTone[risk]}
       size={size}
       dot
     >
-      {riskLevelLabel[risk]} Risk
+      {isArabic
+        ? `مخاطر ${getRiskLevelLabel(
+            risk,
+            language,
+          )}`
+        : `${getRiskLevelLabel(
+            risk,
+            language,
+          )} Risk`}
     </Badge>
   )
 }
@@ -90,6 +113,9 @@ export function EligibilityBadge({
   eligible: boolean
   size?: 'sm' | 'md'
 }) {
+  const { isArabic } =
+    useLanguage()
+
   return (
     <Badge
       tone={
@@ -101,8 +127,12 @@ export function EligibilityBadge({
       dot
     >
       {eligible
-        ? 'Eligible'
-        : 'Not Eligible'}
+        ? isArabic
+          ? 'مؤهل'
+          : 'Eligible'
+        : isArabic
+          ? 'غير مؤهل'
+          : 'Not Eligible'}
     </Badge>
   )
 }
@@ -126,12 +156,18 @@ export function MatchBadge({
   status: RequirementMatchStatus
   size?: 'sm' | 'md'
 }) {
+  const { language } =
+    useLanguage()
+
   return (
     <Badge
       tone={matchTone[status]}
       size={size}
     >
-      {matchStatusLabel[status]}
+      {getMatchStatusLabel(
+        status,
+        language,
+      )}
     </Badge>
   )
 }
@@ -159,19 +195,23 @@ export function RecommendationBadge({
   status: RecommendationStatus
   size?: 'sm' | 'md'
 }) {
+  const { language } =
+    useLanguage()
+
   return (
     <Badge
       tone={
-        recommendationTone[status]
+        recommendationTone[
+          status
+        ]
       }
       size={size}
       dot
     >
-      {
-        recommendationStatusLabel[
-          status
-        ]
-      }
+      {getRecommendationStatusLabel(
+        status,
+        language,
+      )}
     </Badge>
   )
 }
@@ -182,6 +222,9 @@ export function MandatoryBadge({
 }: {
   mandatory: boolean
 }) {
+  const { isArabic } =
+    useLanguage()
+
   return (
     <Badge
       tone={
@@ -192,8 +235,12 @@ export function MandatoryBadge({
       size="sm"
     >
       {mandatory
-        ? 'Mandatory'
-        : 'Optional'}
+        ? isArabic
+          ? 'إلزامي'
+          : 'Mandatory'
+        : isArabic
+          ? 'اختياري'
+          : 'Optional'}
     </Badge>
   )
 }
