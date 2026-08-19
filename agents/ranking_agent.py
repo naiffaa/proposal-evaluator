@@ -30,8 +30,8 @@ class RankingAgent:
         response_text,
     ):
         """
-        Clean common Markdown wrappers before
-        parsing the LLM response.
+        Remove common Markdown wrappers from the
+        model response.
         """
 
         if not isinstance(
@@ -43,25 +43,241 @@ class RankingAgent:
             )
 
         cleaned = (
-            response_text.strip()
+            response_text
+            .strip()
         )
 
         if cleaned.startswith(
             "```json"
         ):
-            cleaned = cleaned[7:]
+            cleaned = (
+                cleaned[7:]
+            )
 
         elif cleaned.startswith(
             "```"
         ):
-            cleaned = cleaned[3:]
+            cleaned = (
+                cleaned[3:]
+            )
 
         if cleaned.endswith(
             "```"
         ):
-            cleaned = cleaned[:-3]
+            cleaned = (
+                cleaned[:-3]
+            )
 
-        return cleaned.strip()
+        return (
+            cleaned.strip()
+        )
+
+    # =====================================================
+    # Parse JSON
+    # =====================================================
+
+    def _parse_json(
+        self,
+        response_text,
+    ):
+        """
+        Parse one model response as JSON.
+
+        Returns:
+        - parsed dictionary
+        - cleaned raw JSON text
+        """
+
+        cleaned = (
+            self._clean_json_response(
+                response_text
+            )
+        )
+
+        try:
+            parsed = json.loads(
+                cleaned
+            )
+
+        except json.JSONDecodeError as error:
+            return (
+                None,
+                cleaned,
+                error,
+            )
+
+        if not isinstance(
+            parsed,
+            dict,
+        ):
+            return (
+                None,
+                cleaned,
+                ValueError(
+                    "Ranking Agent result must be an object."
+                ),
+            )
+
+        return (
+            parsed,
+            cleaned,
+            None,
+        )
+
+    # =====================================================
+    # JSON repair retry
+    # =====================================================
+
+    def _repair_invalid_json(
+        self,
+        invalid_response,
+    ):
+        """
+        Ask OCI Generative AI to repair malformed JSON.
+
+        Important:
+        - No values may be changed.
+        - No scores may be changed.
+        - No vendor names may be changed.
+        - Only JSON syntax / structure may be repaired.
+        """
+
+        repair_prompt = f"""
+You are a JSON syntax repair assistant.
+
+The following response was intended to be valid JSON,
+but its JSON syntax is malformed.
+
+Your ONLY task is to repair the JSON syntax.
+
+==================================================
+STRICT RULES
+==================================================
+
+1. Do NOT change any factual content.
+
+2. Do NOT change any vendor name.
+
+3. Do NOT change any numerical score.
+
+4. Do NOT change any ranking.
+
+5. Do NOT change any compliance or eligibility decision.
+
+6. Do NOT add new analysis.
+
+7. Do NOT remove analysis.
+
+8. Preserve every existing string value as closely as
+   possible.
+
+9. Only repair JSON syntax problems such as:
+
+- missing commas
+- missing closing brackets
+- missing closing braces
+- malformed array boundaries
+- malformed object boundaries
+- accidental Markdown code fences
+
+10. Return ONLY valid JSON.
+
+11. Do not use Markdown.
+
+12. Do not use code fences.
+
+==================================================
+MALFORMED JSON
+==================================================
+
+{invalid_response}
+"""
+
+        repaired_response = (
+            self.llm.ask(
+                repair_prompt
+            )
+        )
+
+        (
+            repaired_json,
+            cleaned_repaired,
+            repair_error,
+        ) = self._parse_json(
+            repaired_response
+        )
+
+        if repair_error is not None:
+            raise ValueError(
+                "Ranking Agent returned invalid JSON "
+                "and the JSON repair retry also failed."
+                "\n\n"
+                "Original response:\n"
+                f"{invalid_response}"
+                "\n\n"
+                "Repair response:\n"
+                f"{cleaned_repaired}"
+            ) from repair_error
+
+        return repaired_json
+
+    # =====================================================
+    # Get valid narrative JSON
+    # =====================================================
+
+    def _get_valid_narrative(
+        self,
+        prompt,
+    ):
+        """
+        Ask the ranking model for JSON.
+
+        If the first response contains malformed JSON,
+        perform one dedicated syntax-repair retry.
+        """
+
+        response_text = (
+            self.llm.ask(
+                prompt
+            )
+        )
+
+        (
+            narrative,
+            cleaned_response,
+            parse_error,
+        ) = self._parse_json(
+            response_text
+        )
+
+        if parse_error is None:
+            return narrative
+
+        print(
+            "\n================================"
+        )
+
+        print(
+            "RANKING JSON PARSE WARNING"
+        )
+
+        print(
+            "================================"
+        )
+
+        print(
+            "Ranking Agent returned malformed JSON."
+        )
+
+        print(
+            "Attempting one JSON repair retry..."
+        )
+
+        return (
+            self._repair_invalid_json(
+                cleaned_response
+            )
+        )
 
     # =====================================================
     # Validate vendor results
@@ -113,7 +329,10 @@ class RankingAgent:
                     "a vendor name."
                 )
 
-            if vendor_name in seen_vendors:
+            if (
+                vendor_name
+                in seen_vendors
+            ):
                 raise ValueError(
                     f"Duplicate vendor found: "
                     f"{vendor_name}"
@@ -149,7 +368,9 @@ class RankingAgent:
                 ) from error
 
             if not (
-                0 <= score <= 100
+                0 <=
+                score <=
+                100
             ):
                 raise ValueError(
                     f"Vendor '{vendor_name}' "
@@ -170,7 +391,9 @@ class RankingAgent:
         """
 
         return {
-            vendor["vendor"]: round(
+            vendor[
+                "vendor"
+            ]: round(
                 float(
                     vendor[
                         "overallScore"
@@ -178,7 +401,8 @@ class RankingAgent:
                 ),
                 2,
             )
-            for vendor in vendor_results
+            for vendor
+            in vendor_results
         }
 
     # =====================================================
@@ -194,26 +418,22 @@ class RankingAgent:
 
         A vendor is eligible for recommendation only
         when compliance is explicitly True.
-
-        False:
-            Vendor has compliance issues.
-
-        None:
-            Compliance was not determined.
-
-        Neither False nor None is treated as eligible.
         """
 
         compliance_reference = {}
 
         for vendor in vendor_results:
 
-            vendor_name = vendor[
-                "vendor"
-            ]
+            vendor_name = (
+                vendor[
+                    "vendor"
+                ]
+            )
 
-            compliant = vendor.get(
-                "compliant"
+            compliant = (
+                vendor.get(
+                    "compliant"
+                )
             )
 
             mandatory_compliance = (
@@ -222,23 +442,33 @@ class RankingAgent:
                 )
             )
 
-            risk_level = vendor.get(
-                "riskLevel",
-                "Unknown",
+            risk_level = (
+                vendor.get(
+                    "riskLevel",
+                    "Unknown",
+                )
             )
 
             eligible = (
-                compliant is True
+                compliant
+                is True
             )
 
             compliance_reference[
                 vendor_name
             ] = {
-                "compliant": compliant,
-                "eligible": eligible,
+                "compliant": (
+                    compliant
+                ),
+
+                "eligible": (
+                    eligible
+                ),
+
                 "mandatoryCompliance": (
                     mandatory_compliance
                 ),
+
                 "riskLevel": (
                     risk_level
                 ),
@@ -275,17 +505,26 @@ class RankingAgent:
 
         deterministic_ranking = []
 
-        for index, vendor in enumerate(
+        for (
+            index,
+            vendor,
+        ) in enumerate(
             ranked,
             start=1,
         ):
 
             deterministic_ranking.append(
                 {
-                    "rank": index,
-                    "vendor": (
-                        vendor["vendor"]
+                    "rank": (
+                        index
                     ),
+
+                    "vendor": (
+                        vendor[
+                            "vendor"
+                        ]
+                    ),
+
                     "score": round(
                         float(
                             vendor[
@@ -294,23 +533,27 @@ class RankingAgent:
                         ),
                         2,
                     ),
+
                     "riskLevel": (
                         vendor.get(
                             "riskLevel",
                             "Unknown",
                         )
                     ),
+
                     "compliant": (
                         vendor.get(
                             "compliant"
                         )
                     ),
+
                     "eligible": (
                         vendor.get(
                             "compliant"
                         )
                         is True
                     ),
+
                     "mandatoryCompliance": (
                         vendor.get(
                             "overallMandatoryCompliance"
@@ -338,23 +581,39 @@ class RankingAgent:
         """
 
         if not deterministic_ranking:
+
             return {
-                "topRankedVendor": None,
-                "topRankedVendorScore": None,
-                "recommendedVendor": None,
-                "recommendedVendorScore": None,
+                "topRankedVendor": (
+                    None
+                ),
+
+                "topRankedVendorScore": (
+                    None
+                ),
+
+                "recommendedVendor": (
+                    None
+                ),
+
+                "recommendedVendorScore": (
+                    None
+                ),
+
                 "recommendationStatus": (
                     "NO_VENDOR_RESULTS"
                 ),
             }
 
         top_vendor = (
-            deterministic_ranking[0]
+            deterministic_ranking[
+                0
+            ]
         )
 
         eligible_vendors = [
             vendor
-            for vendor in deterministic_ranking
+            for vendor
+            in deterministic_ranking
             if vendor.get(
                 "eligible"
             )
@@ -369,13 +628,25 @@ class RankingAgent:
 
             return {
                 "topRankedVendor": (
-                    top_vendor["vendor"]
+                    top_vendor[
+                        "vendor"
+                    ]
                 ),
+
                 "topRankedVendorScore": (
-                    top_vendor["score"]
+                    top_vendor[
+                        "score"
+                    ]
                 ),
-                "recommendedVendor": None,
-                "recommendedVendorScore": None,
+
+                "recommendedVendor": (
+                    None
+                ),
+
+                "recommendedVendorScore": (
+                    None
+                ),
+
                 "recommendationStatus": (
                     "NO_ELIGIBLE_VENDOR"
                 ),
@@ -386,22 +657,36 @@ class RankingAgent:
         # =================================================
 
         recommended = (
-            eligible_vendors[0]
+            eligible_vendors[
+                0
+            ]
         )
 
         return {
             "topRankedVendor": (
-                top_vendor["vendor"]
+                top_vendor[
+                    "vendor"
+                ]
             ),
+
             "topRankedVendorScore": (
-                top_vendor["score"]
+                top_vendor[
+                    "score"
+                ]
             ),
+
             "recommendedVendor": (
-                recommended["vendor"]
+                recommended[
+                    "vendor"
+                ]
             ),
+
             "recommendedVendorScore": (
-                recommended["score"]
+                recommended[
+                    "score"
+                ]
             ),
+
             "recommendationStatus": (
                 "RECOMMENDED_FOR_REVIEW"
             ),
@@ -539,9 +824,6 @@ If no vendor has compliant = true:
 
 recommendedVendor MUST remain null.
 
-In that situation, explain that there is currently
-no eligible vendor for recommendation.
-
 ==================================================
 RULES
 ==================================================
@@ -554,29 +836,41 @@ RULES
 
 4. Do NOT declare a non-compliant vendor eligible.
 
-5. Do NOT convert a compliance status from false
-   or null to true.
+5. Do NOT convert compliance from false or null to true.
 
-6. Do NOT recommend a vendor when Python has returned:
+6. Use ONLY the supplied evaluation results.
 
-recommendationStatus = "NO_ELIGIBLE_VENDOR"
-
-7. Use ONLY the supplied evaluation results.
-
-8. Do not invent capabilities, evidence, requirements,
+7. Do not invent capabilities, evidence, requirements,
    qualifications, prices, certifications, or risks.
 
-9. Clearly explain important procurement trade-offs.
+8. Clearly explain procurement trade-offs.
 
-10. Highlight mandatory requirement gaps and
-    compliance risks.
+9. The recommendation is advisory.
 
-11. The recommendation is advisory.
+10. Human review is always required.
 
-12. Never state that a procurement award has
-    already been made.
+==================================================
+JSON VALIDITY — CRITICAL
+==================================================
 
-13. Human review is always required.
+11. Return syntactically valid JSON.
+
+12. Every object opened with "{{" must close with "}}".
+
+13. Every array opened with "[" must close with "]".
+
+14. In rankingInsights:
+
+- rankingInsights must be an array.
+- Every ranking insight must be an object.
+- keyStrengths must be a complete array.
+- keyRisks must be a complete array.
+- Close keyRisks with "]" BEFORE closing the vendor object.
+
+15. Do not use trailing commas.
+
+16. Before returning the response, verify that the JSON
+    can be parsed by a standard JSON parser.
 
 ==================================================
 OFFICIAL SCORES
@@ -621,21 +915,28 @@ Do not include text before or after JSON.
 Use exactly this structure:
 
 {{
-  "comparisonSummary": "Overall evidence-based comparison",
+  "comparisonSummary":
+    "Overall evidence-based comparison",
 
   "tradeOffs": [
     "Important procurement trade-off"
   ],
 
-  "finalRecommendation": "Advisory explanation based on the official Python decision",
+  "finalRecommendation":
+    "Advisory explanation based on the official Python decision",
 
   "rankingInsights": [
     {{
-      "vendor": "Vendor name",
-      "summary": "Short explanation of the vendor result",
+      "vendor":
+        "Vendor name",
+
+      "summary":
+        "Short explanation of the vendor result",
+
       "keyStrengths": [
         "Evidence-based strength"
       ],
+
       "keyRisks": [
         "Evidence-based risk"
       ]
@@ -645,47 +946,21 @@ Use exactly this structure:
 """
 
         # =================================================
-        # LLM explanation
+        # LLM narrative with one repair retry
         # =================================================
 
-        response_text = (
-            self.llm.ask(
+        narrative = (
+            self._get_valid_narrative(
                 prompt
             )
         )
-
-        cleaned_response = (
-            self._clean_json_response(
-                response_text
-            )
-        )
-
-        try:
-
-            narrative = json.loads(
-                cleaned_response
-            )
-
-        except json.JSONDecodeError as error:
-
-            raise ValueError(
-                "Ranking Agent returned invalid JSON.\n\n"
-                f"Raw response:\n{response_text}"
-            ) from error
-
-        if not isinstance(
-            narrative,
-            dict,
-        ):
-            raise ValueError(
-                "Ranking Agent result must be an object."
-            )
 
         # =================================================
         # Never trust LLM for official ranking fields
         # =================================================
 
         result = {
+
             # ---------------------------------------------
             # Official Python decision
             # ---------------------------------------------
@@ -738,12 +1013,12 @@ Use exactly this structure:
             "tradeOffs": (
                 narrative.get(
                     "tradeOffs",
-                    []
+                    [],
                 )
                 if isinstance(
                     narrative.get(
                         "tradeOffs",
-                        []
+                        [],
                     ),
                     list,
                 )
@@ -760,12 +1035,12 @@ Use exactly this structure:
             "rankingInsights": (
                 narrative.get(
                     "rankingInsights",
-                    []
+                    [],
                 )
                 if isinstance(
                     narrative.get(
                         "rankingInsights",
-                        []
+                        [],
                     ),
                     list,
                 )
@@ -776,7 +1051,9 @@ Use exactly this structure:
             # Human control
             # ---------------------------------------------
 
-            "humanReviewRequired": True,
+            "humanReviewRequired": (
+                True
+            ),
         }
 
         return result

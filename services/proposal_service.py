@@ -34,12 +34,13 @@ class ProposalEvaluationService:
 
     Criterion requirements:
 
-    - Technical / Financial / Project Plan criteria currently
-      require explicit RFP requirements.
+    - Technical / Project Plan criteria currently require
+      explicit RFP requirements.
 
-    - Experience and Team criteria may validly contain an
-      empty requirements list when the RFP provides only an
-      explicit weighted criterion without detailed thresholds.
+    - Experience / Team / Financial criteria may validly
+      contain an empty requirements list when the RFP
+      provides only an explicit weighted criterion without
+      detailed thresholds.
 
       In that case their agents perform criterion-level
       evaluation instead of requirement-level evaluation.
@@ -65,6 +66,7 @@ class ProposalEvaluationService:
     CRITERION_LEVEL_AGENT_TYPES = {
         "experience",
         "team",
+        "financial",
     }
 
     def __init__(self):
@@ -385,6 +387,7 @@ class ProposalEvaluationService:
         Current supported types:
         - experience
         - team
+        - financial
         """
 
         if not isinstance(

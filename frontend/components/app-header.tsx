@@ -212,37 +212,23 @@ export function AppHeader({
                 backgroundColor:
                   '#161F56',
 
-                backgroundImage: isArabic
-                  ? `
-                    linear-gradient(
-                      to left,
-                      rgba(22, 31, 86, 0) 0%,
-                      rgba(22, 31, 86, 0.08) 30%,
-                      rgba(22, 31, 86, 0.35) 55%,
-                      rgba(22, 31, 86, 0.72) 78%,
-                      #161F56 100%
-                    ),
-                    url("/images/navbar-bg.png")
-                  `
-                  : `
-                    linear-gradient(
-                      to right,
-                      rgba(22, 31, 86, 0) 0%,
-                      rgba(22, 31, 86, 0.08) 30%,
-                      rgba(22, 31, 86, 0.35) 55%,
-                      rgba(22, 31, 86, 0.72) 78%,
-                      #161F56 100%
-                    ),
-                    url("/images/navbar-bg.png")
-                  `,
+                backgroundImage: `
+                  linear-gradient(
+                    to right,
+                    rgba(22, 31, 86, 0) 0%,
+                    rgba(22, 31, 86, 0.08) 30%,
+                    rgba(22, 31, 86, 0.35) 55%,
+                    rgba(22, 31, 86, 0.72) 78%,
+                    #161F56 100%
+                  ),
+                  url("/images/navbar-bg.png")
+                `,
 
                 backgroundSize:
                   '340px 100%, 340px 100%',
 
                 backgroundPosition:
-                  isArabic
-                    ? 'right center, right center'
-                    : 'left center, left center',
+                  'left center, left center',
 
                 backgroundRepeat:
                   'no-repeat, no-repeat',
@@ -251,7 +237,10 @@ export function AppHeader({
         }
       >
 
-        <div className="mx-auto flex h-[84px] w-full items-center gap-3 px-6 lg:px-8">
+        <div
+          className="mx-auto flex h-[84px] w-full items-center gap-3 px-6 lg:px-8"
+          dir={isArabic ? 'rtl' : 'ltr'}
+        >
 
           {/* BRAND */}
 

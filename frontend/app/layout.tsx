@@ -61,10 +61,16 @@ const geistMono = Geist_Mono({
 
 
 export const metadata: Metadata = {
-  title: 'Proposal Intelligence Portal',
+  title: 'KSF Proposal Evaluation Portal',
+
   description:
     'Evaluate RFP responses, compare vendors, identify compliance risks, and make informed procurement decisions with AI-assisted analysis.',
-  generator: 'v0.app',
+
+  icons: {
+    icon: '/images/ksf-logo.png',
+    shortcut: '/images/ksf-logo.png',
+    apple: '/images/ksf-logo.png',
+  },
 }
 
 

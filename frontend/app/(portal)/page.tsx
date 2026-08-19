@@ -4,11 +4,11 @@ import Link from 'next/link'
 
 import {
   ArrowRight,
-  BarChart3,
-  ClipboardCheck,
-  FileSearch,
+  FileText,
   GitCompareArrows,
+  ListChecks,
   Plus,
+  ShieldCheck,
 } from 'lucide-react'
 
 import { HeroBanner } from '@/components/hero-banner'
@@ -25,34 +25,34 @@ export default function HomePage() {
   const quickAccess = [
     {
       title: isArabic
-        ? 'تحليل طلب العرض'
-        : 'RFP Analysis',
+        ? 'التقييمات'
+        : 'Evaluations',
 
       description: isArabic
-        ? 'حلّل طلب العرض واستخرج معايير التقييم والمتطلبات والأوزان والبنود الإلزامية.'
-        : 'Analyze an RFP and extract evaluation criteria, requirements, weights, and mandatory items.',
+        ? 'استعرض جميع التقييمات السابقة وحالتها والنتائج المرتبطة بها.'
+        : 'Review previous evaluations, their status, rankings, and completed results.',
+
+      href:
+        '/evaluations',
+
+      icon:
+        ListChecks,
+    },
+
+    {
+      title: isArabic
+        ? 'إطار متطلبات طلب العرض'
+        : 'RFP Framework',
+
+      description: isArabic
+        ? 'راجع المعايير والأوزان والمتطلبات والبنود الإلزامية المستخرجة من طلب العرض.'
+        : 'Review extracted criteria, weights, requirements, and mandatory eligibility gates.',
 
       href:
         '/rfp-analysis',
 
       icon:
-        FileSearch,
-    },
-
-    {
-      title: isArabic
-        ? 'تقييم العروض'
-        : 'Evaluate Proposals',
-
-      description: isArabic
-        ? 'طابق عروض الموردين مع متطلبات طلب العرض وأنشئ درجات مبنية على الأدلة.'
-        : 'Match vendor proposals against RFP requirements and generate evidence-based scores.',
-
-      href:
-        '/evaluations/new',
-
-      icon:
-        ClipboardCheck,
+        FileText,
     },
 
     {
@@ -61,8 +61,8 @@ export default function HomePage() {
         : 'Vendor Comparison',
 
       description: isArabic
-        ? 'قارن الموردين حسب الدرجات والامتثال ونقاط القوة والفجوات والترتيب العام.'
-        : 'Compare vendors across scoring, compliance, strengths, gaps, and overall ranking.',
+        ? 'قارن الموردين حسب الدرجات والامتثال والمخاطر ونقاط القوة والفجوات.'
+        : 'Compare vendors across scoring, compliance, risk, strengths, gaps, and ranking.',
 
       href:
         '/comparison',
@@ -73,18 +73,18 @@ export default function HomePage() {
 
     {
       title: isArabic
-        ? 'تقارير التقييم'
-        : 'Evaluation Reports',
+        ? 'مراجعة الامتثال'
+        : 'Compliance Review',
 
       description: isArabic
-        ? 'راجع نتائج التقييم والتوصيات والمخاطر وتقارير الشراء.'
-        : 'Review evaluation outcomes, recommendations, risks, and procurement reports.',
+        ? 'راجع المتطلبات الإلزامية وحالة أهلية الموردين ومخاطر الامتثال.'
+        : 'Review mandatory requirements, vendor eligibility, and compliance risks.',
 
       href:
-        '/reports',
+        '/compliance',
 
       icon:
-        BarChart3,
+        ShieldCheck,
     },
   ]
 
@@ -129,8 +129,8 @@ export default function HomePage() {
 
             <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
               {isArabic
-                ? 'أدر عملية تقييم طلبات العروض والمقترحات بالكامل، بدءًا من تحليل المتطلبات ومطابقة العروض وحتى الامتثال والمقارنة والتقييم وإعداد التقرير النهائي.'
-                : 'Manage the complete RFP and proposal evaluation process — from requirement analysis and proposal matching to compliance, comparison, scoring, and final reporting.'}
+                ? 'أدر عملية تقييم طلبات العروض بالكامل، بدءًا من مراجعة التقييمات وإطار المتطلبات وحتى مقارنة الموردين ومراجعة الامتثال والنتائج النهائية.'
+                : 'Manage the complete proposal evaluation process — from reviewing evaluations and RFP frameworks to vendor comparison, compliance, and final results.'}
             </p>
 
           </div>
@@ -143,10 +143,7 @@ export default function HomePage() {
           <div className="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
             {quickAccess.map(
-              (
-                item,
-                index,
-              ) => {
+              (item) => {
                 const Icon =
                   item.icon
 
@@ -159,78 +156,138 @@ export default function HomePage() {
                     href={
                       item.href
                     }
-                    className="group"
+                    className="group block h-full"
                   >
 
                     <div
-                      className={`
+                      className="
                         relative
                         flex
                         h-full
                         min-h-[220px]
                         flex-col
+                        overflow-hidden
                         border
+                        border-border
                         bg-white
                         p-5
                         transition-all
                         duration-200
-                        hover:-translate-y-0.5
-                        hover:border-primary/35
-                        hover:shadow-[0_10px_28px_rgba(22,31,86,0.10)]
 
-                        ${
-                          index === 1
-                            ? 'border-primary/25'
-                            : 'border-border'
-                        }
-                      `}
+                        hover:-translate-y-1
+                        hover:border-primary
+                        hover:shadow-[0_14px_35px_rgba(22,31,86,0.12)]
+                      "
                     >
 
+                      {/* ================================= */}
+                      {/* TOP HOVER LINE */}
+                      {/* ================================= */}
+
+                      <div
+                        className="
+                          absolute
+                          inset-x-0
+                          top-0
+                          h-[3px]
+                          origin-left
+                          scale-x-0
+                          bg-primary
+                          transition-transform
+                          duration-200
+                          group-hover:scale-x-100
+                        "
+                      />
+
+
+                      {/* ================================= */}
                       {/* ICON */}
+                      {/* ================================= */}
 
-                      <div className="flex size-11 items-center justify-center bg-primary/[0.06] text-primary">
+                      <div
+                        className="
+                          flex
+                          size-11
+                          items-center
+                          justify-center
+                          bg-primary/[0.06]
+                          text-primary
+                          transition-all
+                          duration-200
 
+                          group-hover:bg-primary
+                          group-hover:text-white
+                        "
+                      >
                         <Icon className="size-5" />
-
                       </div>
 
 
+                      {/* ================================= */}
                       {/* TITLE */}
+                      {/* ================================= */}
 
-                      <h3 className="mt-5 text-[15px] font-semibold text-primary">
-
+                      <h3
+                        className="
+                          mt-5
+                          text-[15px]
+                          font-semibold
+                          text-primary
+                        "
+                      >
                         {item.title}
-
                       </h3>
 
 
+                      {/* ================================= */}
                       {/* DESCRIPTION */}
+                      {/* ================================= */}
 
-                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
-
+                      <p
+                        className="
+                          mt-2
+                          text-sm
+                          leading-6
+                          text-muted-foreground
+                        "
+                      >
                         {item.description}
-
                       </p>
 
 
+                      {/* ================================= */}
                       {/* ARROW */}
+                      {/* ================================= */}
 
                       <div className="mt-auto pt-5">
 
-                        <ArrowRight
-                          className={cn(
-                            `
-                              size-4
-                              text-primary
-                              transition-transform
-                              duration-200
-                            `,
+                        <div
+                          className="
+                            flex
+                            size-8
+                            items-center
+                            justify-center
+                            text-primary
+                            transition-all
+                            duration-200
 
-                            isArabic
-                              ? 'rotate-180 group-hover:-translate-x-1'
-                              : 'group-hover:translate-x-1',
-                          )}
-                        />
+                            group-hover:bg-primary/[0.07]
+                          "
+                        >
+                          <ArrowRight
+                            className={cn(
+                              `
+                                size-4
+                                transition-transform
+                                duration-200
+                              `,
+
+                              isArabic
+                                ? 'rotate-180 group-hover:-translate-x-1'
+                                : 'group-hover:translate-x-1',
+                            )}
+                          />
+                        </div>
 
                       </div>
 
@@ -252,7 +309,9 @@ export default function HomePage() {
 
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
 
+              {/* ================================= */}
               {/* CTA CONTENT */}
+              {/* ================================= */}
 
               <div className="flex items-start gap-4">
 
@@ -283,7 +342,9 @@ export default function HomePage() {
               </div>
 
 
+              {/* ================================= */}
               {/* CTA BUTTON */}
+              {/* ================================= */}
 
               <Link
                 href="/evaluations/new"
@@ -299,8 +360,12 @@ export default function HomePage() {
                   text-sm
                   font-semibold
                   text-primary
-                  transition-colors
-                  hover:bg-white/90
+                  transition-all
+                  duration-200
+
+                  hover:-translate-y-0.5
+                  hover:bg-white/95
+                  hover:shadow-lg
                 "
               >
 
@@ -311,10 +376,11 @@ export default function HomePage() {
 
                 <ArrowRight
                   className={cn(
-                    'size-4',
+                    'size-4 transition-transform duration-200',
 
-                    isArabic &&
-                      'rotate-180',
+                    isArabic
+                      ? 'rotate-180'
+                      : '',
                   )}
                 />
 

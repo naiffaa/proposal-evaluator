@@ -24,6 +24,11 @@ export function HeroBanner({
         backgroundColor: '#161F56',
       }}
     >
+      {/* ===================================== */}
+      {/* BACKGROUND IMAGE */}
+      {/* SAME FOR ARABIC + ENGLISH */}
+      {/* ===================================== */}
+
       <img
         src={backgroundImage}
         alt=""
@@ -32,31 +37,52 @@ export function HeroBanner({
       />
 
 
+      {/* ===================================== */}
+      {/* OVERLAY */}
+      {/* DO NOT FLIP IN ARABIC */}
+      {/* ===================================== */}
+
       <div
         className="absolute inset-0"
         style={{
-          background: isArabic
-            ? 'linear-gradient(270deg, rgba(22,31,86,0.10) 0%, rgba(22,31,86,0.05) 50%, rgba(22,31,86,0.02) 100%)'
-            : 'linear-gradient(90deg, rgba(22,31,86,0.10) 0%, rgba(22,31,86,0.05) 50%, rgba(22,31,86,0.02) 100%)',
+          background:
+            'linear-gradient(90deg, rgba(22,31,86,0.10) 0%, rgba(22,31,86,0.05) 50%, rgba(22,31,86,0.02) 100%)',
         }}
         aria-hidden="true"
       />
 
 
+      {/* ===================================== */}
+      {/* CONTENT */}
+      {/* ===================================== */}
+
       <div className="relative z-10 flex h-full items-center">
 
         <div
+          dir={isArabic ? 'rtl' : 'ltr'}
           className={`
             w-[50%]
             max-w-[800px]
 
             ${
               isArabic
-                ? 'mr-[14%]'
-                : 'ml-[14%]'
+                ? `
+                  ml-auto
+                  mr-[17%]
+                  translate-y-2
+                  text-right
+                `
+                : `
+                  ml-[14%]
+                  text-left
+                `
             }
           `}
         >
+
+          {/* ================================= */}
+          {/* TITLE */}
+          {/* ================================= */}
 
           <h1 className="text-2xl font-semibold leading-[1.25] tracking-tight text-white sm:text-3xl lg:text-[34px]">
             {isArabic
@@ -65,7 +91,26 @@ export function HeroBanner({
           </h1>
 
 
-          <p className="mt-4 max-w-[740px] text-sm leading-7 text-white/85 sm:text-[15px] lg:text-base">
+          {/* ================================= */}
+          {/* DESCRIPTION */}
+          {/* ================================= */}
+
+          <p
+            className={`
+              mt-4
+              text-sm
+              leading-7
+              text-white/85
+              sm:text-[15px]
+              lg:text-base
+
+              ${
+                isArabic
+                  ? 'max-w-[680px]'
+                  : 'max-w-[740px]'
+              }
+            `}
+          >
             {isArabic
               ? 'حلّل طلبات العروض، وقارن عروض الموردين، وقيّم الامتثال، وراجع نتائج التقييم من خلال سير عمل للمشتريات مدعوم بالذكاء الاصطناعي.'
               : 'Analyze RFPs, compare vendor proposals, assess compliance, and review evaluation outcomes through an AI-assisted procurement workflow.'}
