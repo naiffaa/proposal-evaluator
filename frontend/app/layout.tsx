@@ -2,53 +2,58 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
 import { Geist_Mono } from 'next/font/google'
+
 import './globals.css'
 
 
-const ksfText = localFont({
+const ksfDisplay = localFont({
   src: [
     {
-      path: '../fonts/KSFText-Thin.ttf',
+      path: '../fonts/KSFdisplay-Thin.woff2',
       weight: '100',
       style: 'normal',
     },
     {
-      path: '../fonts/KSFText-ExtraLight.ttf',
+      path: '../fonts/KSFdisplay-ExtraLight.woff2',
       weight: '200',
       style: 'normal',
     },
     {
-      path: '../fonts/KSFText-Light.ttf',
+      path: '../fonts/KSFdisplay-Light.woff2',
       weight: '300',
       style: 'normal',
     },
     {
-      path: '../fonts/KSFText-Regular.ttf',
+      path: '../fonts/KSFdisplay-Regular.woff2',
       weight: '400',
       style: 'normal',
     },
     {
-      path: '../fonts/KSFText-Medium.ttf',
+      path: '../fonts/KSFdisplay-Medium.woff2',
       weight: '500',
       style: 'normal',
     },
     {
-      path: '../fonts/KSFText-SemiBold.ttf',
+      path: '../fonts/KSFdisplay-SemiBold.woff2',
       weight: '600',
       style: 'normal',
     },
     {
-      path: '../fonts/KSFText-Bold.ttf',
+      path: '../fonts/KSFdisplay-Bold.woff2',
       weight: '700',
       style: 'normal',
     },
     {
-      path: '../fonts/KSFText-Heavy.ttf',
+      path: '../fonts/KSFdisplay-Heavy.woff2',
       weight: '800',
       style: 'normal',
     },
   ],
+
+  // نخلي نفس اسم الـ CSS variable الحالي
+  // عشان globals.css وباقي المشروع ما يحتاجون تعديل.
   variable: '--font-ksf-text',
+
   display: 'swap',
 })
 
@@ -88,7 +93,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${ksfText.variable} ${geistMono.variable} bg-background`}
+      className={`${ksfDisplay.variable} ${geistMono.variable} bg-background`}
     >
       <body className="font-sans antialiased">
         {children}
