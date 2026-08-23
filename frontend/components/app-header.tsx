@@ -38,39 +38,23 @@ function isActivePath(
     return pathname === '/'
   }
 
-  if (
-    href ===
-    '/evaluations/new'
-  ) {
-    return (
-      pathname ===
-      '/evaluations/new'
-    )
+  if (href === '/evaluations/new') {
+    return pathname === '/evaluations/new'
   }
 
-  if (
-    href ===
-    '/evaluations'
-  ) {
+  if (href === '/evaluations') {
     return (
-      pathname ===
-        '/evaluations' ||
+      pathname === '/evaluations' ||
       (
-        pathname.startsWith(
-          '/evaluations/',
-        ) &&
-        !pathname.startsWith(
-          '/evaluations/new',
-        )
+        pathname.startsWith('/evaluations/') &&
+        !pathname.startsWith('/evaluations/new')
       )
     )
   }
 
   return (
     pathname === href ||
-    pathname.startsWith(
-      `${href}/`,
-    )
+    pathname.startsWith(`${href}/`)
   )
 }
 
@@ -78,8 +62,7 @@ function isActivePath(
 export function AppHeader({
   onOpenMobileNav,
 }: AppHeaderProps) {
-  const pathname =
-    usePathname()
+  const pathname = usePathname()
 
   const {
     t,
@@ -88,9 +71,7 @@ export function AppHeader({
     isArabic,
   } = useLanguage()
 
-
-  const isHome =
-    pathname === '/'
+  const isHome = pathname === '/'
 
   const [menuOpen, setMenuOpen] =
     useState(false)
@@ -112,14 +93,12 @@ export function AppHeader({
       width: 'min-w-[140px]',
     },
     {
-      label:
-        t.header.newEvaluation,
+      label: t.header.newEvaluation,
       href: '/evaluations/new',
       width: 'min-w-[170px]',
     },
     {
-      label:
-        t.header.evaluations,
+      label: t.header.evaluations,
       href: '/evaluations',
       width: 'min-w-[155px]',
     },
@@ -201,103 +180,65 @@ export function AppHeader({
             transition-all
             duration-300
           `,
-
           darkHeader
-            ? 'bg-[#161F56]'
+            ? 'bg-[#131B4F]'
             : 'bg-white/95 shadow-sm backdrop-blur-xl',
         )}
-        style={
-          darkHeader
-            ? {
-                backgroundColor:
-                  '#161F56',
-
-                backgroundImage: `
-                  linear-gradient(
-                    to right,
-                    rgba(22, 31, 86, 0) 0%,
-                    rgba(22, 31, 86, 0.08) 30%,
-                    rgba(22, 31, 86, 0.35) 55%,
-                    rgba(22, 31, 86, 0.72) 78%,
-                    #161F56 100%
-                  ),
-                  url("/images/navbar-bg.png")
-                `,
-
-                backgroundSize:
-                  '340px 100%, 340px 100%',
-
-                backgroundPosition:
-                  'left center, left center',
-
-                backgroundRepeat:
-                  'no-repeat, no-repeat',
-              }
-            : undefined
-        }
       >
 
         <div
-          className="mx-auto flex h-[84px] w-full items-center gap-3 px-6 lg:px-8"
+          className="
+            mx-auto
+            flex
+            h-[84px]
+            w-full
+            items-center
+            gap-3
+            px-6
+            lg:px-8
+          "
           dir={isArabic ? 'rtl' : 'ltr'}
         >
 
-          {/* BRAND */}
+          {/* ========================================== */}
+          {/* BRAND / KSF LOGO */}
+          {/* ========================================== */}
 
           <Link
             href="/"
-            className="flex shrink-0 items-center gap-3"
+            className="
+              flex
+              shrink-0
+              items-center
+            "
+            aria-label="King Salman Foundation"
           >
 
             <img
-              src="/images/ksf-logo.png"
-              alt="KSF Logo"
-              className="h-[62px] w-[62px] shrink-0 object-contain"
+              src={
+                darkHeader
+                  ? '/images/ksf-logo-white.png'
+                  : '/images/ksf-logo-blue.png'
+              }
+              alt="King Salman Foundation"
+              className="
+                h-[54px]
+                w-auto
+                max-w-[235px]
+                shrink-0
+                object-contain
+                sm:h-[58px]
+                lg:h-[60px]
+                lg:max-w-[255px]
+              "
             />
-
-
-            <div className="hidden min-w-0 leading-tight md:block">
-
-              <p
-                className={cn(
-                  `
-                    whitespace-nowrap
-                    text-[15px]
-                    font-semibold
-                    tracking-tight
-                    transition-colors
-                  `,
-
-                  darkHeader
-                    ? 'text-white'
-                    : 'text-[#161F56]',
-                )}
-              >
-                {t.header.brand}
-              </p>
-
-              <p
-                className={cn(
-                  `
-                    mt-1
-                    text-xs
-                    transition-colors
-                  `,
-
-                  darkHeader
-                    ? 'text-white/70'
-                    : 'text-muted-foreground',
-                )}
-              >
-                {t.header.portal}
-              </p>
-
-            </div>
 
           </Link>
 
 
+          {/* ========================================== */}
           {/* DESKTOP NAV */}
+          {/* ========================================== */}
 
           <nav className="hidden min-w-0 flex-1 items-center justify-center lg:flex">
 
@@ -331,9 +272,7 @@ export function AppHeader({
                           duration-200
                           ease-out
                         `,
-
                         item.width,
-
                         active
                           ? darkHeader
                             ? `
@@ -342,9 +281,9 @@ export function AppHeader({
                                 shadow-sm
                               `
                             : `
-                                bg-[#161F56]
+                                bg-[#131B4F]
                                 text-white
-                                shadow-[0_6px_18px_rgba(22,31,86,0.18)]
+                                shadow-[0_6px_18px_rgba(19,27,79,0.18)]
                               `
                           : darkHeader
                             ? `
@@ -356,8 +295,8 @@ export function AppHeader({
                             : `
                                 text-slate-600
                                 hover:-translate-y-[1px]
-                                hover:bg-[#F3F6FC]
-                                hover:text-[#161F56]
+                                hover:bg-[#F7F4EE]
+                                hover:text-[#131B4F]
                               `,
                       )}
                     >
@@ -372,7 +311,9 @@ export function AppHeader({
           </nav>
 
 
+          {/* ========================================== */}
           {/* RIGHT SIDE */}
+          {/* ========================================== */}
 
           <div className="ms-auto flex shrink-0 items-center gap-1">
 
@@ -380,9 +321,7 @@ export function AppHeader({
 
             <button
               type="button"
-              onClick={
-                toggleLanguage
-              }
+              onClick={toggleLanguage}
               className={cn(
                 `
                   me-1
@@ -397,7 +336,6 @@ export function AppHeader({
                   transition-all
                   duration-200
                 `,
-
                 darkHeader
                   ? `
                       text-white/85
@@ -406,16 +344,12 @@ export function AppHeader({
                     `
                   : `
                       text-slate-600
-                      hover:bg-[#F3F6FC]
-                      hover:text-[#161F56]
+                      hover:bg-[#F7F4EE]
+                      hover:text-[#131B4F]
                     `,
               )}
-              aria-label={
-                t.common.language
-              }
-              title={
-                t.common.language
-              }
+              aria-label={t.common.language}
+              title={t.common.language}
             >
               <Languages className="size-4" />
 
@@ -428,19 +362,17 @@ export function AppHeader({
 
 
             <HeaderIconButton
-              label={
-                t.header.notifications
-              }
+              label={t.header.notifications}
               badge
-              darkHeader={
-                darkHeader
-              }
+              darkHeader={darkHeader}
             >
               <Bell className="size-5" />
             </HeaderIconButton>
 
 
+            {/* ======================================== */}
             {/* USER */}
+            {/* ======================================== */}
 
             <div
               className="relative ms-1"
@@ -451,8 +383,7 @@ export function AppHeader({
                 type="button"
                 onClick={() =>
                   setMenuOpen(
-                    (value) =>
-                      !value,
+                    (value) => !value,
                   )
                 }
                 className={cn(
@@ -465,19 +396,12 @@ export function AppHeader({
                     transition-all
                     duration-200
                   `,
-
                   darkHeader
-                    ? `
-                        hover:bg-white/10
-                      `
-                    : `
-                        hover:bg-[#F3F6FC]
-                      `,
+                    ? 'hover:bg-white/10'
+                    : 'hover:bg-[#F7F4EE]',
                 )}
                 aria-haspopup="menu"
-                aria-expanded={
-                  menuOpen
-                }
+                aria-expanded={menuOpen}
               >
 
                 <span
@@ -492,14 +416,13 @@ export function AppHeader({
                       font-semibold
                       transition-all
                     `,
-
                     darkHeader
                       ? `
                           bg-white
-                          text-[#161F56]
+                          text-[#131B4F]
                         `
                       : `
-                          bg-[#161F56]
+                          bg-[#131B4F]
                           text-white
                         `,
                   )}
@@ -515,7 +438,6 @@ export function AppHeader({
                       size-3.5
                       md:block
                     `,
-
                     darkHeader
                       ? 'text-white/70'
                       : 'text-slate-500',
@@ -525,7 +447,9 @@ export function AppHeader({
               </button>
 
 
+              {/* ====================================== */}
               {/* USER MENU */}
+              {/* ====================================== */}
 
               {menuOpen && (
                 <div
@@ -540,7 +464,7 @@ export function AppHeader({
                       border
                       border-border
                       bg-white
-                      shadow-[0_16px_40px_rgba(22,31,86,0.15)]
+                      shadow-[0_16px_40px_rgba(19,27,79,0.15)]
                     `,
                     isArabic
                       ? 'left-0'
@@ -565,24 +489,18 @@ export function AppHeader({
 
                     <MenuLink
                       icon={User}
-                      label={
-                        t.header.profile
-                      }
+                      label={t.header.profile}
                     />
 
                     <MenuLink
                       icon={Settings}
-                      label={
-                        t.header.settings
-                      }
+                      label={t.header.settings}
                       href="/settings"
                     />
 
                     <MenuLink
                       icon={CircleHelp}
-                      label={
-                        t.header.helpSupport
-                      }
+                      label={t.header.helpSupport}
                     />
 
                   </div>
@@ -592,9 +510,7 @@ export function AppHeader({
 
                     <MenuLink
                       icon={LogOut}
-                      label={
-                        t.header.signOut
-                      }
+                      label={t.header.signOut}
                       tone="danger"
                     />
 
@@ -606,19 +522,17 @@ export function AppHeader({
             </div>
 
 
+            {/* ======================================== */}
             {/* MOBILE MENU BUTTON */}
+            {/* ======================================== */}
 
             <button
               type="button"
               onClick={() => {
-                if (
-                  onOpenMobileNav
-                ) {
+                if (onOpenMobileNav) {
                   onOpenMobileNav()
                 } else {
-                  setMobileOpen(
-                    true,
-                  )
+                  setMobileOpen(true)
                 }
               }}
               className={cn(
@@ -631,20 +545,17 @@ export function AppHeader({
                   transition-colors
                   lg:hidden
                 `,
-
                 darkHeader
                   ? `
                       text-white
                       hover:bg-white/10
                     `
                   : `
-                      text-[#161F56]
-                      hover:bg-[#F3F6FC]
+                      text-[#131B4F]
+                      hover:bg-[#F7F4EE]
                     `,
               )}
-              aria-label={
-                t.header.openNavigation
-              }
+              aria-label={t.header.openNavigation}
             >
               <Menu className="size-5" />
             </button>
@@ -656,7 +567,9 @@ export function AppHeader({
       </header>
 
 
+      {/* ========================================== */}
       {/* MOBILE DRAWER */}
+      {/* ========================================== */}
 
       {!onOpenMobileNav &&
         mobileOpen && (
@@ -664,19 +577,15 @@ export function AppHeader({
 
             <button
               type="button"
-              aria-label={
-                t.header.closeNavigation
-              }
+              aria-label={t.header.closeNavigation}
               className="
                 absolute
                 inset-0
-                bg-[#161F56]/40
+                bg-[#131B4F]/40
                 backdrop-blur-sm
               "
               onClick={() =>
-                setMobileOpen(
-                  false,
-                )
+                setMobileOpen(false)
               }
             />
 
@@ -700,51 +609,59 @@ export function AppHeader({
               )}
             >
 
+              {/* MOBILE HEADER */}
+
               <div
                 className="
                   flex
-                  h-[82px]
+                  min-h-[96px]
                   items-center
                   justify-between
                   border-b
                   border-border
                   px-5
+                  py-3
                 "
               >
 
-                <div className="flex items-center gap-3">
+                <Link
+                  href="/"
+                  onClick={() =>
+                    setMobileOpen(false)
+                  }
+                  className="
+                    flex
+                    min-w-0
+                    flex-1
+                    items-center
+                  "
+                  aria-label="King Salman Foundation"
+                >
 
                   <img
-                    src="/images/ksf-logo.png"
-                    alt="KSF Logo"
-                    className="size-14 object-contain"
+                    src="/images/ksf-logo-blue.png"
+                    alt="King Salman Foundation"
+                    className="
+                      h-[58px]
+                      w-auto
+                      max-w-[220px]
+                      object-contain
+                    "
                   />
 
-                  <div className="leading-tight">
-
-                    <p className="text-sm font-semibold text-[#161F56]">
-                      {t.header.brand}
-                    </p>
-
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {t.header.portal}
-                    </p>
-
-                  </div>
-
-                </div>
+                </Link>
 
 
                 <button
                   type="button"
                   onClick={() =>
-                    setMobileOpen(
-                      false,
-                    )
+                    setMobileOpen(false)
                   }
                   className="
+                    ms-2
                     flex
                     size-9
+                    shrink-0
                     items-center
                     justify-center
                     rounded-lg
@@ -753,15 +670,15 @@ export function AppHeader({
                     hover:bg-muted
                     hover:text-foreground
                   "
-                  aria-label={
-                    t.header.closeNavigation
-                  }
+                  aria-label={t.header.closeNavigation}
                 >
                   <X className="size-5" />
                 </button>
 
               </div>
 
+
+              {/* MOBILE NAV */}
 
               <nav className="flex-1 overflow-y-auto p-4">
 
@@ -781,9 +698,7 @@ export function AppHeader({
                           <Link
                             href={item.href}
                             onClick={() =>
-                              setMobileOpen(
-                                false,
-                              )
+                              setMobileOpen(false)
                             }
                             className={cn(
                               `
@@ -797,16 +712,15 @@ export function AppHeader({
                                 transition-all
                                 duration-200
                               `,
-
                               active
                                 ? `
-                                    bg-[#161F56]
+                                    bg-[#131B4F]
                                     text-white
                                   `
                                 : `
                                     text-muted-foreground
-                                    hover:bg-[#F3F6FC]
-                                    hover:text-[#161F56]
+                                    hover:bg-[#F7F4EE]
+                                    hover:text-[#131B4F]
                                   `,
                             )}
                           >
@@ -841,8 +755,8 @@ export function AppHeader({
                       font-medium
                       text-muted-foreground
                       transition-colors
-                      hover:bg-[#F3F6FC]
-                      hover:text-[#161F56]
+                      hover:bg-[#F7F4EE]
+                      hover:text-[#131B4F]
                     "
                   >
                     <Languages className="size-4" />
@@ -896,7 +810,6 @@ function HeaderIconButton({
           transition-all
           duration-300
         `,
-
         darkHeader
           ? `
               text-white/80
@@ -905,8 +818,8 @@ function HeaderIconButton({
             `
           : `
               text-slate-500
-              hover:bg-[#F3F6FC]
-              hover:text-[#161F56]
+              hover:bg-[#F7F4EE]
+              hover:text-[#131B4F]
             `,
       )}
     >
@@ -925,9 +838,8 @@ function HeaderIconButton({
               rounded-full
               bg-red-500
             `,
-
             darkHeader
-              ? 'ring-2 ring-[#161F56]'
+              ? 'ring-2 ring-[#131B4F]'
               : 'ring-2 ring-white',
           )}
         />
@@ -953,31 +865,29 @@ function MenuLink({
   href?: string
   tone?: 'default' | 'danger'
 }) {
-  const className =
-    cn(
-      `
-        flex
-        w-full
-        items-center
-        gap-2.5
-        rounded-lg
-        px-3
-        py-2
-        text-sm
-        font-medium
-        transition-colors
-      `,
-
-      tone === 'danger'
-        ? `
-            text-danger
-            hover:bg-danger-muted
-          `
-        : `
-            text-foreground
-            hover:bg-muted
-          `,
-    )
+  const className = cn(
+    `
+      flex
+      w-full
+      items-center
+      gap-2.5
+      rounded-lg
+      px-3
+      py-2
+      text-sm
+      font-medium
+      transition-colors
+    `,
+    tone === 'danger'
+      ? `
+          text-danger
+          hover:bg-danger-muted
+        `
+      : `
+          text-foreground
+          hover:bg-muted
+        `,
+  )
 
 
   const content = (

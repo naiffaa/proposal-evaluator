@@ -1,7 +1,9 @@
 'use client'
 
 import { AppHeader } from '@/components/app-header'
+import { Footer } from '@/components/footer'
 import { LanguageProvider } from '@/lib/i18n/context'
+
 
 export function AppShell({
   children,
@@ -10,12 +12,16 @@ export function AppShell({
 }) {
   return (
     <LanguageProvider>
-      <div className="min-h-dvh w-full bg-background">
+      <div className="flex min-h-dvh w-full flex-col bg-background">
+
         <AppHeader />
 
-        <main className="min-h-[calc(100dvh-72px)]">
+        <main className="flex-1">
           {children}
         </main>
+
+        <Footer />
+
       </div>
     </LanguageProvider>
   )
