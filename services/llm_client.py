@@ -1,10 +1,9 @@
 import httpx
 
 from openai import OpenAI
-from oci_genai_auth import OciUserPrincipalAuth
+from oci_genai_auth import OciInstancePrincipalAuth
 
 from config import (
-    OCI_PROFILE,
     OCI_BASE_URL,
     OCI_PROJECT_ID,
     MODEL_NAME,
@@ -14,9 +13,7 @@ from config import (
 class LLMClient:
     def __init__(self):
         self.http_client = httpx.Client(
-            auth=OciUserPrincipalAuth(
-                profile_name=OCI_PROFILE
-            )
+            auth=OciInstancePrincipalAuth()
         )
 
         self.client = OpenAI(
