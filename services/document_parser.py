@@ -1,5 +1,4 @@
 import json
-import os
 import time
 import uuid
 from pathlib import Path
@@ -14,53 +13,51 @@ class DocumentParser:
         bucket_name="proposal-evaluator-documents",
         output_prefix="textExtraction",
     ):
+        # profile_name is kept for backward compatibility
+        # with existing callers, but it is not used when
+        # running on OCI Compute with Instance Principal.
         self.profile_name = profile_name
         self.bucket_name = bucket_name
         self.output_prefix = output_prefix
 
         # ==================================================
-        # Load OCI API Key configuration
+        # OCI Instance Principal Authentication
+        # ==================================================
+        #
+        # The application is running inside an OCI Compute
+        # instance, so ~/.oci/config and API keys are not
+        # required.
+        #
+        # Authentication is performed using the identity
+        # of the Compute instance.
         # ==================================================
 
-        config_file = os.path.expanduser("~/.oci/config")
-
-        self.config = oci.config.from_file(
-            file_location=config_file,
-            profile_name=self.profile_name,
+        self.signer = (
+            oci.auth.signers.InstancePrincipalsSecurityTokenSigner()
         )
 
-        self.region = self.config["region"]
+        self.region = self.signer.region
+        self.compartment_id = self.signer.tenancy_id
 
-        # Root compartment = tenancy
-        # We can change this later if needed.
-        self.compartment_id = self.config["tenancy"]
+        self.config = {
+            "region": self.region,
+        }
 
         # ==================================================
         # OCI Clients
         # ==================================================
-        #
-        # No SecurityTokenSigner.
-        # No browser session.
-        #
-        # OCI SDK automatically signs requests using:
-        # user
-        # fingerprint
-        # tenancy
-        # region
-        # key_file
-        #
-        # from ~/.oci/config
-        # ==================================================
 
         self.object_storage = (
             oci.object_storage.ObjectStorageClient(
-                self.config
+                self.config,
+                signer=self.signer,
             )
         )
 
         self.document_client = (
             oci.ai_document.AIServiceDocumentClient(
-                self.config
+                self.config,
+                signer=self.signer,
             )
         )
 
@@ -78,7 +75,7 @@ class DocumentParser:
         print("--------------------------------")
         print("OCI Document Parser initialized")
         print("--------------------------------")
-        print(f"Profile: {self.profile_name}")
+        print("Authentication: Instance Principal")
         print(f"Region: {self.region}")
         print(f"Bucket: {self.bucket_name}")
         print(f"Namespace: {self.namespace}")
@@ -712,12 +709,10 @@ class DocumentParser:
 
 if __name__ == "__main__":
     parser = DocumentParser(
-        profile_name="DEFAULT",
         bucket_name="proposal-evaluator-documents",
         output_prefix="textExtraction",
     )
 
-    # Your current test proposal
     test_file = "Technical Proposal 01.pdf"
 
     try:
