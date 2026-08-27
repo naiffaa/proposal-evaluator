@@ -6,22 +6,17 @@ import {
   useMemo,
   useState,
   type ComponentType,
+  type ReactNode,
 } from 'react'
 
 import Link from 'next/link'
 
 import {
+  ArrowLeft,
   ArrowRight,
-  BarChart3,
-  CalendarDays,
   CheckCircle2,
-  ChevronRight,
-  FileText,
-  GitCompareArrows,
-  LayoutDashboard,
   ShieldAlert,
   ShieldCheck,
-  Users,
   XCircle,
 } from 'lucide-react'
 
@@ -31,7 +26,6 @@ import { EmptyState } from '@/components/empty-state'
 import { evaluationsApi } from '@/lib/api'
 
 import {
-  formatDate,
   formatPercent,
 } from '@/lib/labels'
 
@@ -47,15 +41,20 @@ import type {
 export default function EvaluationCompliancePage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{
+    id: string
+  }>
 }) {
-  const { id } =
+  const {
+    id,
+  } =
     use(params)
 
+
   const {
-    language,
     isArabic,
-  } = useLanguage()
+  } =
+    useLanguage()
 
 
   const [
@@ -66,11 +65,13 @@ export default function EvaluationCompliancePage({
       null,
     )
 
+
   const [
     loading,
     setLoading,
   ] =
     useState(true)
+
 
   const [
     error,
@@ -81,37 +82,64 @@ export default function EvaluationCompliancePage({
     )
 
 
+  /* ========================================== */
+  /* LOAD */
+  /* ========================================== */
+
   useEffect(() => {
-    let active = true
+    let active =
+      true
+
 
     evaluationsApi
       .get(id)
-      .then((data) => {
-        if (!active) {
-          return
-        }
+      .then(
+        (
+          data,
+        ) => {
+          if (!active) {
+            return
+          }
 
-        setEvaluation(data)
-        setLoading(false)
-      })
-      .catch((err) => {
-        if (!active) {
-          return
-        }
 
-        setError(
-          isArabic
-            ? 'تعذر تحميل بيانات الامتثال.'
-            : err instanceof Error
-              ? err.message
-              : 'Failed to load compliance data.',
-        )
+          setEvaluation(
+            data,
+          )
 
-        setLoading(false)
-      })
+
+          setLoading(
+            false,
+          )
+        },
+      )
+      .catch(
+        (
+          err,
+        ) => {
+          if (!active) {
+            return
+          }
+
+
+          setError(
+            isArabic
+              ? 'تعذر تحميل بيانات الامتثال.'
+              : err instanceof Error
+                ? err.message
+                : 'Failed to load compliance data.',
+          )
+
+
+          setLoading(
+            false,
+          )
+        },
+      )
+
 
     return () => {
-      active = false
+      active =
+        false
     }
   }, [
     id,
@@ -119,60 +147,119 @@ export default function EvaluationCompliancePage({
   ])
 
 
+  /* ========================================== */
+  /* SUMMARY */
+  /* ========================================== */
+
   const summary =
-    useMemo(() => {
-      if (!evaluation) {
-        return {
-          eligible: 0,
-          notEligible: 0,
-          highRisk: 0,
-          averageCompliance: 0,
+    useMemo(
+      () => {
+        if (!evaluation) {
+          return {
+            eligible: 0,
+            notEligible: 0,
+            highRisk: 0,
+            averageCompliance: 0,
+          }
         }
-      }
 
-      const vendors =
-        evaluation.vendors
 
-      const eligible =
-        vendors.filter(
-          (vendor) =>
-            vendor.eligible,
-        ).length
+        const vendors =
+          evaluation.vendors
 
-      const notEligible =
-        vendors.length -
-        eligible
 
-      const highRisk =
-        vendors.filter(
-          (vendor) =>
-            vendor.riskLevel ===
-            'HIGH',
-        ).length
+        const eligible =
+          vendors.filter(
+            (
+              vendor,
+            ) =>
+              vendor.eligible,
+          ).length
 
-      const averageCompliance =
-        vendors.length > 0
-          ? vendors.reduce(
-              (
-                total,
-                vendor,
-              ) =>
-                total +
-                vendor
-                  .overallMandatoryCompliance,
-              0,
-            ) /
-            vendors.length
-          : 0
 
-      return {
-        eligible,
-        notEligible,
-        highRisk,
-        averageCompliance,
-      }
-    }, [evaluation])
+        const notEligible =
+          vendors.length -
+          eligible
 
+
+        const highRisk =
+          vendors.filter(
+            (
+              vendor,
+            ) =>
+              vendor.riskLevel ===
+              'HIGH',
+          ).length
+
+
+        const averageCompliance =
+          vendors.length >
+          0
+            ? vendors.reduce(
+                (
+                  total,
+                  vendor,
+                ) =>
+                  total +
+                  vendor.overallMandatoryCompliance,
+                0,
+              ) /
+              vendors.length
+            : 0
+
+
+        return {
+          eligible,
+          notEligible,
+          highRisk,
+          averageCompliance,
+        }
+      },
+      [
+        evaluation,
+      ],
+    )
+
+
+  const sortedVendors =
+    useMemo(
+      () => {
+        if (!evaluation) {
+          return []
+        }
+
+
+        return [
+          ...evaluation.vendors,
+        ].sort(
+          (
+            a,
+            b,
+          ) =>
+            a.rank -
+            b.rank,
+        )
+      },
+      [
+        evaluation,
+      ],
+    )
+
+
+  const topVendor =
+    sortedVendors[0] ??
+    null
+
+
+  const ArrowIcon =
+    isArabic
+      ? ArrowLeft
+      : ArrowRight
+
+
+  /* ========================================== */
+  /* LOADING */
+  /* ========================================== */
 
   if (loading) {
     return (
@@ -181,11 +268,36 @@ export default function EvaluationCompliancePage({
   }
 
 
+  /* ========================================== */
+  /* ERROR */
+  /* ========================================== */
+
   if (error) {
     return (
-      <div className="mx-auto w-full max-w-[1400px] px-4 py-8 md:px-6 lg:py-9">
+      <div
+        className="
+          min-h-screen
+          bg-white
+          px-5
+          py-16
 
-        <div className="rounded-2xl border border-rose-200 bg-white px-5 py-4 text-sm text-rose-700 shadow-sm">
+          sm:px-8
+        "
+      >
+
+        <div
+          className="
+            mx-auto
+            max-w-[1100px]
+            border
+            border-[#F1C9C9]
+            bg-[#FFF8F8]
+            px-6
+            py-5
+            text-sm
+            text-[#A44444]
+          "
+        >
           {error}
         </div>
 
@@ -194,571 +306,1303 @@ export default function EvaluationCompliancePage({
   }
 
 
+  /* ========================================== */
+  /* NOT FOUND */
+  /* ========================================== */
+
   if (!evaluation) {
     return (
-      <div className="mx-auto w-full max-w-[1400px] px-4 py-8 md:px-6 lg:py-9">
+      <div
+        className="
+          min-h-screen
+          bg-white
+          px-5
+          py-16
 
-        <EmptyState
-          icon={ShieldAlert}
-          title={
-            isArabic
-              ? 'لم يتم العثور على بيانات الامتثال'
-              : 'Compliance data not found'
-          }
-          description={
-            isArabic
-              ? 'لا تتوفر نتائج امتثال لهذا التقييم.'
-              : 'This evaluation does not have compliance results available.'
-          }
-          action={
-            <Button
-              nativeButton={false}
-              render={
-                <Link href="/evaluations" />
-              }
-            >
-              {isArabic
-                ? 'العودة إلى التقييمات'
-                : 'Back to Evaluations'}
-            </Button>
-          }
-        />
+          sm:px-8
+        "
+      >
+
+        <div
+          className="
+            mx-auto
+            max-w-[1100px]
+            border
+            border-[#E5E7EC]
+            p-10
+          "
+        >
+
+          <EmptyState
+            icon={
+              ShieldAlert
+            }
+            title={
+              isArabic
+                ? 'لم يتم العثور على بيانات الامتثال'
+                : 'Compliance data not found'
+            }
+            description={
+              isArabic
+                ? 'لا تتوفر نتائج امتثال لهذا التقييم.'
+                : 'This evaluation does not have compliance results available.'
+            }
+            action={
+              <Button
+                nativeButton={
+                  false
+                }
+                render={
+                  <Link
+                    href="/evaluations"
+                  />
+                }
+              >
+                {isArabic
+                  ? 'العودة إلى سجل المنافسات'
+                  : 'Back to Evaluations'}
+              </Button>
+            }
+          />
+
+        </div>
 
       </div>
     )
   }
 
 
-  const topVendor =
-    evaluation.vendors[0] ??
-    null
-
-
   return (
-    <div className="mx-auto w-full max-w-[1400px] px-4 py-8 md:px-6 lg:py-9">
+    <div
+      dir={
+        isArabic
+          ? 'rtl'
+          : 'ltr'
+      }
+      className="
+        min-h-screen
+        bg-white
+        text-[#131B4F]
+      "
+    >
 
       {/* ===================================== */}
-      {/* HEADER */}
+      {/* SECTION 1 — COMPLIANCE OVERVIEW */}
       {/* ===================================== */}
 
-      <header>
-
-        <h1 className="text-[28px] font-semibold tracking-tight text-slate-950 lg:text-[30px]">
-          {isArabic
-            ? 'مراجعة الامتثال'
-            : 'Compliance Review'}
-        </h1>
-
-
-        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-500">
-
-          <HeaderMeta
-            icon={FileText}
-            text={
-              evaluation.rfpName
-            }
-          />
-
-
-          <HeaderMeta
-            icon={Users}
-            text={
-              isArabic
-                ? `${evaluation.vendorCount} ${
-                    evaluation.vendorCount === 1
-                      ? 'مورد'
-                      : 'موردين'
-                  }`
-                : `${evaluation.vendorCount} vendor${
-                    evaluation.vendorCount !== 1
-                      ? 's'
-                      : ''
-                  }`
-            }
-          />
-
-
-          <HeaderMeta
-            icon={CalendarDays}
-            text={formatDate(
-              evaluation.createdDate,
-              language,
-            )}
-          />
-
-        </div>
-
-      </header>
-
-
-      {/* ===================================== */}
-      {/* WORKSPACE NAV */}
-      {/* ===================================== */}
-
-      <nav
+      <section
         className="
-          mt-7
-          overflow-x-auto
-          rounded-2xl
-          border
-          border-[#DDE3EE]
-          bg-white
-          p-2
-          shadow-[0_5px_20px_rgba(22,31,86,0.045)]
+          bg-[#F1ECE0]
+          px-5
+          py-10
+
+          sm:px-8
+          sm:py-12
+
+          lg:px-12
+          lg:py-14
         "
       >
 
-        <div className="flex min-w-max items-stretch">
+        <div
+          className="
+            mx-auto
+            grid
+            w-full
+            max-w-[1500px]
+            gap-5
 
-          <EvaluationNavItem
-            href={`/evaluations/${id}`}
-            label={
-              isArabic
-                ? 'نظرة عامة'
-                : 'Overview'
-            }
-            helper={
-              isArabic
-                ? 'الملخص'
-                : 'Summary'
-            }
-            icon={LayoutDashboard}
-          />
+            xl:grid-cols-[0.68fr_1fr]
+          "
+        >
 
-          <NavArrow
-            isArabic={
-              isArabic
-            }
-          />
-
-          <EvaluationNavItem
-            href={`/evaluations/${id}/rfp`}
-            label={
-              isArabic
-                ? 'إطار طلب العرض'
-                : 'RFP Framework'
-            }
-            helper={
-              isArabic
-                ? 'المعايير'
-                : 'Criteria'
-            }
-            icon={FileText}
-          />
-
-          <NavArrow
-            isArabic={
-              isArabic
-            }
-          />
-
-          <EvaluationNavItem
-            href={`/evaluations/${id}/comparison`}
-            label={
-              isArabic
-                ? 'مقارنة الموردين'
-                : 'Vendor Comparison'
-            }
-            helper={
-              isArabic
-                ? 'التقييم'
-                : 'Scoring'
-            }
-            icon={GitCompareArrows}
-          />
-
-          <NavArrow
-            isArabic={
-              isArabic
-            }
-          />
-
-          <EvaluationNavItem
-            href={`/evaluations/${id}/compliance`}
-            label={
-              isArabic
-                ? 'الامتثال'
-                : 'Compliance'
-            }
-            helper={
-              isArabic
-                ? 'المتطلبات'
-                : 'Requirements'
-            }
-            icon={ShieldCheck}
-            active
-          />
-
-          <NavArrow
-            isArabic={
-              isArabic
-            }
-          />
-
-          <EvaluationNavItem
-            href={`/evaluations/${id}/report`}
-            label={
-              isArabic
-                ? 'التقرير'
-                : 'Report'
-            }
-            helper={
-              isArabic
-                ? 'النتيجة النهائية'
-                : 'Final output'
-            }
-            icon={BarChart3}
-          />
-
-        </div>
-
-      </nav>
-
-
-      {/* ===================================== */}
-      {/* CONTENT */}
-      {/* ===================================== */}
-
-      <main className="mt-6 space-y-5">
-
-        {/* ================================= */}
-        {/* MANDATORY REQUIREMENT REVIEW */}
-        {/* ================================= */}
-
-        <section>
-
-          <h2 className="text-xl font-semibold tracking-tight text-slate-950">
-            {isArabic
-              ? 'مراجعة المتطلبات الإلزامية'
-              : 'Mandatory Requirement Review'}
-          </h2>
-
-
-          <p className="mt-1 text-sm text-slate-500">
-            {isArabic
-              ? 'راجع أداء الموردين مقابل المتطلبات الإلزامية في طلب العرض.'
-              : 'Review how evaluated vendors performed against mandatory RFP requirements.'}
-          </p>
-
+          {/* NAVY PANEL */}
 
           <div
             className="
-              mt-3
-              rounded-2xl
-              border
-              border-[#DDE3EE]
-              bg-white
-              px-6
-              py-6
-              shadow-[0_8px_26px_rgba(22,31,86,0.04)]
-              lg:px-7
+              relative
+              flex
+              min-h-[520px]
+              flex-col
+              overflow-hidden
+              bg-[#131B4F]
+              p-7
+              text-white
+
+              sm:p-9
+
+              lg:p-10
             "
           >
 
-            <div className="flex items-start gap-4">
+            <div
+              className="
+                pointer-events-none
+                absolute
+                -bottom-[160px]
+                -start-[130px]
+                size-[410px]
+                rounded-full
+                bg-[#9466C4]/22
+                blur-[110px]
+              "
+            />
+
+
+            <div
+              className="
+                relative
+                z-10
+              "
+            >
+
+              <span
+                className="
+                  inline-flex
+                  bg-white/10
+                  px-3
+                  py-2
+                  text-[10px]
+                  font-semibold
+                  tracking-[0.12em]
+                  text-white
+                "
+              >
+                {isArabic
+                  ? 'الامتثال'
+                  : 'COMPLIANCE REVIEW'}
+              </span>
+
+
+              <p
+                className="
+                  mt-9
+                  text-[10px]
+                  font-semibold
+                  tracking-[0.13em]
+                  text-[#CDB78F]
+                "
+              >
+                {isArabic
+                  ? 'المتطلبات الإلزامية'
+                  : 'MANDATORY REQUIREMENTS'}
+              </p>
+
+
+              <h1
+                className="
+                  mt-4
+                  max-w-[680px]
+                  text-[clamp(40px,4.7vw,64px)]
+                  font-medium
+                  leading-[1.02]
+                  tracking-[-0.055em]
+                  text-white
+                "
+              >
+                {isArabic
+                  ? 'هنا نعرف مين اجتاز شروط المنافسة'
+                  : 'See who satisfies the mandatory requirements'}
+              </h1>
+
+            </div>
+
+
+            <div
+              className="
+                relative
+                z-10
+                mt-auto
+                max-w-[610px]
+              "
+            >
+
+              <p
+                className="
+                  text-[15px]
+                  leading-8
+                  text-white/72
+                "
+              >
+                {isArabic
+                  ? 'تراجع البوابة كل مورد مقابل البنود الإلزامية المستخرجة من إطار المنافسة. عدم استيفاء أحد هذه البنود قد يؤثر مباشرة على أهلية المورد حتى لو كانت درجته الإجمالية مرتفعة.'
+                  : 'Each vendor is reviewed against mandatory requirements extracted from the competition framework. Failing one of these conditions can directly affect eligibility even when the overall score is high.'
+                }
+              </p>
+
 
               <div
                 className="
-                  flex
-                  size-12
-                  shrink-0
-                  items-center
-                  justify-center
-                  rounded-xl
-                  bg-[#F1F4FC]
-                  text-[#161F56]
+                  mt-7
+                  border-t
+                  border-white/15
+                  pt-5
                 "
               >
-                <ShieldCheck className="size-5" />
-              </div>
 
-
-              <div className="min-w-0 flex-1">
-
-                <h3 className="text-lg font-semibold tracking-tight text-slate-950">
-                  {evaluation.rfpName}
-                </h3>
-
-
-                <p className="mt-2 max-w-4xl text-sm leading-7 text-slate-500">
-                  {isArabic
-                    ? 'يتم التحقق من كل مورد مقابل المتطلبات الإلزامية المستخرجة من إطار طلب العرض المعتمد. تعمل هذه المتطلبات كشرط للأهلية وقد تؤدي إلى استبعاد المورد بغض النظر عن درجته الموزونة.'
-                    : 'Each vendor is checked against the mandatory requirements extracted from the frozen RFP framework. These requirements act as eligibility gates and may disqualify a vendor regardless of weighted score.'}
+                <p
+                  className="
+                    text-[13px]
+                    leading-7
+                    text-white/55
+                  "
+                >
+                  {
+                    evaluation.rfpName
+                  }
                 </p>
 
               </div>
 
             </div>
 
-
-            {topVendor && (
-              <div
-                className="
-                  mt-6
-                  grid
-                  overflow-hidden
-                  rounded-xl
-                  border
-                  border-[#E7EBF2]
-                  bg-[#FAFBFD]
-                  sm:grid-cols-3
-                "
-              >
-
-                <TopMetric
-                  label={
-                    isArabic
-                      ? 'امتثال المورد الأعلى ترتيبًا'
-                      : 'Top Vendor Compliance'
-                  }
-                  value={formatPercent(
-                    topVendor
-                      .overallMandatoryCompliance,
-                    1,
-                  )}
-                />
-
-
-                <TopMetric
-                  label={
-                    isArabic
-                      ? 'المتطلبات غير المستوفاة'
-                      : 'Missing Requirements'
-                  }
-                  value={String(
-                    topVendor
-                      .missingRequirements
-                      .length,
-                  )}
-                />
-
-
-                <TopMetric
-                  label={
-                    isArabic
-                      ? 'الأهلية'
-                      : 'Eligibility'
-                  }
-                  value={
-                    topVendor.eligible
-                      ? isArabic
-                        ? 'مؤهل'
-                        : 'Eligible'
-                      : isArabic
-                        ? 'غير مؤهل'
-                        : 'Not Eligible'
-                  }
-                  last
-                />
-
-              </div>
-            )}
-
           </div>
 
-        </section>
 
-
-        {/* ================================= */}
-        {/* COMPLIANCE SNAPSHOT */}
-        {/* ================================= */}
-
-        <section>
-
-          <h2 className="text-xl font-semibold tracking-tight text-slate-950">
-            {isArabic
-              ? 'ملخص الامتثال'
-              : 'Compliance Snapshot'}
-          </h2>
-
-
-          <p className="mt-1 text-sm text-slate-500">
-            {isArabic
-              ? 'أهم مؤشرات الامتثال لجميع الموردين الذين تم تقييمهم.'
-              : 'Key compliance indicators across evaluated vendors.'}
-          </p>
-
+          {/* OVERVIEW CARDS */}
 
           <div
             className="
-              mt-3
               grid
-              overflow-hidden
-              rounded-2xl
-              border
-              border-[#DDE3EE]
-              bg-white
-              shadow-[0_8px_26px_rgba(22,31,86,0.045)]
-              sm:grid-cols-2
-              xl:grid-cols-4
+              gap-5
             "
           >
 
-            <SnapshotMetric
-              label={
+            <ComplianceOverviewCard
+              number="01"
+              eyebrow={
                 isArabic
-                  ? 'متوسط الامتثال'
-                  : 'Average Compliance'
+                  ? 'المؤهلون'
+                  : 'ELIGIBLE'
               }
-              value={`${summary.averageCompliance.toFixed(
-                1,
-              )}%`}
-              helper={
+              title={
                 isArabic
-                  ? 'تغطية المتطلبات الإلزامية'
-                  : 'Mandatory requirement coverage'
+                  ? `${summary.eligible} موردين مستوفين للشروط`
+                  : `${summary.eligible} vendors satisfy eligibility`
               }
-              icon={ShieldCheck}
+              description={
+                isArabic
+                  ? 'هؤلاء الموردون استوفوا شروط الأهلية الحالية حسب المتطلبات الإلزامية.'
+                  : 'These vendors currently satisfy the mandatory eligibility requirements.'
+              }
+              icon={
+                CheckCircle2
+              }
             />
 
 
-            <SnapshotMetric
-              label={
-                isArabic
-                  ? 'الموردون المؤهلون'
-                  : 'Eligible Vendors'
-              }
-              value={String(
-                summary.eligible,
-              )}
-              helper={
-                isArabic
-                  ? 'اجتازوا شروط الامتثال'
-                  : 'Passed compliance gating'
-              }
-              icon={CheckCircle2}
-            />
-
-
-            <SnapshotMetric
-              label={
+            <ComplianceOverviewCard
+              number="02"
+              eyebrow={
                 isArabic
                   ? 'غير المؤهلين'
-                  : 'Not Eligible'
+                  : 'NOT ELIGIBLE'
               }
-              value={String(
-                summary.notEligible,
-              )}
-              helper={
+              title={
                 isArabic
-                  ? 'لم يجتازوا شروط الامتثال'
-                  : 'Failed compliance gating'
+                  ? `${summary.notEligible} موردين لديهم حالات عدم استيفاء`
+                  : `${summary.notEligible} vendors have compliance gaps`
               }
-              icon={XCircle}
+              description={
+                isArabic
+                  ? 'يحتاج هؤلاء الموردون إلى مراجعة البنود غير المستوفاة قبل الانتقال للقرار النهائي.'
+                  : 'These vendors require review of unmet mandatory conditions before final decision-making.'
+              }
+              icon={
+                XCircle
+              }
             />
 
 
-            <SnapshotMetric
-              label={
+            <ComplianceOverviewCard
+              number="03"
+              eyebrow={
                 isArabic
-                  ? 'مخاطر مرتفعة'
-                  : 'High Risk'
+                  ? 'المخاطر'
+                  : 'RISK'
               }
-              value={String(
-                summary.highRisk,
-              )}
-              helper={
+              title={
                 isArabic
-                  ? 'موردون يحتاجون إلى اهتمام'
-                  : 'Vendors requiring attention'
+                  ? `${summary.highRisk} موردين بمخاطر مرتفعة`
+                  : `${summary.highRisk} vendors are high risk`
               }
-              icon={ShieldAlert}
-              last
+              description={
+                isArabic
+                  ? 'ارتفاع المخاطر يساعد على تحديد العروض التي تحتاج مراجعة إضافية قبل اتخاذ القرار.'
+                  : 'Risk indicators help identify proposals requiring additional review.'
+              }
+              icon={
+                ShieldAlert
+              }
             />
 
           </div>
 
-        </section>
+        </div>
+
+      </section>
 
 
-        {/* ================================= */}
-        {/* COMPLIANCE BY VENDOR */}
-        {/* ================================= */}
+      {/* ===================================== */}
+      {/* SECTION 2 — TOP VENDOR COMPLIANCE */}
+      {/* ===================================== */}
 
+      {topVendor && (
         <section
           className="
-            overflow-hidden
-            rounded-2xl
-            border
-            border-[#DDE3EE]
             bg-white
-            shadow-[0_8px_28px_rgba(22,31,86,0.04)]
+            px-5
+            py-16
+
+            sm:px-8
+
+            lg:px-12
+            lg:py-20
           "
         >
 
           <div
             className="
-              flex
-              flex-col
-              gap-4
-              border-b
-              border-[#E7EBF2]
-              px-6
-              py-5
-              sm:flex-row
-              sm:items-center
-              sm:justify-between
-              lg:px-7
+              mx-auto
+              grid
+              w-full
+              max-w-[1500px]
+              gap-10
+
+              lg:grid-cols-[330px_1fr]
             "
           >
 
             <div>
 
-              <h2 className="text-xl font-semibold tracking-tight text-slate-950">
+              <SectionEyebrow>
                 {isArabic
-                  ? 'الامتثال حسب المورد'
-                  : 'Compliance by Vendor'}
+                  ? 'المورد الأعلى ترتيبًا'
+                  : 'TOP RANKED VENDOR'}
+              </SectionEyebrow>
+
+
+              <h2
+                className="
+                  mt-3
+                  text-[clamp(32px,3.4vw,48px)]
+                  font-medium
+                  leading-[1.07]
+                  tracking-[-0.045em]
+                  text-[#131B4F]
+                "
+              >
+                {isArabic
+                  ? 'هل العرض المتصدر مستوفٍ للشروط؟'
+                  : 'Does the leading vendor meet compliance?'}
               </h2>
 
 
-              <p className="mt-1 text-sm text-slate-500">
+              <p
+                className="
+                  mt-5
+                  text-[15px]
+                  leading-8
+                  text-[#727A8C]
+                "
+              >
                 {isArabic
-                  ? 'راجع نتائج الامتثال والمتطلبات الإلزامية غير المستوفاة لكل مورد.'
-                  : 'Review compliance outcomes and outstanding mandatory requirements for each vendor.'}
+                  ? 'الدرجة وحدها ما تكفي. هنا نراجع حالة الأهلية ونسبة الامتثال للمتطلبات الإلزامية.'
+                  : 'Score alone is not enough. This section shows eligibility and mandatory compliance for the leading proposal.'
+                }
               </p>
 
             </div>
 
 
-            <span className="rounded-full bg-[#F5F7FC] px-3 py-1.5 text-sm text-slate-500">
-              {isArabic
-                ? `${evaluation.vendors.length} ${
-                    evaluation.vendors.length === 1
-                      ? 'مورد'
-                      : 'موردين'
-                  }`
-                : `${evaluation.vendors.length} vendor${
-                    evaluation.vendors.length !== 1
-                      ? 's'
-                      : ''
-                  }`}
-            </span>
+            <div
+              className="
+                grid
+                overflow-hidden
 
-          </div>
+                md:grid-cols-[1fr_0.44fr]
+              "
+            >
+
+              <div
+                className="
+                  flex
+                  min-h-[330px]
+                  flex-col
+                  justify-between
+                  bg-[#F7F7F5]
+                  p-7
+
+                  sm:p-9
+                "
+              >
+
+                <div>
+
+                  <div
+                    className="
+                      flex
+                      flex-wrap
+                      items-center
+                      gap-3
+                    "
+                  >
+
+                    <span
+                      className="
+                        text-[10px]
+                        font-semibold
+                        tracking-[0.13em]
+                        text-[#9466C4]
+                      "
+                    >
+                      {isArabic
+                        ? 'العرض المتصدر'
+                        : 'LEADING PROPOSAL'}
+                    </span>
 
 
-          <div className="space-y-4 bg-[#F8FAFD] p-5 sm:p-6">
+                    <span
+                      className="
+                        bg-white
+                        px-2.5
+                        py-1
+                        text-[10px]
+                        font-semibold
+                        text-[#131B4F]
+                      "
+                    >
+                      #{topVendor.rank}
+                    </span>
 
-            {evaluation.vendors.map(
-              (vendor) => (
-                <VendorComplianceCard
-                  key={vendor.id}
-                  vendor={vendor}
-                  evaluationId={
-                    evaluation.id
-                  }
-                  isArabic={
-                    isArabic
-                  }
-                />
-              ),
-            )}
+                  </div>
+
+
+                  <h3
+                    className="
+                      mt-5
+                      max-w-[720px]
+                      break-words
+                      text-[clamp(30px,3.4vw,46px)]
+                      font-medium
+                      leading-[1.08]
+                      tracking-[-0.045em]
+                      text-[#131B4F]
+                    "
+                  >
+                    {
+                      topVendor.name
+                    }
+                  </h3>
+
+
+                  <p
+                    className="
+                      mt-5
+                      max-w-[720px]
+                      text-[15px]
+                      leading-8
+                      text-[#6F7788]
+                    "
+                  >
+                    {topVendor.complianceAssessment ||
+                      (
+                        isArabic
+                          ? 'لم يتم إرجاع تقييم امتثال تفصيلي لهذا المورد.'
+                          : 'No detailed compliance assessment was returned for this vendor.'
+                      )}
+                  </p>
+
+                </div>
+
+
+                <div
+                  className="
+                    mt-8
+                    flex
+                    flex-wrap
+                    items-center
+                    gap-3
+                  "
+                >
+
+                  <EligibilityBadge
+                    eligible={
+                      topVendor.eligible
+                    }
+                    isArabic={
+                      isArabic
+                    }
+                  />
+
+
+                  <RiskBadge
+                    risk={
+                      topVendor.riskLevel
+                    }
+                    isArabic={
+                      isArabic
+                    }
+                  />
+
+                </div>
+
+              </div>
+
+
+              <div
+                className="
+                  flex
+                  min-h-[330px]
+                  flex-col
+                  justify-between
+                  bg-[#131B4F]
+                  p-7
+                  text-white
+
+                  sm:p-9
+                "
+              >
+
+                <div
+                  className="
+                    flex
+                    items-center
+                    justify-between
+                    gap-4
+                  "
+                >
+
+                  <p
+                    className="
+                      text-[10px]
+                      font-semibold
+                      tracking-[0.13em]
+                      text-[#CDB78F]
+                    "
+                  >
+                    {isArabic
+                      ? 'الامتثال الإلزامي'
+                      : 'MANDATORY COMPLIANCE'}
+                  </p>
+
+
+                  <ShieldCheck
+                    className="
+                      size-5
+                      text-[#CDB78F]
+                    "
+                  />
+
+                </div>
+
+
+                <div>
+
+                  <p
+                    className="
+                      text-[clamp(62px,6.7vw,94px)]
+                      font-light
+                      leading-none
+                      tracking-[-0.075em]
+                    "
+                  >
+                    {formatPercent(
+                      topVendor.overallMandatoryCompliance,
+                      1,
+                    )}
+                  </p>
+
+
+                  <p
+                    className="
+                      mt-5
+                      text-[13px]
+                      leading-7
+                      text-white/60
+                    "
+                  >
+                    {isArabic
+                      ? `${topVendor.missingRequirements.length} متطلبات إلزامية غير مستوفاة`
+                      : `${topVendor.missingRequirements.length} mandatory requirements outstanding`}
+                  </p>
+
+                </div>
+
+
+                <Link
+                  href={`/evaluations/${id}/vendors/${topVendor.id}`}
+                  className="
+                    group
+                    inline-flex
+                    w-fit
+                    items-center
+                    gap-2
+                    text-sm
+                    font-semibold
+                    text-white
+                  "
+                >
+
+                  {isArabic
+                    ? 'عرض تفاصيل المورد'
+                    : 'View vendor details'}
+
+
+                  <ArrowIcon
+                    className={cn(
+                      `
+                        size-4
+                        transition-transform
+                        duration-300
+                      `,
+
+                      isArabic
+                        ? 'group-hover:-translate-x-1'
+                        : 'group-hover:translate-x-1',
+                    )}
+                  />
+
+                </Link>
+
+              </div>
+
+            </div>
 
           </div>
 
         </section>
+      )}
 
-      </main>
+
+      {/* ===================================== */}
+      {/* SECTION 3 — COMPLIANCE SNAPSHOT */}
+      {/* ===================================== */}
+
+      <section
+        className="
+          bg-[#F1ECE0]
+          px-5
+          py-16
+
+          sm:px-8
+
+          lg:px-12
+          lg:py-20
+        "
+      >
+
+        <div
+          className="
+            mx-auto
+            w-full
+            max-w-[1500px]
+          "
+        >
+
+          <SectionEyebrow>
+            {isArabic
+              ? 'ملخص الامتثال'
+              : 'COMPLIANCE SNAPSHOT'}
+          </SectionEyebrow>
+
+
+          <h2
+            className="
+              mt-3
+              text-[32px]
+              font-medium
+              tracking-[-0.04em]
+              text-[#131B4F]
+
+              sm:text-[40px]
+            "
+          >
+            {isArabic
+              ? 'الأرقام الرئيسية'
+              : 'Key compliance numbers'}
+          </h2>
+
+
+          <div
+            className="
+              mt-10
+              grid
+              border-y
+              border-[#D8CCB6]
+
+              sm:grid-cols-2
+
+              xl:grid-cols-4
+            "
+          >
+
+            <ComplianceSnapshotMetric
+              value={
+                formatPercent(
+                  summary.averageCompliance,
+                  1,
+                )
+              }
+              label={
+                isArabic
+                  ? 'متوسط الامتثال'
+                  : 'Average compliance'
+              }
+              helper={
+                isArabic
+                  ? 'متوسط تغطية البنود الإلزامية'
+                  : 'Mandatory requirement coverage'
+              }
+            />
+
+
+            <ComplianceSnapshotMetric
+              value={
+                String(
+                  summary.eligible,
+                )
+              }
+              label={
+                isArabic
+                  ? 'المؤهلون'
+                  : 'Eligible vendors'
+              }
+              helper={
+                isArabic
+                  ? 'اجتازوا شروط الأهلية'
+                  : 'Passed eligibility conditions'
+              }
+            />
+
+
+            <ComplianceSnapshotMetric
+              value={
+                String(
+                  summary.notEligible,
+                )
+              }
+              label={
+                isArabic
+                  ? 'غير المؤهلين'
+                  : 'Not eligible'
+              }
+              helper={
+                isArabic
+                  ? 'لديهم حالات عدم استيفاء'
+                  : 'Have compliance gaps'
+              }
+            />
+
+
+            <ComplianceSnapshotMetric
+              value={
+                String(
+                  summary.highRisk,
+                )
+              }
+              label={
+                isArabic
+                  ? 'مخاطر مرتفعة'
+                  : 'High risk'
+              }
+              helper={
+                isArabic
+                  ? 'يحتاجون مراجعة إضافية'
+                  : 'Require additional review'
+              }
+              last
+            />
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      {/* ===================================== */}
+      {/* SECTION 4 — COMPLIANCE BY VENDOR */}
+      {/* ===================================== */}
+
+      <section
+        className="
+          bg-[#F7F7F5]
+          px-5
+          py-16
+
+          sm:px-8
+
+          lg:px-12
+          lg:py-20
+        "
+      >
+
+        <div
+          className="
+            mx-auto
+            w-full
+            max-w-[1500px]
+          "
+        >
+
+          <div
+            className="
+              grid
+              gap-8
+
+              lg:grid-cols-[330px_1fr]
+            "
+          >
+
+            <div>
+
+              <SectionEyebrow>
+                {isArabic
+                  ? 'نتائج الموردين'
+                  : 'VENDOR COMPLIANCE'}
+              </SectionEyebrow>
+
+
+              <h2
+                className="
+                  mt-3
+                  text-[clamp(32px,3.4vw,46px)]
+                  font-medium
+                  leading-[1.08]
+                  tracking-[-0.045em]
+                  text-[#131B4F]
+                "
+              >
+                {isArabic
+                  ? 'راجع حالة كل مورد'
+                  : 'Review compliance vendor by vendor'}
+              </h2>
+
+
+              <p
+                className="
+                  mt-5
+                  text-[15px]
+                  leading-8
+                  text-[#727A8C]
+                "
+              >
+                {isArabic
+                  ? 'كل مورد يعرض نسبة الامتثال، الأهلية، مستوى المخاطر، والمتطلبات الإلزامية التي ما زالت غير مستوفاة.'
+                  : 'Each vendor shows compliance, eligibility, risk, and any mandatory requirements that remain outstanding.'
+                }
+              </p>
+
+            </div>
+
+
+            <div
+              className="
+                space-y-4
+              "
+            >
+
+              {sortedVendors.map(
+                (
+                  vendor,
+                ) => (
+                  <VendorComplianceCard
+                    key={
+                      vendor.id
+                    }
+                    vendor={
+                      vendor
+                    }
+                    evaluationId={
+                      evaluation.id
+                    }
+                    isArabic={
+                      isArabic
+                    }
+                  />
+                ),
+              )}
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      {/* ===================================== */}
+      {/* SECTION 5 — NEXT STEP */}
+      {/* ===================================== */}
+
+      <section
+        className="
+          bg-[#F1ECE0]
+          px-5
+          py-12
+
+          sm:px-8
+
+          lg:px-12
+          lg:py-14
+        "
+      >
+
+        <div
+          className="
+            mx-auto
+            w-full
+            max-w-[1500px]
+          "
+        >
+
+          <div
+            className="
+              grid
+              overflow-hidden
+              bg-white
+
+              lg:grid-cols-[1fr_auto]
+            "
+          >
+
+            <div
+              className="
+                px-6
+                py-7
+
+                sm:px-8
+
+                lg:px-10
+              "
+            >
+
+              <SectionEyebrow>
+                {isArabic
+                  ? 'الخطوة التالية'
+                  : 'NEXT STEP'}
+              </SectionEyebrow>
+
+
+              <h2
+                className="
+                  mt-2
+                  text-[26px]
+                  font-medium
+                  tracking-[-0.035em]
+                  text-[#131B4F]
+
+                  sm:text-[30px]
+                "
+              >
+                {isArabic
+                  ? 'راجع التقرير النهائي قبل اتخاذ القرار'
+                  : 'Review the final report before making a decision'}
+              </h2>
+
+
+              <p
+                className="
+                  mt-3
+                  max-w-[780px]
+                  text-[14px]
+                  leading-7
+                  text-[#70788A]
+                "
+              >
+                {isArabic
+                  ? 'بعد مراجعة الدرجات والامتثال، انتقل للتقرير النهائي لمراجعة خلاصة المنافسة والنتائج النهائية.'
+                  : 'After reviewing scores and compliance, move to the final report for the complete competition outcome.'
+                }
+              </p>
+
+            </div>
+
+
+            <Link
+              href={`/evaluations/${id}/report`}
+              className="
+                group
+                flex
+                min-h-[88px]
+                min-w-[230px]
+                items-center
+                justify-center
+                gap-3
+                bg-[#131B4F]
+                px-7
+                text-sm
+                font-semibold
+                text-white
+                transition-all
+                duration-300
+
+                hover:bg-[#1D208E]
+
+                lg:min-h-full
+              "
+            >
+
+              {isArabic
+                ? 'عرض التقرير النهائي'
+                : 'View Final Report'}
+
+
+              <ArrowIcon
+                className={cn(
+                  `
+                    size-4
+                    transition-transform
+                    duration-300
+                  `,
+
+                  isArabic
+                    ? 'group-hover:-translate-x-1'
+                    : 'group-hover:translate-x-1',
+                )}
+              />
+
+            </Link>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+  )
+}
+
+
+/* ========================================== */
+/* COMPLIANCE OVERVIEW CARD */
+/* ========================================== */
+
+function ComplianceOverviewCard({
+  number,
+  eyebrow,
+  title,
+  description,
+  icon: Icon,
+}: {
+  number: string
+  eyebrow: string
+  title: string
+  description: string
+  icon: ComponentType<{
+    className?: string
+  }>
+}) {
+  return (
+    <article
+      className="
+        grid
+        min-h-[155px]
+        grid-cols-[1fr_auto]
+        gap-6
+        bg-white
+        px-6
+        py-6
+
+        sm:px-8
+      "
+    >
+
+      <div
+        className="
+          flex
+          items-start
+          gap-4
+        "
+      >
+
+        <div
+          className="
+            mt-1
+            flex
+            size-9
+            shrink-0
+            items-center
+            justify-center
+            bg-[#F1ECE0]
+            text-[#131B4F]
+          "
+        >
+
+          <Icon
+            className="
+              size-4
+            "
+          />
+
+        </div>
+
+
+        <div>
+
+          <p
+            className="
+              text-[10px]
+              font-semibold
+              tracking-[0.12em]
+              text-[#9466C4]
+            "
+          >
+            {eyebrow}
+          </p>
+
+
+          <h3
+            className="
+              mt-2
+              text-[21px]
+              font-medium
+              leading-[1.18]
+              tracking-[-0.03em]
+              text-[#131B4F]
+
+              sm:text-[24px]
+            "
+          >
+            {title}
+          </h3>
+
+
+          <p
+            className="
+              mt-3
+              max-w-[680px]
+              text-[14px]
+              leading-7
+              text-[#737B8D]
+            "
+          >
+            {description}
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <span
+        className="
+          text-[46px]
+          font-light
+          leading-none
+          tracking-[-0.06em]
+          text-[#131B4F]
+
+          sm:text-[54px]
+        "
+      >
+        {number}
+      </span>
+
+    </article>
+  )
+}
+
+
+/* ========================================== */
+/* SECTION EYEBROW */
+/* ========================================== */
+
+function SectionEyebrow({
+  children,
+}: {
+  children: ReactNode
+}) {
+  return (
+    <p
+      className="
+        text-[10px]
+        font-semibold
+        tracking-[0.13em]
+        text-[#9466C4]
+      "
+    >
+      {children}
+    </p>
+  )
+}
+
+
+/* ========================================== */
+/* SNAPSHOT METRIC */
+/* ========================================== */
+
+function ComplianceSnapshotMetric({
+  value,
+  label,
+  helper,
+  last = false,
+}: {
+  value: string
+  label: string
+  helper: string
+  last?: boolean
+}) {
+  return (
+    <div
+      className={cn(
+        `
+          min-h-[175px]
+          py-7
+
+          sm:px-6
+        `,
+
+        !last &&
+          `
+            border-b
+            border-[#D8CCB6]
+
+            sm:border-e
+
+            xl:border-b-0
+          `,
+      )}
+    >
+
+      <p
+        className="
+          text-[clamp(38px,3.7vw,52px)]
+          font-medium
+          leading-none
+          tracking-[-0.055em]
+          text-[#131B4F]
+        "
+      >
+        {value}
+      </p>
+
+
+      <p
+        className="
+          mt-5
+          text-xs
+          font-semibold
+          text-[#131B4F]
+        "
+      >
+        {label}
+      </p>
+
+
+      <p
+        className="
+          mt-2
+          text-[13px]
+          leading-6
+          text-[#7F776A]
+        "
+      >
+        {helper}
+      </p>
 
     </div>
   )
@@ -779,57 +1623,100 @@ function VendorComplianceCard({
   isArabic: boolean
 }) {
   const hasMissing =
-    vendor.missingRequirements
-      .length > 0
+    vendor.missingRequirements.length >
+    0
+
 
   const shouldScroll =
-    vendor.missingRequirements
-      .length > 8
+    vendor.missingRequirements.length >
+    8
 
 
   return (
-    <div
+    <article
       className="
         overflow-hidden
-        rounded-2xl
         border
-        border-[#E2E7F0]
+        border-[#E3E5EA]
         bg-white
         transition-all
-        duration-200
-        hover:border-[#CBD5E7]
-        hover:shadow-[0_8px_24px_rgba(22,31,86,0.06)]
+        duration-300
+
+        hover:border-[#CDD1DA]
+        hover:shadow-[0_14px_32px_rgba(19,27,79,0.055)]
       "
     >
 
-      {/* ================================= */}
       {/* HEADER */}
-      {/* ================================= */}
 
       <div
         className="
           flex
           flex-col
-          gap-4
+          gap-5
           border-b
-          border-[#E7EBF2]
+          border-[#ECEEF2]
           px-5
           py-5
+
           sm:flex-row
           sm:items-center
           sm:justify-between
+
           lg:px-6
         "
       >
 
         <div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div
+            className="
+              flex
+              flex-wrap
+              items-center
+              gap-3
+            "
+          >
 
-            <h3 className="text-lg font-semibold text-slate-950">
+            <span
+              className="
+                flex
+                size-9
+                shrink-0
+                items-center
+                justify-center
+                bg-[#F4F5F7]
+                text-xs
+                font-semibold
+                text-[#131B4F]
+              "
+            >
+              #{vendor.rank}
+            </span>
+
+
+            <h3
+              className="
+                text-[19px]
+                font-medium
+                tracking-[-0.025em]
+                text-[#131B4F]
+              "
+            >
               {vendor.name}
             </h3>
 
+          </div>
+
+
+          <div
+            className="
+              mt-3
+              flex
+              flex-wrap
+              gap-2
+            "
+          >
 
             <EligibilityBadge
               eligible={
@@ -852,108 +1739,142 @@ function VendorComplianceCard({
 
           </div>
 
-
-          <p className="mt-1 text-xs text-slate-400">
-            {isArabic
-              ? `الترتيب #${vendor.rank}`
-              : `Rank #${vendor.rank}`}
-          </p>
-
         </div>
 
 
         <Link
           href={`/evaluations/${evaluationId}/vendors/${vendor.id}`}
           className="
+            group
             inline-flex
             items-center
-            gap-1.5
+            gap-2
             text-sm
             font-semibold
-            text-[#161F56]
-            transition-all
-            duration-200
-            hover:gap-2.5
+            text-[#131B4F]
           "
         >
+
           {isArabic
-            ? 'عرض تفاصيل المورد'
-            : 'View Vendor Details'}
+            ? 'تفاصيل المورد'
+            : 'Vendor details'}
+
 
           <ArrowRight
             className={cn(
-              'size-4',
+              `
+                size-4
+                transition-transform
+                duration-300
+              `,
+
               isArabic &&
                 'rotate-180',
+
+              isArabic
+                ? 'group-hover:-translate-x-1'
+                : 'group-hover:translate-x-1',
             )}
           />
+
         </Link>
 
       </div>
 
 
-      {/* ================================= */}
       {/* METRICS */}
-      {/* ================================= */}
 
-      <div className="grid grid-cols-1 border-b border-[#E7EBF2] sm:grid-cols-3">
+      <div
+        className="
+          grid
+          border-b
+          border-[#ECEEF2]
 
-        <ComplianceMetric
+          sm:grid-cols-3
+        "
+      >
+
+        <VendorMetric
           label={
             isArabic
               ? 'الامتثال الإلزامي'
-              : 'Mandatory Compliance'
+              : 'Mandatory compliance'
           }
-          value={`${vendor.overallMandatoryCompliance.toFixed(
-            1,
-          )}%`}
+          value={
+            formatPercent(
+              vendor.overallMandatoryCompliance,
+              1,
+            )
+          }
         />
 
 
-        <ComplianceMetric
+        <VendorMetric
           label={
             isArabic
               ? 'الدرجة الإجمالية'
-              : 'Overall Score'
+              : 'Overall score'
           }
-          value={`${vendor.overallScore.toFixed(
-            1,
-          )}%`}
-          border
+          value={
+            formatPercent(
+              vendor.overallScore,
+              1,
+            )
+          }
         />
 
 
-        <ComplianceMetric
+        <VendorMetric
           label={
             isArabic
-              ? 'المتطلبات غير المستوفاة'
-              : 'Missing Requirements'
+              ? 'غير المستوفى'
+              : 'Outstanding'
           }
-          value={String(
-            vendor
-              .missingRequirements
-              .length,
-          )}
-          border
+          value={
+            String(
+              vendor.missingRequirements.length,
+            )
+          }
+          last
         />
 
       </div>
 
 
-      {/* ================================= */}
       {/* ASSESSMENT */}
-      {/* ================================= */}
 
-      <div className="px-5 py-5 lg:px-6">
+      <div
+        className="
+          px-5
+          py-5
 
-        <h4 className="text-sm font-semibold text-slate-900">
+          lg:px-6
+        "
+      >
+
+        <p
+          className="
+            text-[10px]
+            font-semibold
+            tracking-[0.12em]
+            text-[#9466C4]
+          "
+        >
           {isArabic
             ? 'تقييم الامتثال'
-            : 'Compliance Assessment'}
-        </h4>
+            : 'COMPLIANCE ASSESSMENT'}
+        </p>
 
 
-        <p className="mt-2 max-w-6xl text-sm leading-7 text-slate-500">
+        <p
+          className="
+            mt-3
+            max-w-[1050px]
+            text-[14px]
+            leading-7
+            text-[#646D7F]
+          "
+        >
           {vendor.complianceAssessment ||
             (
               isArabic
@@ -965,11 +1886,15 @@ function VendorComplianceCard({
       </div>
 
 
-      {/* ================================= */}
       {/* OUTSTANDING REQUIREMENTS */}
-      {/* ================================= */}
 
-      <div className="border-t border-[#E7EBF2] bg-[#FBFCFE]">
+      <div
+        className="
+          border-t
+          border-[#ECEEF2]
+          bg-[#FAFBFC]
+        "
+      >
 
         <div
           className="
@@ -977,38 +1902,64 @@ function VendorComplianceCard({
             flex-col
             gap-3
             border-b
-            border-[#E7EBF2]
+            border-[#ECEEF2]
             px-5
             py-4
+
             sm:flex-row
             sm:items-center
             sm:justify-between
+
             lg:px-6
           "
         >
 
           <div>
 
-            <h4 className="text-sm font-semibold text-slate-900">
+            <h4
+              className="
+                text-sm
+                font-semibold
+                text-[#131B4F]
+              "
+            >
               {isArabic
                 ? 'المتطلبات الإلزامية غير المستوفاة'
-                : 'Outstanding Mandatory Requirements'}
+                : 'Outstanding mandatory requirements'}
             </h4>
 
 
-            <p className="mt-1 text-xs text-slate-500">
+            <p
+              className="
+                mt-1
+                text-xs
+                text-[#7D8595]
+              "
+            >
               {isArabic
-                ? 'المتطلبات التي لم يتم إثبات استيفائها بشكل كافٍ في العرض.'
-                : 'Requirements not sufficiently demonstrated in the proposal.'}
+                ? 'البنود التي لم يظهر في العرض ما يكفي لإثبات استيفائها.'
+                : 'Requirements not sufficiently demonstrated by the proposal.'
+              }
             </p>
 
           </div>
 
 
-          <div className="flex items-center gap-3">
+          <div
+            className="
+              flex
+              items-center
+              gap-3
+            "
+          >
 
             {shouldScroll && (
-              <span className="text-[11px] text-slate-400">
+              <span
+                className="
+                  text-[11px]
+                  text-[#969DAC]
+                "
+              >
                 {isArabic
                   ? 'مرر لعرض الكل'
                   : 'Scroll to view all'}
@@ -1019,9 +1970,6 @@ function VendorComplianceCard({
             <span
               className={cn(
                 `
-                  inline-flex
-                  w-fit
-                  rounded-full
                   px-2.5
                   py-1
                   text-xs
@@ -1029,8 +1977,14 @@ function VendorComplianceCard({
                 `,
 
                 hasMissing
-                  ? 'bg-rose-50 text-rose-700'
-                  : 'bg-emerald-50 text-emerald-700',
+                  ? `
+                      bg-[#FFF1F1]
+                      text-[#A44444]
+                    `
+                  : `
+                      bg-[#EEF8F2]
+                      text-[#25724C]
+                    `,
               )}
             >
               {isArabic
@@ -1044,41 +1998,53 @@ function VendorComplianceCard({
 
 
         {!hasMissing ? (
+          <div
+            className="
+              bg-white
+              px-5
+              py-5
 
-          <div className="px-5 py-5 lg:px-6">
+              lg:px-6
+            "
+          >
 
             <div
               className="
                 flex
                 items-center
                 gap-2
-                rounded-xl
                 border
-                border-emerald-100
-                bg-emerald-50/70
+                border-[#D7EBDD]
+                bg-[#F5FBF7]
                 px-4
                 py-3
                 text-sm
-                text-emerald-700
+                text-[#25724C]
               "
             >
 
-              <CheckCircle2 className="size-4 shrink-0" />
+              <CheckCircle2
+                className="
+                  size-4
+                  shrink-0
+                "
+              />
+
 
               {isArabic
-                ? 'لم يتم تحديد أي متطلبات إلزامية مفقودة.'
-                : 'No missing mandatory requirements were identified.'}
+                ? 'لم يتم تحديد متطلبات إلزامية مفقودة لهذا المورد.'
+                : 'No missing mandatory requirements were identified for this vendor.'}
 
             </div>
 
           </div>
-
         ) : (
-
           <div
             className={cn(
               `
+                bg-[#F8F9FB]
                 p-4
+
                 sm:p-5
               `,
 
@@ -1087,406 +2053,237 @@ function VendorComplianceCard({
                   max-h-[460px]
                   overflow-y-auto
                   overscroll-contain
+
+                  [scrollbar-color:#B9BEC8_transparent]
+                  [scrollbar-width:thin]
+
+                  [&::-webkit-scrollbar]:w-[7px]
+
+                  [&::-webkit-scrollbar-track]:bg-transparent
+
+                  [&::-webkit-scrollbar-thumb]:rounded-full
+                  [&::-webkit-scrollbar-thumb]:bg-[#B9BEC8]
+
+                  hover:[&::-webkit-scrollbar-thumb]:bg-[#9299A8]
                 `,
             )}
           >
 
-            <div className="grid gap-3 lg:grid-cols-2">
+            <div
+              className="
+                grid
+                gap-3
+
+                lg:grid-cols-2
+              "
+            >
 
               {vendor.missingRequirements.map(
                 (
                   requirement,
+                  index,
                 ) => (
-
-                  <div
+                  <MissingRequirementCard
                     key={
-                      requirement
-                        .requirementId
+                      requirement.requirementId
                     }
-                    className="
-                      rounded-xl
-                      border
-                      border-[#E7EBF2]
-                      bg-white
-                      px-4
-                      py-4
-                      transition-colors
-                      duration-150
-                      hover:border-[#CBD5E7]
-                      hover:bg-[#FCFDFF]
-                    "
-                  >
-
-                    <div className="flex items-start gap-3">
-
-                      <div
-                        className="
-                          mt-0.5
-                          flex
-                          size-8
-                          shrink-0
-                          items-center
-                          justify-center
-                          rounded-lg
-                          bg-rose-50
-                          text-rose-600
-                        "
-                      >
-                        <ShieldAlert className="size-4" />
-                      </div>
-
-
-                      <div className="min-w-0 flex-1">
-
-                        <p className="text-sm font-medium leading-6 text-slate-800">
-                          {requirement.requirement}
-                        </p>
-
-
-                        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
-
-                          {requirement.criterionName && (
-                            <span>
-                              {isArabic
-                                ? 'المعيار: '
-                                : 'Criterion: '}
-
-                              {
-                                requirement.criterionName
-                              }
-                            </span>
-                          )}
-
-
-                          {requirement.source && (
-                            <span>
-                              {isArabic
-                                ? 'المصدر: '
-                                : 'Source: '}
-
-                              {
-                                requirement.source
-                              }
-                            </span>
-                          )}
-
-                        </div>
-
-
-                        {requirement.issue && (
-                          <p className="mt-2 text-xs leading-5 text-rose-600">
-                            {
-                              requirement.issue
-                            }
-                          </p>
-                        )}
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
+                    index={
+                      index + 1
+                    }
+                    requirement={
+                      requirement
+                    }
+                    isArabic={
+                      isArabic
+                    }
+                  />
                 ),
               )}
 
             </div>
 
           </div>
-
         )}
 
       </div>
 
-    </div>
+    </article>
   )
 }
 
 
 /* ========================================== */
-/* WORKSPACE NAV */
+/* MISSING REQUIREMENT */
 /* ========================================== */
 
-function EvaluationNavItem({
-  href,
-  label,
-  helper,
-  icon: Icon,
-  active = false,
-}: {
-  href: string
-  label: string
-  helper: string
-  icon: ComponentType<{
-    className?: string
-  }>
-  active?: boolean
-}) {
-  return (
-    <Link
-      href={href}
-      className={cn(
-        `
-          group
-          relative
-          flex
-          min-w-[176px]
-          items-center
-          gap-3
-          rounded-xl
-          px-4
-          py-3
-          transition-all
-          duration-200
-          ease-out
-        `,
-
-        active
-          ? `
-              bg-[#161F56]
-              text-white
-              shadow-[0_5px_16px_rgba(22,31,86,0.20)]
-            `
-          : `
-              text-slate-600
-              hover:-translate-y-[1px]
-              hover:bg-[#F3F6FC]
-            `,
-      )}
-    >
-
-      <div
-        className={cn(
-          `
-            flex
-            size-9
-            shrink-0
-            items-center
-            justify-center
-            rounded-lg
-            transition-all
-            duration-200
-          `,
-
-          active
-            ? 'bg-white/10 text-white'
-            : `
-                bg-[#F2F5FB]
-                text-[#60709A]
-                group-hover:bg-white
-                group-hover:text-[#161F56]
-                group-hover:shadow-sm
-              `,
-        )}
-      >
-        <Icon className="size-4" />
-      </div>
-
-
-      <div>
-
-        <p
-          className={cn(
-            `
-              text-sm
-              font-semibold
-              transition-colors
-              duration-200
-            `,
-
-            active
-              ? 'text-white'
-              : 'text-slate-700 group-hover:text-[#161F56]',
-          )}
-        >
-          {label}
-        </p>
-
-
-        <p
-          className={cn(
-            `
-              mt-0.5
-              text-[10px]
-              transition-colors
-              duration-200
-            `,
-
-            active
-              ? 'text-white/55'
-              : 'text-slate-400 group-hover:text-[#7180A7]',
-          )}
-        >
-          {helper}
-        </p>
-
-      </div>
-
-
-      <span
-        className={cn(
-          `
-            absolute
-            bottom-0
-            start-4
-            end-4
-            h-[2px]
-            rounded-full
-            transition-transform
-            duration-200
-          `,
-
-          active
-            ? 'scale-x-100 bg-white/60'
-            : 'scale-x-0 bg-[#161F56] group-hover:scale-x-100',
-        )}
-      />
-
-    </Link>
-  )
-}
-
-
-function NavArrow({
+function MissingRequirementCard({
+  index,
+  requirement,
   isArabic,
 }: {
+  index: number
+  requirement: Vendor['missingRequirements'][number]
   isArabic: boolean
 }) {
   return (
-    <div className="flex w-7 shrink-0 items-center justify-center">
+    <article
+      className="
+        border
+        border-[#E6E8ED]
+        bg-white
+        px-4
+        py-4
+        transition-colors
+        duration-200
 
-      <ChevronRight
-        className={cn(
-          'size-3.5 text-slate-300',
+        hover:border-[#D5D9E1]
 
-          isArabic &&
-            'rotate-180',
-        )}
-      />
-
-    </div>
-  )
-}
-
-
-/* ========================================== */
-/* HEADER META */
-/* ========================================== */
-
-function HeaderMeta({
-  icon: Icon,
-  text,
-}: {
-  icon: ComponentType<{
-    className?: string
-  }>
-  text: string
-}) {
-  return (
-    <span className="inline-flex items-center gap-1.5">
-
-      <Icon className="size-4 text-[#6C789A]" />
-
-      {text}
-
-    </span>
-  )
-}
-
-
-/* ========================================== */
-/* SNAPSHOT METRIC */
-/* ========================================== */
-
-function SnapshotMetric({
-  label,
-  value,
-  helper,
-  icon: Icon,
-  last = false,
-}: {
-  label: string
-  value: string
-  helper: string
-  icon: ComponentType<{
-    className?: string
-  }>
-  last?: boolean
-}) {
-  return (
-    <div
-      className={cn(
-        `
-          group
-          flex
-          min-h-[110px]
-          items-center
-          gap-4
-          px-5
-          py-4
-          transition-colors
-          duration-200
-          hover:bg-[#F7F9FE]
-        `,
-
-        !last &&
-          `
-            border-b
-            border-[#E7EBF2]
-            sm:border-e
-            xl:border-b-0
-          `,
-      )}
+        sm:px-5
+      "
     >
 
       <div
         className="
           flex
-          size-10
-          shrink-0
-          items-center
-          justify-center
-          rounded-xl
-          bg-[#F2F5FB]
-          text-[#60709A]
-          transition-all
-          duration-200
-          group-hover:bg-[#E9EFFB]
-          group-hover:text-[#161F56]
+          items-start
+          gap-4
         "
       >
-        <Icon className="size-4" />
+
+        <span
+          className="
+            pt-0.5
+            text-[10px]
+            font-semibold
+            tracking-[0.1em]
+            text-[#A0A6B2]
+          "
+        >
+          {String(
+            index,
+          ).padStart(
+            2,
+            '0',
+          )}
+        </span>
+
+
+        <div
+          className="
+            min-w-0
+            flex-1
+          "
+        >
+
+          <div
+            className="
+              flex
+              items-start
+              gap-3
+            "
+          >
+
+            <ShieldAlert
+              className="
+                mt-1
+                size-4
+                shrink-0
+                text-[#A44444]
+              "
+            />
+
+
+            <p
+              className="
+                text-[14px]
+                font-medium
+                leading-7
+                text-[#3E4658]
+              "
+            >
+              {
+                requirement.requirement
+              }
+            </p>
+
+          </div>
+
+
+          {(requirement.criterionName ||
+            requirement.source) && (
+            <div
+              className="
+                mt-3
+                flex
+                flex-wrap
+                gap-x-4
+                gap-y-1
+                border-t
+                border-[#ECEEF2]
+                pt-3
+                text-[11px]
+                text-[#8B92A0]
+              "
+            >
+
+              {requirement.criterionName && (
+                <span>
+                  {isArabic
+                    ? 'المعيار: '
+                    : 'Criterion: '}
+
+                  {
+                    requirement.criterionName
+                  }
+                </span>
+              )}
+
+
+              {requirement.source && (
+                <span>
+                  {isArabic
+                    ? 'المصدر: '
+                    : 'Source: '}
+
+                  {
+                    requirement.source
+                  }
+                </span>
+              )}
+
+            </div>
+          )}
+
+
+          {requirement.issue && (
+            <p
+              className="
+                mt-3
+                text-xs
+                leading-6
+                text-[#A44444]
+              "
+            >
+              {
+                requirement.issue
+              }
+            </p>
+          )}
+
+        </div>
+
       </div>
 
-
-      <div className="min-w-0 flex-1">
-
-        <p className="text-[11px] font-medium text-slate-500">
-          {label}
-        </p>
-
-
-        <p className="mt-1 truncate text-lg font-semibold text-slate-950">
-          {value}
-        </p>
-
-
-        <p className="mt-0.5 text-xs text-slate-400">
-          {helper}
-        </p>
-
-      </div>
-
-    </div>
+    </article>
   )
 }
 
 
 /* ========================================== */
-/* TOP METRIC */
+/* VENDOR METRIC */
 /* ========================================== */
 
-function TopMetric({
+function VendorMetric({
   label,
   value,
   last = false,
@@ -1498,56 +2295,44 @@ function TopMetric({
   return (
     <div
       className={cn(
-        'px-4 py-4',
+        `
+          px-5
+          py-4
+
+          lg:px-6
+        `,
 
         !last &&
-          'border-b border-[#E7EBF2] sm:border-b-0 sm:border-e',
+          `
+            border-b
+            border-[#ECEEF2]
+
+            sm:border-b-0
+            sm:border-e
+          `,
       )}
     >
 
-      <p className="text-xs font-medium text-slate-500">
+      <p
+        className="
+          text-[10px]
+          font-medium
+          text-[#8C94A4]
+        "
+      >
         {label}
       </p>
 
 
-      <p className="mt-2 text-lg font-semibold text-[#161F56]">
-        {value}
-      </p>
-
-    </div>
-  )
-}
-
-
-/* ========================================== */
-/* COMPLIANCE METRIC */
-/* ========================================== */
-
-function ComplianceMetric({
-  label,
-  value,
-  border = false,
-}: {
-  label: string
-  value: string
-  border?: boolean
-}) {
-  return (
-    <div
-      className={cn(
-        'px-5 py-4 lg:px-6',
-
-        border &&
-          'border-t border-[#E7EBF2] sm:border-s sm:border-t-0',
-      )}
-    >
-
-      <p className="text-xs font-medium text-slate-500">
-        {label}
-      </p>
-
-
-      <p className="mt-2 text-xl font-semibold tracking-tight text-[#161F56]">
+      <p
+        className="
+          mt-2
+          text-[22px]
+          font-semibold
+          tracking-[-0.04em]
+          text-[#131B4F]
+        "
+      >
         {value}
       </p>
 
@@ -1568,9 +2353,27 @@ function EligibilityBadge({
   isArabic: boolean
 }) {
   return eligible ? (
-    <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+    <span
+      className="
+        inline-flex
+        w-fit
+        items-center
+        gap-1.5
+        bg-[#EEF8F2]
+        px-2.5
+        py-1.5
+        text-xs
+        font-semibold
+        text-[#25724C]
+      "
+    >
 
-      <CheckCircle2 className="size-3.5" />
+      <CheckCircle2
+        className="
+          size-3.5
+        "
+      />
+
 
       {isArabic
         ? 'مؤهل'
@@ -1578,9 +2381,27 @@ function EligibilityBadge({
 
     </span>
   ) : (
-    <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700">
+    <span
+      className="
+        inline-flex
+        w-fit
+        items-center
+        gap-1.5
+        bg-[#FFF1F1]
+        px-2.5
+        py-1.5
+        text-xs
+        font-semibold
+        text-[#A44444]
+      "
+    >
 
-      <XCircle className="size-3.5" />
+      <XCircle
+        className="
+          size-3.5
+        "
+      />
+
 
       {isArabic
         ? 'غير مؤهل'
@@ -1604,20 +2425,25 @@ function RiskBadge({
 }) {
   const styles = {
     LOW:
-      'border-emerald-200 bg-emerald-50 text-emerald-700',
+      'bg-[#EEF8F2] text-[#25724C]',
 
     MEDIUM:
-      'border-amber-200 bg-amber-50 text-amber-700',
+      'bg-[#FFF8E8] text-[#966515]',
 
     HIGH:
-      'border-rose-200 bg-rose-50 text-rose-700',
+      'bg-[#FFF1F1] text-[#A44444]',
   }
 
 
   const arabicLabels = {
-    LOW: 'مخاطر منخفضة',
-    MEDIUM: 'مخاطر متوسطة',
-    HIGH: 'مخاطر مرتفعة',
+    LOW:
+      'مخاطر منخفضة',
+
+    MEDIUM:
+      'مخاطر متوسطة',
+
+    HIGH:
+      'مخاطر مرتفعة',
   }
 
 
@@ -1629,10 +2455,8 @@ function RiskBadge({
           w-fit
           items-center
           gap-1.5
-          rounded-full
-          border
           px-2.5
-          py-1
+          py-1.5
           text-xs
           font-semibold
         `,
@@ -1641,14 +2465,23 @@ function RiskBadge({
       )}
     >
 
-      <ShieldAlert className="size-3.5" />
+      <ShieldAlert
+        className="
+          size-3.5
+        "
+      />
+
 
       {isArabic
         ? arabicLabels[risk]
         : `${
-            risk.charAt(0) +
+            risk.charAt(
+              0,
+            ) +
             risk
-              .slice(1)
+              .slice(
+                1,
+              )
               .toLowerCase()
           } Risk`}
 
@@ -1663,17 +2496,127 @@ function RiskBadge({
 
 function LoadingState() {
   return (
-    <div className="mx-auto w-full max-w-[1400px] px-4 py-8 md:px-6 lg:py-9">
+    <div
+      className="
+        min-h-screen
+        bg-white
+      "
+    >
 
-      <div className="h-20 animate-pulse rounded-2xl bg-muted" />
+      <div
+        className="
+          bg-[#F1ECE0]
+          px-5
+          py-10
 
-      <div className="mt-5 h-20 animate-pulse rounded-2xl bg-muted" />
+          sm:px-8
 
-      <div className="mt-6 h-72 animate-pulse rounded-2xl bg-muted" />
+          lg:px-12
+        "
+      >
 
-      <div className="mt-5 h-52 animate-pulse rounded-2xl bg-muted" />
+        <div
+          className="
+            mx-auto
+            grid
+            max-w-[1500px]
+            gap-5
 
-      <div className="mt-5 h-96 animate-pulse rounded-2xl bg-muted" />
+            xl:grid-cols-[0.68fr_1fr]
+          "
+        >
+
+          <div
+            className="
+              h-[520px]
+              animate-pulse
+              bg-[#131B4F]/90
+            "
+          />
+
+
+          <div
+            className="
+              grid
+              gap-5
+            "
+          >
+
+            <div
+              className="
+                h-[155px]
+                animate-pulse
+                bg-white
+              "
+            />
+
+
+            <div
+              className="
+                h-[155px]
+                animate-pulse
+                bg-white
+              "
+            />
+
+
+            <div
+              className="
+                h-[155px]
+                animate-pulse
+                bg-white
+              "
+            />
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div
+        className="
+          mx-auto
+          max-w-[1500px]
+          px-5
+          py-16
+
+          sm:px-8
+
+          lg:px-12
+        "
+      >
+
+        <div
+          className="
+            h-[300px]
+            animate-pulse
+            bg-[#F5F6F8]
+          "
+        />
+
+
+        <div
+          className="
+            mt-12
+            h-[180px]
+            animate-pulse
+            bg-[#F5F6F8]
+          "
+        />
+
+
+        <div
+          className="
+            mt-12
+            h-[520px]
+            animate-pulse
+            bg-[#F5F6F8]
+          "
+        />
+
+      </div>
 
     </div>
   )

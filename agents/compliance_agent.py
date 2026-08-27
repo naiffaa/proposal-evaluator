@@ -2,6 +2,11 @@ import json
 import re
 
 from services.llm_client import LLMClient
+from config import COMPLIANCE_CONTEXT_MAX_CHARS
+from utils.proposal_context import (
+    build_relevant_context,
+    requirement_query_parts,
+)
 
 
 class ComplianceAgent:
@@ -528,6 +533,16 @@ class ComplianceAgent:
             )
         )
 
+        relevant_context = build_relevant_context(
+            proposal_text=proposal_text,
+            query_parts=requirement_query_parts(
+                mandatory_requirements
+            ),
+            domain_hint="compliance",
+            max_chars=COMPLIANCE_CONTEXT_MAX_CHARS,
+            top_k=10,
+        )
+
         # =================================================
         # Prompt
         # =================================================
@@ -705,7 +720,7 @@ VENDOR PROPOSAL
 ==================================================
 
 <PROPOSAL_DOCUMENT>
-{proposal_text}
+{relevant_context}
 </PROPOSAL_DOCUMENT>
 """
 
@@ -715,7 +730,8 @@ VENDOR PROPOSAL
 
         raw_result = (
             self.llm.ask(
-                prompt
+                prompt,
+                label="ComplianceAgent",
             )
         )
 

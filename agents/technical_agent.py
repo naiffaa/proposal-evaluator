@@ -7,6 +7,11 @@ from concurrent.futures import (
 )
 
 from services.llm_client import LLMClient
+from config import FAST_MODEL_NAME, TECHNICAL_CONTEXT_MAX_CHARS
+from utils.proposal_context import (
+    build_relevant_context,
+    requirement_query_parts,
+)
 
 
 class TechnicalAgent:
@@ -44,7 +49,7 @@ class TechnicalAgent:
     # 12 + 12 + 12 + 8 = 4 batches
     #
     # This is still small enough to keep JSON stable.
-    BATCH_SIZE = 12
+    BATCH_SIZE = 16
 
     # Run only two technical batches simultaneously.
     #
@@ -53,7 +58,7 @@ class TechnicalAgent:
     MAX_BATCH_WORKERS = 2
 
     def __init__(self):
-        self.llm = LLMClient()
+        self.llm = LLMClient(model=FAST_MODEL_NAME)
 
     # =====================================================
     # Boolean normalization
@@ -201,7 +206,8 @@ STRICT RULES:
 
         repaired_response = (
             llm.ask(
-                repair_prompt
+                repair_prompt,
+                label="TechnicalJSONRepair",
             )
         )
 
@@ -768,6 +774,19 @@ STRICT RULES:
             )
         )
 
+        relevant_context = build_relevant_context(
+            proposal_text=proposal_text,
+            query_parts=[
+                criterion,
+                *requirement_query_parts(
+                    batch_requirements
+                ),
+            ],
+            domain_hint="technical",
+            max_chars=TECHNICAL_CONTEXT_MAX_CHARS,
+            top_k=10,
+        )
+
         expected_ids = [
             item[
                 "id"
@@ -951,7 +970,7 @@ VENDOR PROPOSAL
 ==================================================
 
 <PROPOSAL_DOCUMENT>
-{proposal_text}
+{relevant_context}
 </PROPOSAL_DOCUMENT>
 """
 
@@ -999,7 +1018,11 @@ VENDOR PROPOSAL
 
         response = (
             llm.ask(
-                prompt
+                prompt,
+                label=(
+                    f"TechnicalBatch"
+                    f"{batch_number}"
+                ),
             )
         )
 
@@ -1044,7 +1067,9 @@ VENDOR PROPOSAL
         )
 
         llm = (
-            LLMClient()
+            LLMClient(
+                model=FAST_MODEL_NAME
+            )
         )
 
         try:

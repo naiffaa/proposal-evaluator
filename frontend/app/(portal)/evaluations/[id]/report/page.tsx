@@ -5,32 +5,28 @@ import {
   useEffect,
   useMemo,
   useState,
-  type ComponentType,
+  type ReactNode,
 } from 'react'
 
 import Link from 'next/link'
 
 import {
-  ArrowRight,
-  Award,
-  BarChart3,
-  CalendarDays,
   CheckCircle2,
-  ChevronRight,
+  Download,
+  ExternalLink,
+  FileCheck2,
   FileText,
-  GitCompareArrows,
-  LayoutDashboard,
   ShieldAlert,
-  ShieldCheck,
-  Trophy,
-  Users,
   XCircle,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/empty-state'
 
-import { evaluationsApi } from '@/lib/api'
+import {
+  API_BASE_URL,
+  evaluationsApi,
+} from '@/lib/api'
 
 import {
   formatDate,
@@ -49,15 +45,21 @@ import type {
 export default function EvaluationReportPage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{
+    id: string
+  }>
 }) {
-  const { id } =
+  const {
+    id,
+  } =
     use(params)
+
 
   const {
     language,
     isArabic,
-  } = useLanguage()
+  } =
+    useLanguage()
 
 
   const [
@@ -68,11 +70,13 @@ export default function EvaluationReportPage({
       null,
     )
 
+
   const [
     loading,
     setLoading,
   ] =
     useState(true)
+
 
   const [
     error,
@@ -83,34 +87,59 @@ export default function EvaluationReportPage({
     )
 
 
+  /* ========================================== */
+  /* LOAD */
+  /* ========================================== */
+
   useEffect(() => {
     let active = true
 
+
     evaluationsApi
       .get(id)
-      .then((data) => {
-        if (!active) {
-          return
-        }
+      .then(
+        (
+          data,
+        ) => {
+          if (!active) {
+            return
+          }
 
-        setEvaluation(data)
-        setLoading(false)
-      })
-      .catch((err) => {
-        if (!active) {
-          return
-        }
 
-        setError(
-          isArabic
-            ? 'تعذر تحميل تقرير التقييم.'
-            : err instanceof Error
-              ? err.message
-              : 'Failed to load evaluation report.',
-        )
+          setEvaluation(
+            data,
+          )
 
-        setLoading(false)
-      })
+
+          setLoading(
+            false,
+          )
+        },
+      )
+      .catch(
+        (
+          err,
+        ) => {
+          if (!active) {
+            return
+          }
+
+
+          setError(
+            isArabic
+              ? 'تعذر تحميل تقرير التقييم.'
+              : err instanceof Error
+                ? err.message
+                : 'Failed to load evaluation report.',
+          )
+
+
+          setLoading(
+            false,
+          )
+        },
+      )
+
 
     return () => {
       active = false
@@ -121,74 +150,33 @@ export default function EvaluationReportPage({
   ])
 
 
+  /* ========================================== */
+  /* DERIVED DATA */
+  /* ========================================== */
+
   const sortedVendors =
-    useMemo(() => {
-      if (!evaluation) {
-        return []
-      }
-
-      return [
-        ...evaluation.vendors,
-      ].sort(
-        (a, b) =>
-          a.rank - b.rank,
-      )
-    }, [evaluation])
+    useMemo(
+      () => {
+        if (!evaluation) {
+          return []
+        }
 
 
-  if (loading) {
-    return (
-      <LoadingState />
+        return [
+          ...evaluation.vendors,
+        ].sort(
+          (
+            a,
+            b,
+          ) =>
+            a.rank -
+            b.rank,
+        )
+      },
+      [
+        evaluation,
+      ],
     )
-  }
-
-
-  if (error) {
-    return (
-      <div className="mx-auto w-full max-w-[1400px] px-4 py-8 md:px-6 lg:py-9">
-
-        <div className="rounded-2xl border border-rose-200 bg-white px-5 py-4 text-sm text-rose-700 shadow-sm">
-          {error}
-        </div>
-
-      </div>
-    )
-  }
-
-
-  if (!evaluation) {
-    return (
-      <div className="mx-auto w-full max-w-[1400px] px-4 py-8 md:px-6 lg:py-9">
-
-        <EmptyState
-          icon={FileText}
-          title={
-            isArabic
-              ? 'لم يتم العثور على التقرير'
-              : 'Report not found'
-          }
-          description={
-            isArabic
-              ? 'لا يتوفر تقرير تقييم لهذا التقييم.'
-              : 'No evaluation report is available for this evaluation.'
-          }
-          action={
-            <Button
-              nativeButton={false}
-              render={
-                <Link href="/evaluations" />
-              }
-            >
-              {isArabic
-                ? 'العودة إلى التقييمات'
-                : 'Back to Evaluations'}
-            </Button>
-          }
-        />
-
-      </div>
-    )
-  }
 
 
   const topVendor =
@@ -198,14 +186,18 @@ export default function EvaluationReportPage({
 
   const eligibleVendors =
     sortedVendors.filter(
-      (vendor) =>
+      (
+        vendor,
+      ) =>
         vendor.eligible,
     )
 
 
   const highRiskVendors =
     sortedVendors.filter(
-      (vendor) =>
+      (
+        vendor,
+      ) =>
         vendor.riskLevel ===
         'HIGH',
     )
@@ -218,292 +210,617 @@ export default function EvaluationReportPage({
         vendor,
       ) =>
         total +
-        vendor
-          .missingRequirements
-          .length,
+        vendor.missingRequirements.length,
       0,
     )
 
 
-  return (
-    <div className="mx-auto w-full max-w-[1400px] px-4 py-8 md:px-6 lg:py-9">
+  /* ========================================== */
+  /* ORIGINAL DOCUMENT URLS */
+  /* ========================================== */
 
-      {/* ===================================== */}
-      {/* HEADER */}
-      {/* ===================================== */}
-
-      <header>
-
-        <h1 className="text-[28px] font-semibold tracking-tight text-slate-950 lg:text-[30px]">
-          {isArabic
-            ? 'تقرير التقييم النهائي'
-            : 'Final Evaluation Report'}
-        </h1>
+  const rfpDownloadUrl =
+    `${API_BASE_URL}/evaluations/${encodeURIComponent(
+      id,
+    )}/documents/rfp`
 
 
-        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-500">
-
-          <HeaderMeta
-            icon={FileText}
-            text={
-              evaluation.rfpName
-            }
-          />
+  const rfpViewUrl =
+    `${API_BASE_URL}/evaluations/${encodeURIComponent(
+      id,
+    )}/documents/rfp/view`
 
 
-          <HeaderMeta
-            icon={Users}
-            text={
-              isArabic
-                ? `${evaluation.vendorCount} ${
-                    evaluation.vendorCount === 1
-                      ? 'مورد'
-                      : 'موردين'
-                  }`
-                : `${evaluation.vendorCount} vendor${
-                    evaluation.vendorCount !== 1
-                      ? 's'
-                      : ''
-                  }`
-            }
-          />
+  const topProposalDownloadUrl =
+    `${API_BASE_URL}/evaluations/${encodeURIComponent(
+      id,
+    )}/documents/top-proposal`
 
 
-          <HeaderMeta
-            icon={CalendarDays}
-            text={formatDate(
-              evaluation.createdDate,
-              language,
-            )}
-          />
-
-        </div>
-
-      </header>
+  const topProposalViewUrl =
+    `${API_BASE_URL}/evaluations/${encodeURIComponent(
+      id,
+    )}/documents/top-proposal/view`
 
 
-      {/* ===================================== */}
-      {/* WORKSPACE NAV */}
-      {/* ===================================== */}
+  /* ========================================== */
+  /* PRINT */
+  /* ========================================== */
 
-      <nav
+  function handleDownloadReport() {
+    window.print()
+  }
+
+
+  /* ========================================== */
+  /* LOADING */
+  /* ========================================== */
+
+  if (loading) {
+    return (
+      <LoadingState />
+    )
+  }
+
+
+  /* ========================================== */
+  /* ERROR */
+  /* ========================================== */
+
+  if (error) {
+    return (
+      <div
         className="
-          mt-7
-          overflow-x-auto
-          rounded-2xl
-          border
-          border-[#DDE3EE]
+          min-h-screen
           bg-white
-          p-2
-          shadow-[0_5px_20px_rgba(22,31,86,0.045)]
+          px-5
+          py-16
+
+          sm:px-8
+        "
+      >
+        <div
+          className="
+            mx-auto
+            max-w-[1100px]
+            border
+            border-[#F1C9C9]
+            bg-[#FFF8F8]
+            px-6
+            py-5
+            text-sm
+            text-[#A44444]
+          "
+        >
+          {error}
+        </div>
+      </div>
+    )
+  }
+
+
+  /* ========================================== */
+  /* NOT FOUND */
+  /* ========================================== */
+
+  if (!evaluation) {
+    return (
+      <div
+        className="
+          min-h-screen
+          bg-white
+          px-5
+          py-16
+
+          sm:px-8
+        "
+      >
+        <div
+          className="
+            mx-auto
+            max-w-[1100px]
+            border
+            border-[#E5E7EC]
+            p-10
+          "
+        >
+          <EmptyState
+            icon={
+              FileText
+            }
+            title={
+              isArabic
+                ? 'لم يتم العثور على التقرير'
+                : 'Report not found'
+            }
+            description={
+              isArabic
+                ? 'لا يتوفر تقرير تقييم لهذه المنافسة.'
+                : 'No evaluation report is available for this evaluation.'
+            }
+            action={
+              <Button
+                nativeButton={
+                  false
+                }
+                render={
+                  <Link
+                    href="/evaluations"
+                  />
+                }
+              >
+                {isArabic
+                  ? 'العودة إلى سجل المنافسات'
+                  : 'Back to Evaluations'}
+              </Button>
+            }
+          />
+        </div>
+      </div>
+    )
+  }
+
+
+  return (
+    <>
+      {/* ===================================== */}
+      {/* PRINT SETTINGS */}
+      {/* ===================================== */}
+
+      <style>
+        {`
+          @media print {
+            @page {
+              size: A4 portrait;
+              margin: 12mm;
+            }
+
+            html,
+            body {
+              background: white !important;
+            }
+
+            body {
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+
+            header,
+            footer {
+              display: none !important;
+            }
+
+            * {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+
+            a {
+              text-decoration: none !important;
+            }
+
+            iframe {
+              display: none !important;
+            }
+          }
+        `}
+      </style>
+
+
+      <div
+        dir={
+          isArabic
+            ? 'rtl'
+            : 'ltr'
+        }
+        className="
+          min-h-screen
+          bg-[#F5F5F3]
+          text-[#131B4F]
+
+          print:min-h-0
+          print:bg-white
         "
       >
 
-        <div className="flex min-w-max items-stretch">
+        {/* =================================== */}
+        {/* TOOLBAR */}
+        {/* =================================== */}
 
-          <EvaluationNavItem
-            href={`/evaluations/${id}`}
-            label={
-              isArabic
-                ? 'نظرة عامة'
-                : 'Overview'
-            }
-            helper={
-              isArabic
-                ? 'الملخص'
-                : 'Summary'
-            }
-            icon={LayoutDashboard}
-          />
+        <div
+          className="
+            border-b
+            border-[#E3E5EA]
+            bg-white
+            px-5
+            py-4
 
-          <NavArrow
-            isArabic={
-              isArabic
-            }
-          />
+            print:hidden
 
-          <EvaluationNavItem
-            href={`/evaluations/${id}/rfp`}
-            label={
-              isArabic
-                ? 'إطار طلب العرض'
-                : 'RFP Framework'
-            }
-            helper={
-              isArabic
-                ? 'المعايير'
-                : 'Criteria'
-            }
-            icon={FileText}
-          />
+            sm:px-8
 
-          <NavArrow
-            isArabic={
-              isArabic
-            }
-          />
-
-          <EvaluationNavItem
-            href={`/evaluations/${id}/comparison`}
-            label={
-              isArabic
-                ? 'مقارنة الموردين'
-                : 'Vendor Comparison'
-            }
-            helper={
-              isArabic
-                ? 'التقييم'
-                : 'Scoring'
-            }
-            icon={GitCompareArrows}
-          />
-
-          <NavArrow
-            isArabic={
-              isArabic
-            }
-          />
-
-          <EvaluationNavItem
-            href={`/evaluations/${id}/compliance`}
-            label={
-              isArabic
-                ? 'الامتثال'
-                : 'Compliance'
-            }
-            helper={
-              isArabic
-                ? 'المتطلبات'
-                : 'Requirements'
-            }
-            icon={ShieldCheck}
-          />
-
-          <NavArrow
-            isArabic={
-              isArabic
-            }
-          />
-
-          <EvaluationNavItem
-            href={`/evaluations/${id}/report`}
-            label={
-              isArabic
-                ? 'التقرير'
-                : 'Report'
-            }
-            helper={
-              isArabic
-                ? 'النتيجة النهائية'
-                : 'Final output'
-            }
-            icon={BarChart3}
-            active
-          />
-
-        </div>
-
-      </nav>
-
-
-      {/* ===================================== */}
-      {/* CONTENT */}
-      {/* ===================================== */}
-
-      <main className="mt-6 space-y-5">
-
-        {/* ================================= */}
-        {/* FINAL RECOMMENDATION */}
-        {/* ================================= */}
-
-        <section>
-
-          <h2 className="text-xl font-semibold tracking-tight text-slate-950">
-            {isArabic
-              ? 'التوصية النهائية'
-              : 'Final Recommendation'}
-          </h2>
-
-
-          <p className="mt-1 text-sm text-slate-500">
-            {isArabic
-              ? 'التوصية النهائية بناءً على الترتيب والامتثال ومستوى المخاطر.'
-              : 'Consolidated procurement recommendation based on ranking, compliance, and risk.'}
-          </p>
-
-
+            lg:px-12
+          "
+        >
           <div
             className="
-              mt-3
-              overflow-hidden
-              rounded-2xl
-              border
-              border-[#DDE3EE]
-              bg-white
-              shadow-[0_8px_26px_rgba(22,31,86,0.04)]
+              mx-auto
+              flex
+              w-full
+              max-w-[1280px]
+              flex-col
+              gap-4
+
+              sm:flex-row
+              sm:items-center
+              sm:justify-between
             "
           >
-
-            <div className="px-6 py-6 lg:px-7">
-
-              <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-
-                <div className="flex min-w-0 items-start gap-4">
-
-                  <div
-                    className={cn(
-                      `
-                        flex
-                        size-12
-                        shrink-0
-                        items-center
-                        justify-center
-                        rounded-xl
-                      `,
-
-                      evaluation.recommendedVendor
-                        ? 'bg-emerald-50 text-emerald-700'
-                        : 'bg-rose-50 text-rose-700',
-                    )}
-                  >
-
-                    {evaluation.recommendedVendor ? (
-                      <Award className="size-5" />
-                    ) : (
-                      <ShieldAlert className="size-5" />
-                    )}
-
-                  </div>
+            <div>
+              <p
+                className="
+                  text-[10px]
+                  font-semibold
+                  tracking-[0.13em]
+                  text-[#9466C4]
+                "
+              >
+                {isArabic
+                  ? 'تقرير التقييم النهائي'
+                  : 'FINAL EVALUATION REPORT'}
+              </p>
 
 
-                  <div className="min-w-0">
-
-                    <h3 className="text-2xl font-semibold tracking-tight text-slate-950">
-                      {getRecommendationTitle(
-                        evaluation.recommendationStatus,
-                        evaluation.recommendedVendor,
-                        isArabic,
-                      )}
-                    </h3>
-
-                  </div>
-
-                </div>
-
-
-                <RecommendationBadge
-                  evaluation={
-                    evaluation
-                  }
-                  isArabic={
-                    isArabic
-                  }
-                />
-
-              </div>
+              <p
+                className="
+                  mt-1
+                  text-sm
+                  text-[#727A8C]
+                "
+              >
+                {isArabic
+                  ? 'نسخة شاملة قابلة للطباعة والحفظ كملف PDF'
+                  : 'Complete report ready for printing or saving as PDF'}
+              </p>
+            </div>
 
 
-              <p className="mt-5 max-w-5xl text-sm leading-7 text-slate-600">
+            <button
+              type="button"
+              onClick={
+                handleDownloadReport
+              }
+              className="
+                inline-flex
+                h-11
+                items-center
+                justify-center
+                gap-2
+                bg-[#131B4F]
+                px-5
+                text-sm
+                font-semibold
+                text-white
+                transition-colors
+
+                hover:bg-[#1D208E]
+              "
+            >
+              <Download
+                className="
+                  size-4
+                "
+              />
+
+              {isArabic
+                ? 'تحميل التقرير PDF'
+                : 'Download Report PDF'}
+            </button>
+          </div>
+        </div>
+
+
+        {/* =================================== */}
+        {/* DOCUMENT */}
+        {/* =================================== */}
+
+        <main
+          className="
+            mx-auto
+            my-8
+            w-full
+            max-w-[1280px]
+            overflow-hidden
+            bg-white
+            shadow-[0_20px_70px_rgba(19,27,79,0.08)]
+
+            print:my-0
+            print:max-w-none
+            print:overflow-visible
+            print:shadow-none
+          "
+        >
+
+          {/* ================================= */}
+          {/* COVER */}
+          {/* ================================= */}
+
+          <section
+            className="
+              bg-[#131B4F]
+              px-7
+              py-10
+              text-white
+
+              print:break-after-page
+              print:px-8
+              print:py-10
+
+              sm:px-10
+              sm:py-12
+
+              lg:px-14
+              lg:py-14
+            "
+          >
+            <div
+              className="
+                flex
+                flex-wrap
+                items-center
+                justify-between
+                gap-4
+              "
+            >
+              <span
+                className="
+                  bg-white/10
+                  px-3
+                  py-2
+                  text-[10px]
+                  font-semibold
+                  tracking-[0.14em]
+                  text-white
+                "
+              >
+                {isArabic
+                  ? 'التقرير النهائي'
+                  : 'FINAL EVALUATION REPORT'}
+              </span>
+
+
+              <span
+                className="
+                  text-xs
+                  text-white/45
+                "
+              >
+                {evaluation.id}
+              </span>
+            </div>
+
+
+            <div
+              className="
+                mt-16
+                max-w-[900px]
+
+                print:mt-12
+              "
+            >
+              <p
+                className="
+                  text-[10px]
+                  font-semibold
+                  tracking-[0.14em]
+                  text-[#CDB78F]
+                "
+              >
+                {isArabic
+                  ? 'ملف المنافسة'
+                  : 'COMPETITION RFP'}
+              </p>
+
+
+              {/* RFP NAME -> ORIGINAL RFP */}
+
+              <a
+                href={
+                  rfpViewUrl
+                }
+                target="_blank"
+                rel="noreferrer"
+                className="
+                  mt-5
+                  block
+                  max-w-[900px]
+                  break-words
+                  text-[clamp(34px,5vw,62px)]
+                  font-medium
+                  leading-[1.03]
+                  tracking-[-0.05em]
+                  text-white
+                  transition-opacity
+
+                  hover:opacity-80
+
+                  print:text-[34px]
+                "
+              >
+                {evaluation.rfpName}
+              </a>
+
+
+              <p
+                className="
+                  mt-7
+                  max-w-[760px]
+                  text-[15px]
+                  leading-8
+                  text-white/65
+
+                  print:text-[12px]
+                  print:leading-6
+                "
+              >
+                {isArabic
+                  ? 'تقرير شامل يلخص إطار المنافسة، نتائج تقييم عروض الموردين، الترتيب، الامتثال الإلزامي، المخاطر والتوصية النهائية لدعم المراجعة البشرية قبل قرار الترسية.'
+                  : 'A comprehensive report covering the competition framework, vendor evaluation results, ranking, mandatory compliance, risk, and the final recommendation for human review before award.'}
+              </p>
+            </div>
+
+
+            <div
+              className="
+                mt-14
+                grid
+                gap-px
+                bg-white/15
+
+                sm:grid-cols-3
+
+                print:grid-cols-3
+              "
+            >
+              <CoverMetric
+                label={
+                  isArabic
+                    ? 'عدد العروض'
+                    : 'VENDOR PROPOSALS'
+                }
+                value={
+                  String(
+                    evaluation.vendorCount,
+                  )
+                }
+              />
+
+
+              <CoverMetric
+                label={
+                  isArabic
+                    ? 'العروض المؤهلة'
+                    : 'ELIGIBLE VENDORS'
+                }
+                value={
+                  String(
+                    eligibleVendors.length,
+                  )
+                }
+              />
+
+
+              <CoverMetric
+                label={
+                  isArabic
+                    ? 'تاريخ التقييم'
+                    : 'EVALUATION DATE'
+                }
+                value={
+                  formatDate(
+                    evaluation.createdDate,
+                    language,
+                  )
+                }
+                compact
+              />
+            </div>
+
+
+            <p
+              className="
+                mt-6
+                hidden
+                text-[9px]
+                text-white/40
+
+                print:block
+              "
+            >
+              {isArabic
+                ? 'اسم ملف المنافسة أعلاه رابط قابل للنقر للوصول إلى المستند الأصلي.'
+                : 'The RFP filename above is a clickable link to the original source document.'}
+            </p>
+          </section>
+
+
+          {/* ================================= */}
+          {/* 01 EXECUTIVE SUMMARY */}
+          {/* ================================= */}
+
+          <ReportSection
+            number="01"
+            eyebrow={
+              isArabic
+                ? 'الملخص التنفيذي'
+                : 'EXECUTIVE SUMMARY'
+            }
+            title={
+              isArabic
+                ? 'خلاصة نتيجة المنافسة'
+                : 'Competition outcome at a glance'
+            }
+          >
+
+            {/* RECOMMENDATION */}
+
+            <div
+              className="
+                border
+                border-[#E3E5EA]
+                bg-[#F8F8F6]
+                p-7
+
+                print:break-inside-avoid
+                print:p-5
+
+                sm:p-8
+              "
+            >
+              <RecommendationBadge
+                evaluation={
+                  evaluation
+                }
+                isArabic={
+                  isArabic
+                }
+              />
+
+
+              <h3
+                className="
+                  mt-5
+                  max-w-[980px]
+                  break-words
+                  text-[clamp(25px,3vw,38px)]
+                  font-medium
+                  leading-[1.1]
+                  tracking-[-0.04em]
+                  text-[#131B4F]
+
+                  print:text-[22px]
+                "
+              >
+                {getRecommendationTitle(
+                  evaluation.recommendationStatus,
+                  evaluation.recommendedVendor,
+                  isArabic,
+                )}
+              </h3>
+
+
+              <p
+                className="
+                  mt-5
+                  max-w-[1050px]
+                  text-[14px]
+                  leading-7
+                  text-[#646D7F]
+
+                  print:text-[11px]
+                  print:leading-5
+                "
+              >
                 {evaluation.advisoryRecommendation ||
                   (
                     isArabic
@@ -516,418 +833,445 @@ export default function EvaluationReportPage({
               {evaluation.humanReviewRequired && (
                 <div
                   className="
-                    mt-5
+                    mt-6
                     flex
                     items-start
                     gap-3
-                    rounded-xl
-                    border
-                    border-[#E7EBF2]
-                    bg-[#F8FAFD]
-                    px-4
-                    py-3.5
+                    border-t
+                    border-[#DEE1E7]
+                    pt-5
                   "
                 >
+                  <ShieldAlert
+                    className="
+                      mt-1
+                      size-4
+                      shrink-0
+                      text-[#9466C4]
+                    "
+                  />
 
-                  <ShieldAlert className="mt-0.5 size-4 shrink-0 text-[#6676A6]" />
+                  <p
+                    className="
+                      text-[13px]
+                      leading-6
+                      text-[#727A8C]
 
-
-                  <p className="text-sm leading-6 text-slate-600">
+                      print:text-[10px]
+                      print:leading-5
+                    "
+                  >
                     {isArabic
-                      ? 'يلزم إجراء مراجعة بشرية قبل اتخاذ أي قرار شراء أو ترسية نهائي.'
-                      : 'Human review is required before any final procurement decision or award.'}
+                      ? 'هذه التوصية استشارية ويجب إجراء مراجعة بشرية قبل أي قرار ترسية نهائي.'
+                      : 'This recommendation is advisory and requires human review before any final award decision.'}
                   </p>
-
                 </div>
               )}
-
-            </div>
-
-          </div>
-
-        </section>
-
-
-        {/* ================================= */}
-        {/* REPORT SNAPSHOT */}
-        {/* ================================= */}
-
-        <section>
-
-          <h2 className="text-xl font-semibold tracking-tight text-slate-950">
-            {isArabic
-              ? 'ملخص التقرير'
-              : 'Report Snapshot'}
-          </h2>
-
-
-          <p className="mt-1 text-sm text-slate-500">
-            {isArabic
-              ? 'أهم نتائج هذا التقييم.'
-              : 'Key outcomes across this evaluation.'}
-          </p>
-
-
-          <div
-            className="
-              mt-3
-              grid
-              overflow-hidden
-              rounded-2xl
-              border
-              border-[#DDE3EE]
-              bg-white
-              shadow-[0_8px_26px_rgba(22,31,86,0.045)]
-              sm:grid-cols-2
-              xl:grid-cols-4
-            "
-          >
-
-            <SnapshotMetric
-              label={
-                isArabic
-                  ? 'المورد الأعلى ترتيبًا'
-                  : 'Top Ranked Vendor'
-              }
-              value={
-                evaluation.topRankedVendor ??
-                (
-                  isArabic
-                    ? 'لا يوجد'
-                    : 'None'
-                )
-              }
-              helper={
-                evaluation.topRankedVendorScore !==
-                null
-                  ? isArabic
-                    ? `${formatPercent(
-                        evaluation.topRankedVendorScore,
-                        1,
-                      )} درجة موزونة`
-                    : `${formatPercent(
-                        evaluation.topRankedVendorScore,
-                        1,
-                      )} weighted score`
-                  : isArabic
-                    ? 'لا توجد درجة متاحة'
-                    : 'No score available'
-              }
-              icon={Trophy}
-            />
-
-
-            <SnapshotMetric
-              label={
-                isArabic
-                  ? 'الموردون المؤهلون'
-                  : 'Eligible Vendors'
-              }
-              value={String(
-                eligibleVendors.length,
-              )}
-              helper={
-                isArabic
-                  ? `تم تقييم ${evaluation.vendorCount}`
-                  : `${evaluation.vendorCount} evaluated`
-              }
-              icon={CheckCircle2}
-            />
-
-
-            <SnapshotMetric
-              label={
-                isArabic
-                  ? 'الموردون مرتفعو المخاطر'
-                  : 'High Risk Vendors'
-              }
-              value={String(
-                highRiskVendors.length,
-              )}
-              helper={
-                isArabic
-                  ? 'يتطلبون مراجعة إضافية'
-                  : 'Require additional review'
-              }
-              icon={ShieldAlert}
-            />
-
-
-            <SnapshotMetric
-              label={
-                isArabic
-                  ? 'الفجوات القائمة'
-                  : 'Outstanding Gaps'
-              }
-              value={String(
-                totalMissing,
-              )}
-              helper={
-                isArabic
-                  ? 'المتطلبات الإلزامية'
-                  : 'Mandatory requirements'
-              }
-              icon={FileText}
-              last
-            />
-
-          </div>
-
-        </section>
-
-
-        {/* ================================= */}
-        {/* RFP SUMMARY */}
-        {/* ================================= */}
-
-        <section
-          className="
-            grid
-            overflow-hidden
-            rounded-2xl
-            border
-            border-[#DDE3EE]
-            bg-white
-            shadow-[0_8px_26px_rgba(22,31,86,0.04)]
-            md:grid-cols-[1.5fr_1fr]
-          "
-        >
-
-          <div className="px-6 py-5 lg:px-7">
-
-            <div className="flex items-start gap-4">
-
-              <div
-                className="
-                  flex
-                  size-11
-                  shrink-0
-                  items-center
-                  justify-center
-                  rounded-xl
-                  bg-[#F2F5FB]
-                  text-[#161F56]
-                "
-              >
-                <FileText className="size-5" />
-              </div>
-
-
-              <div className="min-w-0">
-
-                <h2 className="text-base font-semibold text-slate-950">
-                  {evaluation.rfpName}
-                </h2>
-
-
-                <p className="mt-1 text-sm text-slate-500">
-                  {isArabic
-                    ? 'تم إنشاء التقييم في '
-                    : 'Evaluation created '}
-
-                  {formatDate(
-                    evaluation.createdDate,
-                    language,
-                  )}
-                </p>
-
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div
-            className="
-              grid
-              grid-cols-3
-              border-t
-              border-[#E7EBF2]
-              bg-[#F8FAFD]
-              md:border-s
-              md:border-t-0
-            "
-          >
-
-            <MiniMetric
-              label={
-                isArabic
-                  ? 'المعايير'
-                  : 'Criteria'
-              }
-              value={
-                evaluation.rfp
-                  .totalCriteria
-              }
-            />
-
-
-            <MiniMetric
-              label={
-                isArabic
-                  ? 'المتطلبات'
-                  : 'Requirements'
-              }
-              value={
-                evaluation.rfp
-                  .totalRequirements
-              }
-            />
-
-
-            <MiniMetric
-              label={
-                isArabic
-                  ? 'إلزامي'
-                  : 'Mandatory'
-              }
-              value={
-                evaluation.rfp
-                  .mandatoryRequirements
-              }
-            />
-
-          </div>
-
-        </section>
-
-
-        {/* ================================= */}
-        {/* VENDOR RANKING */}
-        {/* ================================= */}
-
-        <section
-          className="
-            overflow-hidden
-            rounded-2xl
-            border
-            border-[#DDE3EE]
-            bg-white
-            shadow-[0_8px_28px_rgba(22,31,86,0.04)]
-          "
-        >
-
-          <div
-            className="
-              flex
-              flex-col
-              gap-4
-              border-b
-              border-[#E7EBF2]
-              px-6
-              py-5
-              sm:flex-row
-              sm:items-center
-              sm:justify-between
-              lg:px-7
-            "
-          >
-
-            <div>
-
-              <h2 className="text-xl font-semibold tracking-tight text-slate-950">
-                {isArabic
-                  ? 'ترتيب الموردين'
-                  : 'Vendor Ranking'}
-              </h2>
-
-
-              <p className="mt-1 text-sm text-slate-500">
-                {isArabic
-                  ? 'تم ترتيب الموردين باستخدام التقييم الموزون وشروط الامتثال الإلزامية.'
-                  : 'Ranked using deterministic weighted scoring and mandatory compliance gating.'}
-              </p>
-
             </div>
 
 
-            {sortedVendors.length > 1 && (
-              <Button
-                variant="outline"
-                nativeButton={false}
-                render={
-                  <Link
-                    href={`/evaluations/${id}/comparison`}
-                  />
-                }
-              >
-                {isArabic
-                  ? 'مقارنة الموردين'
-                  : 'Compare Vendors'}
-
-                <ArrowRight
-                  className={cn(
-                    'size-4',
-                    isArabic &&
-                      'rotate-180',
-                  )}
-                />
-              </Button>
-            )}
-
-          </div>
-
-
-          <div className="overflow-x-auto">
+            {/* SUMMARY RESULT */}
 
             <div
               className="
-                hidden
-                min-w-[900px]
-                grid-cols-[70px_minmax(0,2fr)_140px_170px_140px_140px]
-                gap-4
-                border-b
-                border-[#E7EBF2]
-                bg-[#F8FAFD]
-                px-6
-                py-3.5
-                text-xs
-                font-medium
-                text-slate-500
-                lg:grid
-                lg:px-7
+                mt-5
+                border
+                border-[#E3E5EA]
+                bg-white
+
+                print:break-inside-avoid
               "
             >
-              <span>
-                {isArabic
-                  ? 'الترتيب'
-                  : 'Rank'}
-              </span>
 
-              <span>
-                {isArabic
-                  ? 'المورد'
-                  : 'Vendor'}
-              </span>
+              {/* TOP VENDOR */}
 
-              <span>
-                {isArabic
-                  ? 'الدرجة'
-                  : 'Score'}
-              </span>
+              <div
+                className="
+                  grid
+                  gap-5
+                  border-b
+                  border-[#E3E5EA]
+                  px-6
+                  py-6
 
-              <span>
-                {isArabic
-                  ? 'الإلزامي'
-                  : 'Mandatory'}
-              </span>
+                  md:grid-cols-[1fr_auto]
+                  md:items-center
 
-              <span>
-                {isArabic
-                  ? 'الأهلية'
-                  : 'Eligibility'}
-              </span>
+                  print:grid-cols-[1fr_120px]
+                  print:items-center
+                  print:px-5
+                  print:py-4
+                "
+              >
+                <div
+                  className="
+                    min-w-0
+                  "
+                >
+                  <p
+                    className="
+                      text-[9px]
+                      font-semibold
+                      tracking-[0.12em]
+                      text-[#9466C4]
+                    "
+                  >
+                    {isArabic
+                      ? 'المورد المتصدر'
+                      : 'TOP-RANKED VENDOR'}
+                  </p>
 
-              <span>
-                {isArabic
-                  ? 'المخاطر'
-                  : 'Risk'}
-              </span>
+
+                  {topVendor ? (
+                    <Link
+                      href={`/evaluations/${evaluation.id}/vendors/${topVendor.id}`}
+                      className="
+                        mt-2
+                        block
+                        break-words
+                        text-[22px]
+                        font-medium
+                        leading-[1.2]
+                        tracking-[-0.03em]
+                        text-[#131B4F]
+                        underline-offset-4
+
+                        hover:underline
+
+                        print:text-[16px]
+                      "
+                    >
+                      {topVendor.name}
+                    </Link>
+                  ) : (
+                    <p
+                      className="
+                        mt-2
+                        text-[22px]
+                        font-medium
+                        text-[#131B4F]
+                      "
+                    >
+                      —
+                    </p>
+                  )}
+                </div>
+
+
+                <div>
+                  <p
+                    className="
+                      text-[9px]
+                      font-semibold
+                      tracking-[0.1em]
+                      text-[#949BAA]
+                    "
+                  >
+                    {isArabic
+                      ? 'أعلى درجة'
+                      : 'TOP SCORE'}
+                  </p>
+
+
+                  <p
+                    className="
+                      mt-1
+                      text-[32px]
+                      font-semibold
+                      tracking-[-0.05em]
+                      text-[#131B4F]
+
+                      print:text-[24px]
+                    "
+                  >
+                    {topVendor
+                      ? formatPercent(
+                          topVendor.overallScore,
+                          1,
+                        )
+                      : '—'}
+                  </p>
+                </div>
+              </div>
+
+
+              {/* OTHER METRICS */}
+
+              <div
+                className="
+                  grid
+
+                  sm:grid-cols-3
+
+                  print:grid-cols-3
+                "
+              >
+                <ExecutiveMetric
+                  label={
+                    isArabic
+                      ? 'الموردين المؤهلين'
+                      : 'Eligible Vendors'
+                  }
+                  value={`${eligibleVendors.length}/${evaluation.vendorCount}`}
+                />
+
+
+                <ExecutiveMetric
+                  label={
+                    isArabic
+                      ? 'الفجوات الإلزامية'
+                      : 'Mandatory Gaps'
+                  }
+                  value={
+                    String(
+                      totalMissing,
+                    )
+                  }
+                />
+
+
+                <ExecutiveMetric
+                  label={
+                    isArabic
+                      ? 'مخاطر مرتفعة'
+                      : 'High-Risk Vendors'
+                  }
+                  value={
+                    String(
+                      highRiskVendors.length,
+                    )
+                  }
+                  last
+                />
+              </div>
+            </div>
+
+          </ReportSection>
+
+
+          {/* ================================= */}
+          {/* 02 ORIGINAL DOCUMENTS */}
+          {/* ================================= */}
+
+          <ReportSection
+            number="02"
+            eyebrow={
+              isArabic
+                ? 'المستندات الأصلية'
+                : 'SOURCE DOCUMENTS'
+            }
+            title={
+              isArabic
+                ? 'المستندات التي بُني عليها التقييم'
+                : 'Original documents used in this evaluation'
+            }
+            cream
+          >
+            <p
+              className="
+                mb-7
+                max-w-[850px]
+                text-[14px]
+                leading-7
+                text-[#706A60]
+
+                print:mb-5
+                print:text-[11px]
+                print:leading-5
+              "
+            >
+              {isArabic
+                ? 'يمكن الرجوع إلى ملف المنافسة الأصلي وعرض المورد المتصدر مباشرة من التقرير للتحقق من المستندات المصدر التي استند إليها التحليل.'
+                : 'The original RFP and leading proposal can be accessed directly from this report to verify the source documents used during evaluation.'}
+            </p>
+
+
+            <div
+              className="
+                grid
+                gap-5
+
+                lg:grid-cols-2
+
+                print:grid-cols-2
+              "
+            >
+              <OriginalDocumentCard
+                eyebrow={
+                  isArabic
+                    ? 'ملف المنافسة الأصلي'
+                    : 'ORIGINAL RFP'
+                }
+                title={
+                  evaluation.rfpName
+                }
+                description={
+                  isArabic
+                    ? 'المستند الأصلي المستخدم لاستخراج معايير التقييم والأوزان والمتطلبات والبنود الإلزامية.'
+                    : 'Original competition document used to extract evaluation criteria, weights, requirements, and mandatory clauses.'
+                }
+                viewUrl={
+                  rfpViewUrl
+                }
+                downloadUrl={
+                  rfpDownloadUrl
+                }
+                isArabic={
+                  isArabic
+                }
+              />
+
+
+              {topVendor && (
+                <OriginalDocumentCard
+                  eyebrow={
+                    isArabic
+                      ? 'عرض المورد المتصدر'
+                      : 'LEADING PROPOSAL'
+                  }
+                  title={
+                    topVendor.name
+                  }
+                  description={
+                    isArabic
+                      ? 'النسخة الأصلية من العرض الذي حصل على المركز الأول في نتيجة التقييم الحالية.'
+                      : 'Original uploaded proposal corresponding to the current highest-ranked vendor.'
+                  }
+                  viewUrl={
+                    topProposalViewUrl
+                  }
+                  downloadUrl={
+                    topProposalDownloadUrl
+                  }
+                  isArabic={
+                    isArabic
+                  }
+                />
+              )}
             </div>
 
 
-            <div className="min-w-[900px]">
+            {/* PDF PREVIEWS — SCREEN ONLY */}
+
+            <div
+              className="
+                mt-8
+                grid
+                gap-6
+
+                print:hidden
+
+                xl:grid-cols-2
+              "
+            >
+              <PdfPreview
+                title={
+                  isArabic
+                    ? 'معاينة ملف المنافسة'
+                    : 'Original RFP Preview'
+                }
+                src={
+                  rfpViewUrl
+                }
+              />
+
+
+              {topVendor && (
+                <PdfPreview
+                  title={
+                    isArabic
+                      ? 'معاينة عرض المورد المتصدر'
+                      : 'Leading Proposal Preview'
+                  }
+                  src={
+                    topProposalViewUrl
+                  }
+                />
+              )}
+            </div>
+          </ReportSection>
+
+
+          {/* ================================= */}
+          {/* 03 RANKING */}
+          {/* ================================= */}
+
+          <ReportSection
+            number="03"
+            eyebrow={
+              isArabic
+                ? 'ترتيب الموردين'
+                : 'VENDOR RANKING'
+            }
+            title={
+              isArabic
+                ? 'النتائج النهائية لجميع العروض'
+                : 'Final ranking across all proposals'
+            }
+          >
+            <div
+              className="
+                overflow-hidden
+                border
+                border-[#E3E5EA]
+                bg-white
+              "
+            >
+              <div
+                className="
+                  hidden
+                  grid-cols-[64px_minmax(220px,1fr)_100px_120px_110px]
+                  gap-4
+                  border-b
+                  border-[#E3E5EA]
+                  bg-[#F8F9FB]
+                  px-5
+                  py-3
+                  text-[10px]
+                  font-semibold
+                  uppercase
+                  tracking-[0.08em]
+                  text-[#8A91A0]
+
+                  md:grid
+
+                  print:grid
+                  print:grid-cols-[50px_minmax(180px,1fr)_80px_95px_90px]
+                  print:px-4
+                  print:text-[8px]
+                "
+              >
+                <span>
+                  {isArabic
+                    ? 'الترتيب'
+                    : 'Rank'}
+                </span>
+
+                <span>
+                  {isArabic
+                    ? 'المورد'
+                    : 'Vendor'}
+                </span>
+
+                <span>
+                  {isArabic
+                    ? 'الدرجة'
+                    : 'Score'}
+                </span>
+
+                <span>
+                  {isArabic
+                    ? 'الامتثال'
+                    : 'Compliance'}
+                </span>
+
+                <span>
+                  {isArabic
+                    ? 'الأهلية'
+                    : 'Eligibility'}
+                </span>
+              </div>
+
 
               {sortedVendors.map(
                 (
@@ -935,8 +1279,12 @@ export default function EvaluationReportPage({
                   index,
                 ) => (
                   <VendorReportRow
-                    key={vendor.id}
-                    vendor={vendor}
+                    key={
+                      vendor.id
+                    }
+                    vendor={
+                      vendor
+                    }
                     evaluationId={
                       evaluation.id
                     }
@@ -951,646 +1299,1172 @@ export default function EvaluationReportPage({
                   />
                 ),
               )}
-
             </div>
-
-          </div>
-
-        </section>
+          </ReportSection>
 
 
-        {/* ================================= */}
-        {/* TOP RANKED VENDOR REVIEW */}
-        {/* ================================= */}
+          {/* ================================= */}
+          {/* 04 TOP PROPOSAL */}
+          {/* ================================= */}
 
-        {topVendor && (
-          <section
-            className="
-              overflow-hidden
-              rounded-2xl
-              border
-              border-[#DDE3EE]
-              bg-white
-              shadow-[0_8px_28px_rgba(22,31,86,0.04)]
-            "
-          >
-
-            <div className="border-b border-[#E7EBF2] px-6 py-5 lg:px-7">
-
-              <div className="flex flex-wrap items-center gap-3">
-
-                <h2 className="text-xl font-semibold tracking-tight text-slate-950">
-                  {isArabic
-                    ? 'مراجعة المورد الأعلى ترتيبًا'
-                    : 'Top Ranked Vendor Review'}
-                </h2>
-
-
-                <EligibilityBadge
-                  eligible={
-                    topVendor.eligible
-                  }
-                  isArabic={
-                    isArabic
-                  }
-                />
-
-
-                <RiskBadge
-                  risk={
-                    topVendor.riskLevel
-                  }
-                  isArabic={
-                    isArabic
-                  }
-                />
-
-              </div>
-
-            </div>
-
-
-            <div className="px-6 py-5 lg:px-7">
-
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-
-                <h3 className="text-lg font-semibold text-slate-950">
-                  {topVendor.name}
-                </h3>
-
-
-                <Link
-                  href={`/evaluations/${evaluation.id}/vendors/${topVendor.id}`}
+          {topVendor && (
+            <ReportSection
+              number="04"
+              eyebrow={
+                isArabic
+                  ? 'مراجعة العرض المتصدر'
+                  : 'TOP PROPOSAL REVIEW'
+              }
+              title={
+                isArabic
+                  ? 'تحليل المورد الأعلى ترتيبًا'
+                  : 'Detailed review of the leading vendor'
+              }
+              cream
+            >
+              <div
+                className="
+                  border
+                  border-[#DDD5C7]
+                  bg-white
+                "
+              >
+                <div
                   className="
-                    inline-flex
-                    items-center
-                    gap-1.5
-                    text-sm
-                    font-semibold
-                    text-[#161F56]
-                    transition-all
-                    duration-200
-                    hover:gap-2.5
+                    grid
+                    gap-6
+                    border-b
+                    border-[#E8EAF0]
+                    p-7
+
+                    lg:grid-cols-[1fr_auto]
+
+                    print:grid-cols-[1fr_180px]
+                    print:p-5
+
+                    sm:p-8
                   "
                 >
-                  {isArabic
-                    ? 'عرض تفاصيل المورد'
-                    : 'View vendor details'}
+                  <div
+                    className="
+                      min-w-0
+                    "
+                  >
+                    <div
+                      className="
+                        flex
+                        items-start
+                        gap-3
+                      "
+                    >
+                      <span
+                        className="
+                          flex
+                          size-10
+                          shrink-0
+                          items-center
+                          justify-center
+                          bg-[#131B4F]
+                          text-xs
+                          font-semibold
+                          text-white
+                        "
+                      >
+                        #{topVendor.rank}
+                      </span>
 
-                  <ArrowRight
-                    className={cn(
-                      'size-4',
-                      isArabic &&
-                        'rotate-180',
-                    )}
+
+                      <div
+                        className="
+                          min-w-0
+                        "
+                      >
+                        <p
+                          className="
+                            text-[9px]
+                            font-semibold
+                            tracking-[0.1em]
+                            text-[#9466C4]
+                          "
+                        >
+                          {isArabic
+                            ? 'تقييم المورد'
+                            : 'VENDOR EVALUATION'}
+                        </p>
+
+
+                        {/* VENDOR NAME -> VENDOR EVALUATION PAGE */}
+
+                        <Link
+                          href={`/evaluations/${evaluation.id}/vendors/${topVendor.id}`}
+                          className="
+                            mt-2
+                            block
+                            break-words
+                            text-[24px]
+                            font-medium
+                            leading-[1.15]
+                            tracking-[-0.035em]
+                            text-[#131B4F]
+                            underline-offset-4
+
+                            hover:underline
+
+                            print:text-[16px]
+                          "
+                        >
+                          {topVendor.name}
+                        </Link>
+                      </div>
+                    </div>
+
+
+                    <div
+                      className="
+                        mt-4
+                        flex
+                        flex-wrap
+                        gap-2
+                      "
+                    >
+                      <EligibilityBadge
+                        eligible={
+                          topVendor.eligible
+                        }
+                        isArabic={
+                          isArabic
+                        }
+                      />
+
+
+                      <RiskBadge
+                        risk={
+                          topVendor.riskLevel
+                        }
+                        isArabic={
+                          isArabic
+                        }
+                      />
+                    </div>
+                  </div>
+
+
+                  <div
+                    className="
+                      grid
+                      grid-cols-2
+                      gap-6
+                    "
+                  >
+                    <SmallResult
+                      label={
+                        isArabic
+                          ? 'الدرجة'
+                          : 'Score'
+                      }
+                      value={
+                        formatPercent(
+                          topVendor.overallScore,
+                          1,
+                        )
+                      }
+                    />
+
+
+                    <SmallResult
+                      label={
+                        isArabic
+                          ? 'الامتثال'
+                          : 'Compliance'
+                      }
+                      value={
+                        formatPercent(
+                          topVendor.overallMandatoryCompliance,
+                          1,
+                        )
+                      }
+                    />
+                  </div>
+                </div>
+
+
+                <div
+                  className="
+                    px-7
+                    py-6
+
+                    print:px-5
+                    print:py-4
+
+                    sm:px-8
+                  "
+                >
+                  <p
+                    className="
+                      text-[14px]
+                      leading-7
+                      text-[#646D7F]
+
+                      print:text-[10px]
+                      print:leading-5
+                    "
+                  >
+                    {topVendor.summary ||
+                      topVendor.complianceAssessment ||
+                      (
+                        isArabic
+                          ? 'لم يتم إرجاع ملخص لهذا المورد.'
+                          : 'No summary was returned for this vendor.'
+                      )}
+                  </p>
+                </div>
+
+
+                <div
+                  className="
+                    grid
+                    border-t
+                    border-[#E8EAF0]
+
+                    lg:grid-cols-2
+
+                    print:grid-cols-2
+                  "
+                >
+                  <AssessmentList
+                    title={
+                      isArabic
+                        ? 'نقاط القوة الرئيسية'
+                        : 'Key Strengths'
+                    }
+                    items={
+                      topVendor.strengths
+                    }
+                    positive
+                    isArabic={
+                      isArabic
+                    }
                   />
-                </Link>
 
+
+                  <AssessmentList
+                    title={
+                      isArabic
+                        ? 'الفجوات الرئيسية'
+                        : 'Key Gaps'
+                    }
+                    items={
+                      topVendor.gaps
+                    }
+                    isArabic={
+                      isArabic
+                    }
+                  />
+                </div>
+
+
+                {/* ORIGINAL PROPOSAL ACTIONS */}
+
+                <div
+                  className="
+                    flex
+                    flex-wrap
+                    gap-3
+                    border-t
+                    border-[#E8EAF0]
+                    px-7
+                    py-5
+
+                    print:hidden
+
+                    sm:px-8
+                  "
+                >
+                  <Link
+                    href={`/evaluations/${evaluation.id}/vendors/${topVendor.id}`}
+                    className="
+                      inline-flex
+                      h-10
+                      items-center
+                      gap-2
+                      bg-[#131B4F]
+                      px-4
+                      text-xs
+                      font-semibold
+                      text-white
+                    "
+                  >
+                    {isArabic
+                      ? 'فتح تقييم المورد'
+                      : 'Open Vendor Evaluation'}
+                  </Link>
+
+
+                  <a
+                    href={
+                      topProposalViewUrl
+                    }
+                    target="_blank"
+                    rel="noreferrer"
+                    className="
+                      inline-flex
+                      h-10
+                      items-center
+                      gap-2
+                      border
+                      border-[#D3D7E0]
+                      px-4
+                      text-xs
+                      font-semibold
+                      text-[#131B4F]
+                    "
+                  >
+                    <ExternalLink
+                      className="
+                        size-3.5
+                      "
+                    />
+
+                    {isArabic
+                      ? 'فتح العرض الأصلي'
+                      : 'View Original Proposal'}
+                  </a>
+
+
+                  <a
+                    href={
+                      topProposalDownloadUrl
+                    }
+                    download
+                    className="
+                      inline-flex
+                      h-10
+                      items-center
+                      gap-2
+                      border
+                      border-[#D3D7E0]
+                      px-4
+                      text-xs
+                      font-semibold
+                      text-[#131B4F]
+                    "
+                  >
+                    <Download
+                      className="
+                        size-3.5
+                      "
+                    />
+
+                    {isArabic
+                      ? 'تحميل العرض'
+                      : 'Download Proposal'}
+                  </a>
+                </div>
               </div>
+            </ReportSection>
+          )}
 
 
-              <p className="mt-4 max-w-6xl text-sm leading-7 text-slate-500">
-                {topVendor.summary ||
-                  topVendor.complianceAssessment ||
-                  (
-                    isArabic
-                      ? 'لم يتم إرجاع ملخص لهذا المورد.'
-                      : 'No summary was returned for this vendor.'
-                  )}
-              </p>
+          {/* ================================= */}
+          {/* 05 COMPLIANCE */}
+          {/* ================================= */}
 
-            </div>
-
-
-            <div className="grid border-t border-[#E7EBF2] lg:grid-cols-2">
-
-              <AssessmentList
-                title={
-                  isArabic
-                    ? 'نقاط القوة الرئيسية'
-                    : 'Key Strengths'
-                }
-                items={
-                  topVendor.strengths
-                }
-                positive
-                isArabic={
-                  isArabic
-                }
-              />
-
-
-              <AssessmentList
-                title={
-                  isArabic
-                    ? 'الفجوات الرئيسية'
-                    : 'Key Gaps'
-                }
-                items={
-                  topVendor.gaps
-                }
-                isArabic={
-                  isArabic
-                }
-              />
-
-            </div>
-
-          </section>
-        )}
-
-
-        {/* ================================= */}
-        {/* COMPLIANCE SUMMARY */}
-        {/* ================================= */}
-
-        <section
-          className="
-            overflow-hidden
-            rounded-2xl
-            border
-            border-[#DDE3EE]
-            bg-white
-            shadow-[0_8px_28px_rgba(22,31,86,0.04)]
-          "
-        >
-
-          <div
-            className="
-              flex
-              flex-col
-              gap-4
-              border-b
-              border-[#E7EBF2]
-              px-6
-              py-5
-              sm:flex-row
-              sm:items-center
-              sm:justify-between
-              lg:px-7
-            "
+          <ReportSection
+            number="05"
+            eyebrow={
+              isArabic
+                ? 'الامتثال والمخاطر'
+                : 'COMPLIANCE & RISK'
+            }
+            title={
+              isArabic
+                ? 'مراجعة الامتثال لجميع الموردين'
+                : 'Compliance review across all vendors'
+            }
           >
+            <div
+              className="
+                grid
+                gap-4
 
-            <div>
+                lg:grid-cols-2
 
-              <h2 className="text-xl font-semibold tracking-tight text-slate-950">
-                {isArabic
-                  ? 'ملخص الامتثال'
-                  : 'Compliance Summary'}
-              </h2>
+                print:grid-cols-2
+                print:gap-3
+              "
+            >
+              {sortedVendors.map(
+                (
+                  vendor,
+                ) => (
+                  <ComplianceCard
+                    key={
+                      vendor.id
+                    }
+                    vendor={
+                      vendor
+                    }
+                    isArabic={
+                      isArabic
+                    }
+                  />
+                ),
+              )}
+            </div>
+          </ReportSection>
 
 
-              <p className="mt-1 text-sm text-slate-500">
-                {isArabic
-                  ? 'حالة الامتثال للمتطلبات الإلزامية لجميع الموردين.'
-                  : 'Mandatory compliance status across evaluated vendors.'}
-              </p>
+          {/* ================================= */}
+          {/* 06 METHODOLOGY */}
+          {/* ================================= */}
 
+          <ReportSection
+            number="06"
+            eyebrow={
+              isArabic
+                ? 'منهجية التقييم'
+                : 'METHODOLOGY'
+            }
+            title={
+              isArabic
+                ? 'كيف تم بناء النتيجة؟'
+                : 'How the evaluation was produced'
+            }
+            cream
+          >
+            <div
+              className="
+                grid
+                gap-5
+
+                lg:grid-cols-3
+
+                print:grid-cols-3
+                print:gap-3
+              "
+            >
+              <MethodologyItem
+                number="01"
+                title={
+                  isArabic
+                    ? 'استخراج إطار المنافسة'
+                    : 'RFP Framework Extraction'
+                }
+                description={
+                  isArabic
+                    ? 'يتم استخراج معايير التقييم والأوزان والمتطلبات والبنود الإلزامية من مستند المنافسة الأصلي.'
+                    : 'Evaluation criteria, weights, requirements, and mandatory clauses are extracted from the original RFP.'
+                }
+              />
+
+
+              <MethodologyItem
+                number="02"
+                title={
+                  isArabic
+                    ? 'تقييم العروض'
+                    : 'Proposal Evaluation'
+                }
+                description={
+                  isArabic
+                    ? 'يتم تحليل كل عرض مقابل نفس إطار المنافسة وحساب النتيجة الموزونة وفق المعايير المحددة.'
+                    : 'Each proposal is assessed against the same framework and weighted according to the competition criteria.'
+                }
+              />
+
+
+              <MethodologyItem
+                number="03"
+                title={
+                  isArabic
+                    ? 'الامتثال والمراجعة'
+                    : 'Compliance & Review'
+                }
+                description={
+                  isArabic
+                    ? 'يتم فحص المتطلبات الإلزامية والمخاطر والأهلية بشكل مستقل عن الترتيب، وتظل التوصية النهائية خاضعة للمراجعة البشرية.'
+                    : 'Mandatory compliance, risk, and eligibility are reviewed separately from ranking, with the final recommendation remaining subject to human review.'
+                }
+              />
             </div>
 
-
-            <Button
-              variant="outline"
-              nativeButton={false}
-              render={
-                <Link
-                  href={`/evaluations/${id}/compliance`}
-                />
-              }
-            >
-              {isArabic
-                ? 'عرض الامتثال'
-                : 'View Compliance'}
-
-              <ArrowRight
-                className={cn(
-                  'size-4',
-                  isArabic &&
-                    'rotate-180',
-                )}
-              />
-            </Button>
-
-          </div>
-
-
-          <div className="grid gap-4 bg-[#F8FAFD] p-5 sm:p-6 lg:grid-cols-2">
-
-            {sortedVendors.map(
-              (vendor) => (
-                <ComplianceCard
-                  key={vendor.id}
-                  vendor={vendor}
-                  isArabic={
-                    isArabic
-                  }
-                />
-              ),
-            )}
-
-          </div>
-
-        </section>
-
-
-        {/* ================================= */}
-        {/* METHODOLOGY */}
-        {/* ================================= */}
-
-        <section
-          className="
-            flex
-            flex-col
-            gap-4
-            rounded-2xl
-            border
-            border-[#DDE3EE]
-            bg-white
-            px-6
-            py-5
-            sm:flex-row
-            sm:items-start
-            sm:justify-between
-            lg:px-7
-          "
-        >
-
-          <div className="flex max-w-5xl items-start gap-4">
 
             <div
               className="
+                mt-6
                 flex
-                size-9
-                shrink-0
-                items-center
-                justify-center
-                rounded-xl
-                bg-[#F1F4FC]
-                text-[#161F56]
+                items-start
+                gap-3
+                bg-[#131B4F]
+                px-6
+                py-5
+                text-white
+
+                print:break-inside-avoid
+                print:px-5
+                print:py-4
               "
             >
-              <ShieldCheck className="size-4" />
-            </div>
+              <ShieldAlert
+                className="
+                  mt-1
+                  size-4
+                  shrink-0
+                  text-[#CDB78F]
+                "
+              />
 
 
-            <div>
+              <p
+                className="
+                  text-[13px]
+                  leading-7
+                  text-white/70
 
-              <h3 className="text-sm font-semibold text-slate-900">
+                  print:text-[9px]
+                  print:leading-5
+                "
+              >
                 {isArabic
-                  ? 'منهجية التقييم'
-                  : 'Evaluation Methodology'}
-              </h3>
-
-
-              <p className="mt-1.5 text-sm leading-6 text-slate-500">
-                {isArabic
-                  ? 'يتم تقييم عروض الموردين متطلبًا بمتطلب مقابل إطار طلب العرض المستخرج. يتم احتساب درجات المعايير باستخدام نظام تقييم حتمي في Python وأوزان طلب العرض المعتمدة. يتم تقييم الامتثال الإلزامي ومستوى المخاطر وأهلية التوصية بشكل مستقل عن الترتيب الرقمي. جميع التوصيات الصادرة استشارية وتتطلب مراجعة بشرية من فريق المشتريات.'
-                  : 'Vendor proposals are assessed requirement-by-requirement against the extracted RFP framework. Criterion scores are calculated using deterministic Python scoring and published RFP weights. Mandatory compliance, risk, and recommendation eligibility are reviewed separately from numerical ranking. All generated recommendations are advisory and require human procurement review.'}
+                  ? 'هذا التقرير أداة دعم قرار ولا يمثل قرار ترسية آلي. يجب التحقق من المستندات الأصلية وإجراء المراجعة البشرية المطلوبة قبل أي قرار شراء نهائي.'
+                  : 'This report is a decision-support tool and does not represent an automated award decision. Original documents should be verified and the required human review completed before any final procurement decision.'}
               </p>
-
             </div>
+          </ReportSection>
 
-          </div>
 
+          {/* ================================= */}
+          {/* SCREEN END BAR */}
+          {/* ================================= */}
 
-          <Link
-            href={`/evaluations/${id}/rfp`}
+          <div
             className="
-              inline-flex
-              shrink-0
-              items-center
-              gap-1.5
-              text-sm
-              font-semibold
-              text-[#161F56]
-              transition-all
-              duration-200
-              hover:gap-2.5
+              border-t
+              border-[#E3E5EA]
+              bg-[#131B4F]
+              px-8
+              py-7
+              text-white
+
+              print:hidden
             "
           >
-            {isArabic
-              ? 'عرض الإطار'
-              : 'View Framework'}
+            <div
+              className="
+                flex
+                flex-col
+                gap-4
 
-            <ArrowRight
-              className={cn(
-                'size-4',
-                isArabic &&
-                  'rotate-180',
-              )}
-            />
-          </Link>
+                sm:flex-row
+                sm:items-center
+                sm:justify-between
+              "
+            >
+              <div>
+                <p
+                  className="
+                    text-[10px]
+                    font-semibold
+                    tracking-[0.12em]
+                    text-[#CDB78F]
+                  "
+                >
+                  {isArabic
+                    ? 'نهاية التقرير'
+                    : 'END OF REPORT'}
+                </p>
 
-        </section>
 
-      </main>
+                <p
+                  className="
+                    mt-1
+                    text-sm
+                    text-white/60
+                  "
+                >
+                  {evaluation.rfpName}
+                </p>
+              </div>
 
-    </div>
+
+              <button
+                type="button"
+                onClick={
+                  handleDownloadReport
+                }
+                className="
+                  inline-flex
+                  h-11
+                  items-center
+                  justify-center
+                  gap-2
+                  bg-[#CDB78F]
+                  px-5
+                  text-sm
+                  font-semibold
+                  text-[#131B4F]
+                "
+              >
+                <Download
+                  className="
+                    size-4
+                  "
+                />
+
+                {isArabic
+                  ? 'تحميل PDF'
+                  : 'Download PDF'}
+              </button>
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </>
   )
 }
 
 
 /* ========================================== */
-/* WORKSPACE NAV */
+/* REPORT SECTION */
 /* ========================================== */
 
-function EvaluationNavItem({
-  href,
-  label,
-  helper,
-  icon: Icon,
-  active = false,
+function ReportSection({
+  number,
+  eyebrow,
+  title,
+  children,
+  cream = false,
 }: {
-  href: string
-  label: string
-  helper: string
-  icon: ComponentType<{
-    className?: string
-  }>
-  active?: boolean
+  number: string
+  eyebrow: string
+  title: string
+  children: ReactNode
+  cream?: boolean
 }) {
   return (
-    <Link
-      href={href}
+    <section
       className={cn(
         `
-          group
-          relative
-          flex
-          min-w-[176px]
-          items-center
-          gap-3
-          rounded-xl
-          px-4
-          py-3
-          transition-all
-          duration-200
-          ease-out
+          px-7
+          py-12
+
+          print:px-6
+          print:py-6
+
+          sm:px-10
+          sm:py-14
+
+          lg:px-14
         `,
 
-        active
+        cream
           ? `
-              bg-[#161F56]
-              text-white
-              shadow-[0_5px_16px_rgba(22,31,86,0.20)]
+              bg-[#F1ECE0]
+
+              print:bg-[#F7F4ED]
             `
-          : `
-              text-slate-600
-              hover:-translate-y-[1px]
-              hover:bg-[#F3F6FC]
-            `,
+          : 'bg-white',
       )}
     >
-
       <div
+        className="
+          mb-8
+          grid
+          gap-4
+          border-b
+          border-[#DDE0E6]
+          pb-6
+
+          md:grid-cols-[70px_1fr]
+
+          print:mb-5
+          print:grid-cols-[52px_1fr]
+          print:pb-4
+        "
+      >
+        <span
+          className="
+            text-[36px]
+            font-light
+            leading-none
+            tracking-[-0.055em]
+            text-[#CDB78F]
+
+            print:text-[28px]
+          "
+        >
+          {number}
+        </span>
+
+
+        <div>
+          <p
+            className="
+              text-[10px]
+              font-semibold
+              tracking-[0.13em]
+              text-[#9466C4]
+
+              print:text-[8px]
+            "
+          >
+            {eyebrow}
+          </p>
+
+
+          <h2
+            className="
+              mt-2
+              text-[clamp(28px,3vw,40px)]
+              font-medium
+              leading-[1.08]
+              tracking-[-0.04em]
+              text-[#131B4F]
+
+              print:text-[24px]
+            "
+          >
+            {title}
+          </h2>
+        </div>
+      </div>
+
+
+      {children}
+    </section>
+  )
+}
+
+
+/* ========================================== */
+/* COVER METRIC */
+/* ========================================== */
+
+function CoverMetric({
+  label,
+  value,
+  compact = false,
+}: {
+  label: string
+  value: string
+  compact?: boolean
+}) {
+  return (
+    <div
+      className="
+        bg-[#131B4F]
+        px-5
+        py-5
+      "
+    >
+      <p
+        className="
+          text-[9px]
+          font-semibold
+          tracking-[0.12em]
+          text-white/40
+        "
+      >
+        {label}
+      </p>
+
+
+      <p
         className={cn(
           `
-            flex
-            size-9
-            shrink-0
-            items-center
-            justify-center
-            rounded-lg
-            transition-all
-            duration-200
+            mt-2
+            font-medium
+            tracking-[-0.04em]
+            text-white
           `,
 
-          active
-            ? 'bg-white/10 text-white'
+          compact
+            ? `
+                text-[17px]
+
+                print:text-[13px]
+              `
             : `
-                bg-[#F2F5FB]
-                text-[#60709A]
-                group-hover:bg-white
-                group-hover:text-[#161F56]
-                group-hover:shadow-sm
+                text-[28px]
+
+                print:text-[22px]
               `,
         )}
       >
-        <Icon className="size-4" />
-      </div>
-
-
-      <div>
-
-        <p
-          className={cn(
-            `
-              text-sm
-              font-semibold
-              transition-colors
-              duration-200
-            `,
-
-            active
-              ? 'text-white'
-              : 'text-slate-700 group-hover:text-[#161F56]',
-          )}
-        >
-          {label}
-        </p>
-
-
-        <p
-          className={cn(
-            `
-              mt-0.5
-              text-[10px]
-              transition-colors
-              duration-200
-            `,
-
-            active
-              ? 'text-white/55'
-              : 'text-slate-400 group-hover:text-[#7180A7]',
-          )}
-        >
-          {helper}
-        </p>
-
-      </div>
-
-
-      <span
-        className={cn(
-          `
-            absolute
-            bottom-0
-            start-4
-            end-4
-            h-[2px]
-            rounded-full
-            transition-transform
-            duration-200
-          `,
-
-          active
-            ? 'scale-x-100 bg-white/60'
-            : 'scale-x-0 bg-[#161F56] group-hover:scale-x-100',
-        )}
-      />
-
-    </Link>
-  )
-}
-
-
-function NavArrow({
-  isArabic,
-}: {
-  isArabic: boolean
-}) {
-  return (
-    <div className="flex w-7 shrink-0 items-center justify-center">
-
-      <ChevronRight
-        className={cn(
-          'size-3.5 text-slate-300',
-          isArabic &&
-            'rotate-180',
-        )}
-      />
-
+        {value}
+      </p>
     </div>
   )
 }
 
 
 /* ========================================== */
-/* HEADER META */
+/* EXECUTIVE METRIC */
 /* ========================================== */
 
-function HeaderMeta({
-  icon: Icon,
-  text,
-}: {
-  icon: ComponentType<{
-    className?: string
-  }>
-  text: string
-}) {
-  return (
-    <span className="inline-flex items-center gap-1.5">
-
-      <Icon className="size-4 text-[#6C789A]" />
-
-      {text}
-
-    </span>
-  )
-}
-
-
-/* ========================================== */
-/* SNAPSHOT METRIC */
-/* ========================================== */
-
-function SnapshotMetric({
+function ExecutiveMetric({
   label,
   value,
-  helper,
-  icon: Icon,
   last = false,
 }: {
   label: string
   value: string
-  helper: string
-  icon: ComponentType<{
-    className?: string
-  }>
   last?: boolean
 }) {
   return (
     <div
       className={cn(
         `
-          group
-          flex
-          min-h-[110px]
-          items-center
-          gap-4
-          px-5
-          py-4
-          transition-colors
-          duration-200
-          hover:bg-[#F7F9FE]
+          min-h-[120px]
+          px-6
+          py-5
+
+          print:min-h-0
+          print:px-4
+          print:py-4
         `,
 
         !last &&
           `
             border-b
-            border-[#E7EBF2]
+            border-[#E3E5EA]
+
+            sm:border-b-0
             sm:border-e
-            xl:border-b-0
+
+            print:border-b-0
+            print:border-e
           `,
       )}
     >
-
-      <div
+      <p
         className="
-          flex
-          size-10
-          shrink-0
-          items-center
-          justify-center
-          rounded-xl
-          bg-[#F2F5FB]
-          text-[#60709A]
-          transition-all
-          duration-200
-          group-hover:bg-[#E9EFFB]
-          group-hover:text-[#161F56]
+          text-[9px]
+          font-semibold
+          tracking-[0.1em]
+          text-[#949BAA]
+
+          print:text-[7px]
         "
       >
-        <Icon className="size-4" />
-      </div>
+        {label}
+      </p>
 
 
-      <div className="min-w-0 flex-1">
+      <p
+        className="
+          mt-3
+          text-[29px]
+          font-semibold
+          tracking-[-0.04em]
+          text-[#131B4F]
 
-        <p className="text-[11px] font-medium text-slate-500">
-          {label}
-        </p>
-
-
-        <p className="mt-1 truncate text-lg font-semibold text-slate-950">
-          {value}
-        </p>
-
-
-        <p className="mt-0.5 text-xs text-slate-400">
-          {helper}
-        </p>
-
-      </div>
-
+          print:text-[20px]
+        "
+      >
+        {value}
+      </p>
     </div>
   )
 }
 
 
 /* ========================================== */
-/* MINI METRIC */
+/* ORIGINAL DOCUMENT CARD */
 /* ========================================== */
 
-function MiniMetric({
-  label,
-  value,
+function OriginalDocumentCard({
+  eyebrow,
+  title,
+  description,
+  viewUrl,
+  downloadUrl,
+  isArabic,
 }: {
-  label: string
-  value: string | number
+  eyebrow: string
+  title: string
+  description: string
+  viewUrl: string
+  downloadUrl: string
+  isArabic: boolean
 }) {
   return (
-    <div className="flex min-h-[92px] flex-col justify-center border-e border-[#E7EBF2] px-4 last:border-e-0">
+    <article
+      className="
+        border
+        border-[#DDD5C7]
+        bg-white
 
-      <p className="text-xs font-medium text-slate-500">
-        {label}
-      </p>
+        print:break-inside-avoid
+      "
+    >
+      <div
+        className="
+          p-6
+
+          print:p-4
+
+          sm:p-7
+        "
+      >
+        <div
+          className="
+            flex
+            items-start
+            gap-4
+          "
+        >
+          <div
+            className="
+              flex
+              size-11
+              shrink-0
+              items-center
+              justify-center
+              bg-[#131B4F]
+              text-white
+
+              print:size-9
+            "
+          >
+            <FileText
+              className="
+                size-5
+
+                print:size-4
+              "
+            />
+          </div>
 
 
-      <p className="mt-2 text-xl font-semibold text-[#161F56]">
-        {value}
-      </p>
+          <div
+            className="
+              min-w-0
+            "
+          >
+            <p
+              className="
+                text-[9px]
+                font-semibold
+                tracking-[0.12em]
+                text-[#9466C4]
 
+                print:text-[7px]
+              "
+            >
+              {eyebrow}
+            </p>
+
+
+            {/* ORIGINAL PDF LINK */}
+
+            <a
+              href={
+                viewUrl
+              }
+              target="_blank"
+              rel="noreferrer"
+              className="
+                mt-2
+                block
+                break-words
+                text-[17px]
+                font-semibold
+                leading-6
+                text-[#131B4F]
+
+                hover:underline
+                hover:underline-offset-4
+
+                print:text-[12px]
+                print:leading-5
+              "
+            >
+              {title}
+            </a>
+
+
+            <p
+              className="
+                mt-3
+                text-[13px]
+                leading-6
+                text-[#727A8C]
+
+                print:text-[9px]
+                print:leading-4
+              "
+            >
+              {description}
+            </p>
+          </div>
+        </div>
+      </div>
+
+
+      <div
+        className="
+          flex
+          flex-wrap
+          gap-3
+          border-t
+          border-[#E8EAF0]
+          px-6
+          py-4
+
+          print:hidden
+
+          sm:px-7
+        "
+      >
+        <a
+          href={
+            viewUrl
+          }
+          target="_blank"
+          rel="noreferrer"
+          className="
+            inline-flex
+            h-9
+            items-center
+            gap-2
+            bg-[#131B4F]
+            px-4
+            text-xs
+            font-semibold
+            text-white
+          "
+        >
+          <ExternalLink
+            className="
+              size-3.5
+            "
+          />
+
+          {isArabic
+            ? 'فتح الملف الأصلي'
+            : 'View Original'}
+        </a>
+
+
+        <a
+          href={
+            downloadUrl
+          }
+          download
+          className="
+            inline-flex
+            h-9
+            items-center
+            gap-2
+            border
+            border-[#D3D7E0]
+            px-4
+            text-xs
+            font-semibold
+            text-[#131B4F]
+          "
+        >
+          <Download
+            className="
+              size-3.5
+            "
+          />
+
+          {isArabic
+            ? 'تحميل PDF'
+            : 'Download PDF'}
+        </a>
+      </div>
+
+
+      <div
+        className="
+          hidden
+          border-t
+          border-[#E8EAF0]
+          px-4
+          py-3
+          text-[8px]
+          text-[#8A91A0]
+
+          print:block
+        "
+      >
+        {isArabic
+          ? 'اضغط على اسم المستند لفتح الملف الأصلي.'
+          : 'Click the document name to open the original PDF.'}
+      </div>
+    </article>
+  )
+}
+
+
+/* ========================================== */
+/* PDF PREVIEW */
+/* ========================================== */
+
+function PdfPreview({
+  title,
+  src,
+}: {
+  title: string
+  src: string
+}) {
+  return (
+    <div
+      className="
+        border
+        border-[#DDD5C7]
+        bg-white
+      "
+    >
+      <div
+        className="
+          flex
+          items-center
+          gap-2
+          border-b
+          border-[#E8EAF0]
+          px-5
+          py-4
+        "
+      >
+        <FileCheck2
+          className="
+            size-4
+            text-[#9466C4]
+          "
+        />
+
+        <p
+          className="
+            text-sm
+            font-semibold
+            text-[#131B4F]
+          "
+        >
+          {title}
+        </p>
+      </div>
+
+
+      <iframe
+        src={
+          src
+        }
+        title={
+          title
+        }
+        className="
+          block
+          h-[620px]
+          w-full
+          border-0
+          bg-[#F4F5F7]
+        "
+      />
     </div>
   )
 }
@@ -1612,99 +2486,167 @@ function VendorReportRow({
   isArabic: boolean
 }) {
   return (
-    <Link
-      href={`/evaluations/${evaluationId}/vendors/${vendor.id}`}
+    <div
       className={cn(
         `
           grid
-          grid-cols-1
           gap-4
-          px-6
+          px-5
           py-5
-          transition-colors
-          duration-200
-          hover:bg-[#F8FAFD]
-          lg:grid-cols-[70px_minmax(0,2fr)_140px_170px_140px_140px]
-          lg:items-center
-          lg:px-7
+
+          print:break-inside-avoid
+          print:grid-cols-[50px_minmax(180px,1fr)_80px_95px_90px]
+          print:items-center
+          print:px-4
+          print:py-3
+
+          md:grid-cols-[64px_minmax(220px,1fr)_100px_120px_110px]
+          md:items-center
         `,
 
         !last &&
-          'border-b border-[#E7EBF2]',
+          'border-b border-[#E8EAF0]',
       )}
     >
-
       <div>
-        <MobileLabel>
-          {isArabic
-            ? 'الترتيب'
-            : 'Rank'}
-        </MobileLabel>
+        <MobileLabel
+          isArabic={
+            isArabic
+          }
+          arabic="الترتيب"
+          english="Rank"
+        />
 
-        <span className="font-semibold text-[#161F56]">
+        <p
+          className="
+            text-[17px]
+            font-semibold
+            text-[#131B4F]
+
+            print:text-[12px]
+          "
+        >
           #{vendor.rank}
-        </span>
-      </div>
-
-
-      <div className="min-w-0">
-
-        <MobileLabel>
-          {isArabic
-            ? 'المورد'
-            : 'Vendor'}
-        </MobileLabel>
-
-        <p className="truncate text-sm font-semibold text-slate-900">
-          {vendor.name}
         </p>
+      </div>
 
+
+      <div
+        className="
+          min-w-0
+        "
+      >
+        <MobileLabel
+          isArabic={
+            isArabic
+          }
+          arabic="المورد"
+          english="Vendor"
+        />
+
+
+        {/* EVERY VENDOR NAME -> ITS EVALUATION PAGE */}
+
+        <Link
+          href={`/evaluations/${evaluationId}/vendors/${vendor.id}`}
+          className="
+            block
+            break-words
+            text-[14px]
+            font-semibold
+            leading-5
+            text-[#131B4F]
+            underline-offset-4
+
+            hover:underline
+
+            print:text-[9px]
+            print:leading-4
+          "
+        >
+          {vendor.name}
+        </Link>
+
+
+        <div
+          className="
+            mt-2
+
+            print:mt-1
+          "
+        >
+          <RiskBadge
+            risk={
+              vendor.riskLevel
+            }
+            isArabic={
+              isArabic
+            }
+          />
+        </div>
       </div>
 
 
       <div>
+        <MobileLabel
+          isArabic={
+            isArabic
+          }
+          arabic="الدرجة"
+          english="Score"
+        />
 
-        <MobileLabel>
-          {isArabic
-            ? 'الدرجة'
-            : 'Score'}
-        </MobileLabel>
+        <p
+          className="
+            text-[16px]
+            font-semibold
+            text-[#131B4F]
 
-        <span className="text-sm font-semibold text-slate-800">
-          {vendor.overallScore.toFixed(
+            print:text-[11px]
+          "
+        >
+          {formatPercent(
+            vendor.overallScore,
             1,
           )}
-          %
-        </span>
-
+        </p>
       </div>
 
 
       <div>
+        <MobileLabel
+          isArabic={
+            isArabic
+          }
+          arabic="الامتثال"
+          english="Compliance"
+        />
 
-        <MobileLabel>
-          {isArabic
-            ? 'الإلزامي'
-            : 'Mandatory'}
-        </MobileLabel>
+        <p
+          className="
+            text-[16px]
+            font-semibold
+            text-[#131B4F]
 
-        <span className="text-sm font-semibold text-slate-800">
-          {vendor.overallMandatoryCompliance.toFixed(
+            print:text-[11px]
+          "
+        >
+          {formatPercent(
+            vendor.overallMandatoryCompliance,
             1,
           )}
-          %
-        </span>
-
+        </p>
       </div>
 
 
       <div>
-
-        <MobileLabel>
-          {isArabic
-            ? 'الأهلية'
-            : 'Eligibility'}
-        </MobileLabel>
+        <MobileLabel
+          isArabic={
+            isArabic
+          }
+          arabic="الأهلية"
+          english="Eligibility"
+        />
 
         <EligibilityBadge
           eligible={
@@ -1714,30 +2656,88 @@ function VendorReportRow({
             isArabic
           }
         />
-
       </div>
+    </div>
+  )
+}
 
 
-      <div>
+/* ========================================== */
+/* MOBILE LABEL */
+/* ========================================== */
 
-        <MobileLabel>
-          {isArabic
-            ? 'المخاطر'
-            : 'Risk'}
-        </MobileLabel>
+function MobileLabel({
+  isArabic,
+  arabic,
+  english,
+}: {
+  isArabic: boolean
+  arabic: string
+  english: string
+}) {
+  return (
+    <p
+      className="
+        mb-1
+        text-[9px]
+        font-semibold
+        uppercase
+        tracking-[0.08em]
+        text-[#9298A5]
 
-        <RiskBadge
-          risk={
-            vendor.riskLevel
-          }
-          isArabic={
-            isArabic
-          }
-        />
+        md:hidden
 
-      </div>
+        print:hidden
+      "
+    >
+      {isArabic
+        ? arabic
+        : english}
+    </p>
+  )
+}
 
-    </Link>
+
+/* ========================================== */
+/* SMALL RESULT */
+/* ========================================== */
+
+function SmallResult({
+  label,
+  value,
+}: {
+  label: string
+  value: string
+}) {
+  return (
+    <div>
+      <p
+        className="
+          text-[9px]
+          font-semibold
+          tracking-[0.1em]
+          text-[#949BAA]
+
+          print:text-[7px]
+        "
+      >
+        {label}
+      </p>
+
+      <p
+        className="
+          mt-1
+          text-[22px]
+          font-semibold
+          tracking-[-0.035em]
+          text-[#131B4F]
+
+          print:text-[16px]
+        "
+      >
+        {value}
+      </p>
+    </div>
   )
 }
 
@@ -1760,66 +2760,133 @@ function AssessmentList({
   return (
     <div
       className={cn(
-        'px-6 py-5 lg:px-7',
+        `
+          px-7
+          py-6
+
+          print:px-5
+          print:py-4
+
+          sm:px-8
+        `,
 
         positive &&
-          'lg:border-e lg:border-[#E7EBF2]',
+          `
+            border-b
+            border-[#E8EAF0]
+
+            lg:border-b-0
+            lg:border-e
+
+            print:border-b-0
+            print:border-e
+          `,
       )}
     >
-
-      <div className="flex items-center gap-2">
-
+      <div
+        className="
+          flex
+          items-center
+          gap-2
+        "
+      >
         {positive ? (
-          <CheckCircle2 className="size-4 text-emerald-600" />
+          <CheckCircle2
+            className="
+              size-4
+              text-[#25724C]
+            "
+          />
         ) : (
-          <XCircle className="size-4 text-rose-600" />
+          <XCircle
+            className="
+              size-4
+              text-[#A44444]
+            "
+          />
         )}
 
 
-        <h4 className="text-sm font-semibold text-slate-900">
+        <h4
+          className="
+            text-sm
+            font-semibold
+            text-[#131B4F]
+
+            print:text-[10px]
+          "
+        >
           {title}
         </h4>
-
       </div>
 
 
-      {items.length > 0 ? (
+      {items.length >
+      0 ? (
+        <ul
+          className="
+            mt-4
+            space-y-3
 
-        <ul className="mt-4 space-y-3">
-
+            print:mt-3
+            print:space-y-2
+          "
+        >
           {items.map(
             (
               item,
               index,
             ) => (
-
               <li
                 key={`${item}-${index}`}
-                className="flex gap-2.5 text-sm leading-6 text-slate-500"
-              >
+                className="
+                  flex
+                  gap-2.5
+                  text-[13px]
+                  leading-6
+                  text-[#646D7F]
 
+                  print:text-[8px]
+                  print:leading-4
+                "
+              >
                 <span
                   className={cn(
-                    'mt-2 size-1.5 shrink-0 rounded-full',
+                    `
+                      mt-[9px]
+                      size-1.5
+                      shrink-0
+                      rounded-full
+
+                      print:mt-[6px]
+                      print:size-1
+                    `,
 
                     positive
-                      ? 'bg-emerald-500'
-                      : 'bg-rose-500',
+                      ? 'bg-[#5FAC81]'
+                      : 'bg-[#DD3A3B]',
                   )}
                 />
 
-                {item}
-
+                <span>
+                  {item}
+                </span>
               </li>
-
             ),
           )}
-
         </ul>
-
       ) : (
+        <p
+          className="
+            mt-4
+            text-[13px]
+            leading-6
+            text-[#727A8C]
 
-        <p className="mt-4 text-sm text-slate-500">
+            print:text-[8px]
+            print:leading-4
+          "
+        >
           {positive
             ? isArabic
               ? 'لم يتم تحديد نقاط قوة محددة.'
@@ -1828,9 +2895,7 @@ function AssessmentList({
               ? 'لم يتم تحديد فجوات رئيسية.'
               : 'No major gaps were identified.'}
         </p>
-
       )}
-
     </div>
   )
 }
@@ -1848,65 +2913,141 @@ function ComplianceCard({
   isArabic: boolean
 }) {
   return (
-    <div
+    <article
       className="
-        rounded-2xl
         border
-        border-[#E2E7F0]
+        border-[#E3E5EA]
         bg-white
         px-5
         py-5
+
+        print:break-inside-avoid
+        print:px-4
+        print:py-4
+
+        sm:px-6
       "
     >
+      <div
+        className="
+          flex
+          items-start
+          justify-between
+          gap-4
+        "
+      >
+        <div
+          className="
+            min-w-0
+          "
+        >
+          <h3
+            className="
+              break-words
+              text-[14px]
+              font-semibold
+              leading-5
+              text-[#131B4F]
 
-      <div className="flex items-start justify-between gap-4">
-
-        <div>
-
-          <h3 className="text-sm font-semibold text-slate-900">
+              print:text-[9px]
+              print:leading-4
+            "
+          >
             {vendor.name}
           </h3>
 
 
-          <p className="mt-1 text-xs text-slate-400">
-            {isArabic
-              ? 'الامتثال الإلزامي'
-              : 'Mandatory Compliance'}
-          </p>
+          <div
+            className="
+              mt-3
+              flex
+              flex-wrap
+              gap-2
 
+              print:mt-2
+            "
+          >
+            <EligibilityBadge
+              eligible={
+                vendor.eligible
+              }
+              isArabic={
+                isArabic
+              }
+            />
+
+            <RiskBadge
+              risk={
+                vendor.riskLevel
+              }
+              isArabic={
+                isArabic
+              }
+            />
+          </div>
         </div>
 
 
-        <p className="text-xl font-semibold text-[#161F56]">
-          {vendor.overallMandatoryCompliance.toFixed(
+        <p
+          className="
+            shrink-0
+            text-[22px]
+            font-semibold
+            tracking-[-0.04em]
+            text-[#131B4F]
+
+            print:text-[15px]
+          "
+        >
+          {formatPercent(
+            vendor.overallMandatoryCompliance,
             1,
           )}
-          %
         </p>
-
       </div>
 
 
-      <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#EDF0F5]">
+      <div
+        className="
+          mt-5
+          h-1.5
+          overflow-hidden
+          bg-[#ECEEF2]
 
+          print:mt-3
+          print:h-1
+        "
+      >
         <div
-          className="h-full rounded-full bg-[#161F56]"
+          className="
+            h-full
+            bg-[#131B4F]
+          "
           style={{
             width: `${Math.min(
               Math.max(
-                vendor
-                  .overallMandatoryCompliance,
+                vendor.overallMandatoryCompliance,
                 0,
               ),
               100,
             )}%`,
           }}
         />
-
       </div>
 
 
-      <p className="mt-4 line-clamp-4 text-sm leading-6 text-slate-500">
+      <p
+        className="
+          mt-5
+          text-[12px]
+          leading-6
+          text-[#727A8C]
+
+          print:mt-3
+          print:text-[8px]
+          print:leading-4
+        "
+      >
         {vendor.complianceAssessment ||
           (
             isArabic
@@ -1915,7 +3056,108 @@ function ComplianceCard({
           )}
       </p>
 
-    </div>
+
+      {vendor.missingRequirements.length >
+        0 && (
+        <div
+          className="
+            mt-5
+            border-t
+            border-[#E8EAF0]
+            pt-4
+
+            print:mt-3
+            print:pt-2
+          "
+        >
+          <p
+            className="
+              text-[10px]
+              font-semibold
+              text-[#A44444]
+
+              print:text-[7px]
+            "
+          >
+            {isArabic
+              ? `${vendor.missingRequirements.length} متطلبات مفقودة`
+              : `${vendor.missingRequirements.length} missing requirements`}
+          </p>
+        </div>
+      )}
+    </article>
+  )
+}
+
+
+/* ========================================== */
+/* METHODOLOGY ITEM */
+/* ========================================== */
+
+function MethodologyItem({
+  number,
+  title,
+  description,
+}: {
+  number: string
+  title: string
+  description: string
+}) {
+  return (
+    <article
+      className="
+        border
+        border-[#DDD5C7]
+        bg-white
+        p-6
+
+        print:break-inside-avoid
+        print:p-4
+      "
+    >
+      <p
+        className="
+          text-[11px]
+          font-semibold
+          tracking-[0.1em]
+          text-[#9466C4]
+
+          print:text-[8px]
+        "
+      >
+        {number}
+      </p>
+
+
+      <h3
+        className="
+          mt-5
+          text-[17px]
+          font-semibold
+          text-[#131B4F]
+
+          print:mt-3
+          print:text-[11px]
+        "
+      >
+        {title}
+      </h3>
+
+
+      <p
+        className="
+          mt-3
+          text-[13px]
+          leading-6
+          text-[#727A8C]
+
+          print:text-[8px]
+          print:leading-4
+        "
+      >
+        {description}
+      </p>
+    </article>
   )
 }
 
@@ -1936,7 +3178,22 @@ function RecommendationBadge({
     'NO_ELIGIBLE_VENDOR'
   ) {
     return (
-      <span className="inline-flex w-fit rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700">
+      <span
+        className="
+          inline-flex
+          w-fit
+          bg-[#FFF1F1]
+          px-3
+          py-1.5
+          text-xs
+          font-semibold
+          text-[#A44444]
+
+          print:px-2
+          print:py-1
+          print:text-[8px]
+        "
+      >
         {isArabic
           ? 'لا يوجد مورد مؤهل'
           : 'No Eligible Vendor'}
@@ -1950,17 +3207,47 @@ function RecommendationBadge({
     'REQUIRES_HUMAN_REVIEW'
   ) {
     return (
-      <span className="inline-flex w-fit rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700">
+      <span
+        className="
+          inline-flex
+          w-fit
+          bg-[#FFF8E8]
+          px-3
+          py-1.5
+          text-xs
+          font-semibold
+          text-[#966515]
+
+          print:px-2
+          print:py-1
+          print:text-[8px]
+        "
+      >
         {isArabic
-          ? 'يتطلب مراجعة'
-          : 'Review Required'}
+          ? 'يتطلب مراجعة بشرية'
+          : 'Human Review Required'}
       </span>
     )
   }
 
 
   return (
-    <span className="inline-flex w-fit rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+    <span
+      className="
+        inline-flex
+        w-fit
+        bg-[#EEF8F2]
+        px-3
+        py-1.5
+        text-xs
+        font-semibold
+        text-[#25724C]
+
+        print:px-2
+        print:py-1
+        print:text-[8px]
+      "
+    >
       {isArabic
         ? 'موصى به للمراجعة'
         : 'Recommended for Review'}
@@ -1981,24 +3268,66 @@ function EligibilityBadge({
   isArabic: boolean
 }) {
   return eligible ? (
-    <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+    <span
+      className="
+        inline-flex
+        w-fit
+        items-center
+        gap-1
+        bg-[#EEF8F2]
+        px-2
+        py-1
+        text-[10px]
+        font-semibold
+        text-[#25724C]
 
-      <CheckCircle2 className="size-3.5" />
+        print:px-1.5
+        print:py-1
+        print:text-[7px]
+      "
+    >
+      <CheckCircle2
+        className="
+          size-3
+
+          print:size-2.5
+        "
+      />
 
       {isArabic
         ? 'مؤهل'
         : 'Eligible'}
-
     </span>
   ) : (
-    <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700">
+    <span
+      className="
+        inline-flex
+        w-fit
+        items-center
+        gap-1
+        bg-[#FFF1F1]
+        px-2
+        py-1
+        text-[10px]
+        font-semibold
+        text-[#A44444]
 
-      <XCircle className="size-3.5" />
+        print:px-1.5
+        print:py-1
+        print:text-[7px]
+      "
+    >
+      <XCircle
+        className="
+          size-3
+
+          print:size-2.5
+        "
+      />
 
       {isArabic
         ? 'غير مؤهل'
         : 'Not Eligible'}
-
     </span>
   )
 }
@@ -2017,20 +3346,25 @@ function RiskBadge({
 }) {
   const styles = {
     LOW:
-      'border-emerald-200 bg-emerald-50 text-emerald-700',
+      'bg-[#EEF8F2] text-[#25724C]',
 
     MEDIUM:
-      'border-amber-200 bg-amber-50 text-amber-700',
+      'bg-[#FFF8E8] text-[#966515]',
 
     HIGH:
-      'border-rose-200 bg-rose-50 text-rose-700',
+      'bg-[#FFF1F1] text-[#A44444]',
   }
 
 
   const arabicLabels = {
-    LOW: 'مخاطر منخفضة',
-    MEDIUM: 'مخاطر متوسطة',
-    HIGH: 'مخاطر مرتفعة',
+    LOW:
+      'مخاطر منخفضة',
+
+    MEDIUM:
+      'مخاطر متوسطة',
+
+    HIGH:
+      'مخاطر مرتفعة',
   }
 
 
@@ -2041,48 +3375,41 @@ function RiskBadge({
           inline-flex
           w-fit
           items-center
-          gap-1.5
-          rounded-full
-          border
-          px-2.5
+          gap-1
+          px-2
           py-1
-          text-xs
+          text-[10px]
           font-semibold
+
+          print:px-1.5
+          print:py-1
+          print:text-[7px]
         `,
 
         styles[risk],
       )}
     >
+      <ShieldAlert
+        className="
+          size-3
 
-      <ShieldAlert className="size-3.5" />
+          print:size-2.5
+        "
+      />
 
       {isArabic
         ? arabicLabels[risk]
         : `${
-            risk.charAt(0) +
+            risk.charAt(
+              0,
+            ) +
             risk
-              .slice(1)
+              .slice(
+                1,
+              )
               .toLowerCase()
           } Risk`}
-
     </span>
-  )
-}
-
-
-/* ========================================== */
-/* MOBILE LABEL */
-/* ========================================== */
-
-function MobileLabel({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <p className="mb-1 text-xs font-medium text-slate-400 lg:hidden">
-      {children}
-    </p>
   )
 }
 
@@ -2113,8 +3440,8 @@ function getRecommendationTitle(
     'REQUIRES_HUMAN_REVIEW'
   ) {
     return isArabic
-      ? 'يتطلب مراجعة بشرية'
-      : 'Human Review Required'
+      ? 'التقييم يتطلب مراجعة بشرية'
+      : 'Evaluation Requires Human Review'
   }
 
 
@@ -2139,18 +3466,66 @@ function getRecommendationTitle(
 
 function LoadingState() {
   return (
-    <div className="mx-auto w-full max-w-[1400px] px-4 py-8 md:px-6 lg:py-9">
+    <div
+      className="
+        min-h-screen
+        bg-[#F5F5F3]
+        px-5
+        py-8
 
-      <div className="h-20 animate-pulse rounded-2xl bg-muted" />
+        sm:px-8
+      "
+    >
+      <div
+        className="
+          mx-auto
+          max-w-[1280px]
+          bg-white
+        "
+      >
+        <div
+          className="
+            h-[520px]
+            animate-pulse
+            bg-[#131B4F]/90
+          "
+        />
 
-      <div className="mt-5 h-20 animate-pulse rounded-2xl bg-muted" />
 
-      <div className="mt-6 h-72 animate-pulse rounded-2xl bg-muted" />
+        <div
+          className="
+            space-y-8
+            px-8
+            py-10
+          "
+        >
+          <div
+            className="
+              h-[260px]
+              animate-pulse
+              bg-[#F2F3F5]
+            "
+          />
 
-      <div className="mt-5 h-32 animate-pulse rounded-2xl bg-muted" />
 
-      <div className="mt-5 h-96 animate-pulse rounded-2xl bg-muted" />
+          <div
+            className="
+              h-[420px]
+              animate-pulse
+              bg-[#F2F3F5]
+            "
+          />
 
+
+          <div
+            className="
+              h-[360px]
+              animate-pulse
+              bg-[#F2F3F5]
+            "
+          />
+        </div>
+      </div>
     </div>
   )
 }

@@ -3,6 +3,7 @@ from concurrent.futures import (
     as_completed,
 )
 from pathlib import Path
+import time
 
 from agents.rfp_agent import RFPAgent
 from agents.technical_agent import TechnicalAgent
@@ -1252,17 +1253,31 @@ class ProposalEvaluationService:
             "================================"
         )
 
-        # Dedicated service per vendor.
-        worker = (
-            ProposalEvaluationService()
+        # Use only a dedicated DocumentParser per vendor.
+        #
+        # The previous implementation created a complete
+        # ProposalEvaluationService for every proposal, which
+        # initialized many unused agents and clients.
+        parser = (
+            DocumentParser()
         )
+
+        proposal_started = time.perf_counter()
 
         try:
 
+            parse_started = time.perf_counter()
+
             proposal_document = (
-                worker.document_parser.parse_document(
+                parser.parse_document(
                     proposal_path
                 )
+            )
+
+            print(
+                f"[{proposal_path.name}] "
+                "Document parsing: "
+                f"{time.perf_counter() - parse_started:.2f}s"
             )
 
             proposal_text = str(
@@ -1289,19 +1304,42 @@ class ProposalEvaluationService:
                 proposal_path.stem
             )
 
+            evaluation_started = (
+                time.perf_counter()
+            )
+
             vendor_result = (
-                worker._evaluate_vendor(
+                self._evaluate_vendor(
                     vendor_name=vendor_name,
                     proposal_text=proposal_text,
                     criteria=criteria,
                 )
             )
 
+            print(
+                f"[{proposal_path.name}] "
+                "Vendor AI evaluation: "
+                f"{time.perf_counter() - evaluation_started:.2f}s"
+            )
+
+            print(
+                f"[{proposal_path.name}] "
+                "Total proposal processing: "
+                f"{time.perf_counter() - proposal_started:.2f}s"
+            )
+
             return vendor_result
 
         finally:
 
-            worker.close()
+            close_method = getattr(
+                parser,
+                "close",
+                None,
+            )
+
+            if callable(close_method):
+                close_method()
 
     # =====================================================
     # Main evaluation
@@ -1313,6 +1351,8 @@ class ProposalEvaluationService:
         proposal_paths=None,
         **kwargs,
     ):
+        evaluation_started = time.perf_counter()
+
         # =================================================
         # Alternate parameter names
         # =================================================
@@ -1401,10 +1441,17 @@ class ProposalEvaluationService:
             "================================"
         )
 
+        rfp_parse_started = time.perf_counter()
+
         rfp_document = (
             self.document_parser.parse_document(
                 rfp_path
             )
+        )
+
+        print(
+            "RFP parsing total: "
+            f"{time.perf_counter() - rfp_parse_started:.2f}s"
         )
 
         rfp_text = str(
@@ -1442,10 +1489,17 @@ class ProposalEvaluationService:
             "================================"
         )
 
+        rfp_analysis_started = time.perf_counter()
+
         rfp_analysis = (
             self.rfp_agent.analyze(
                 rfp_text
             )
+        )
+
+        print(
+            "RFP analysis total: "
+            f"{time.perf_counter() - rfp_analysis_started:.2f}s"
         )
 
         if not isinstance(
@@ -1752,10 +1806,17 @@ class ProposalEvaluationService:
             "================================"
         )
 
+        ranking_started = time.perf_counter()
+
         ranking = (
             self.ranking_agent.rank(
                 vendor_results
             )
+        )
+
+        print(
+            "Ranking agent total: "
+            f"{time.perf_counter() - ranking_started:.2f}s"
         )
 
         if not isinstance(
@@ -1900,6 +1961,11 @@ class ProposalEvaluationService:
         print(
             f"Recommendation Status: "
             f"{recommendation_status}"
+        )
+
+        print(
+            "Total evaluation time: "
+            f"{time.perf_counter() - evaluation_started:.2f}s"
         )
 
         return final_result

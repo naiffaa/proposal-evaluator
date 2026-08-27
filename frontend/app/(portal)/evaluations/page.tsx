@@ -10,14 +10,15 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 import {
+  ArrowLeft,
   ArrowRight,
   FileCheck2,
   Plus,
+  Search,
+  Users,
 } from 'lucide-react'
 
-import { PageHeader } from '@/components/page-header'
 import { EmptyState } from '@/components/empty-state'
-import { Button } from '@/components/ui/button'
 
 import {
   RecommendationBadge,
@@ -27,36 +28,30 @@ import {
 import { evaluationsApi } from '@/lib/api'
 import { formatDate } from '@/lib/labels'
 import { useLanguage } from '@/lib/i18n/context'
+import { cn } from '@/lib/utils'
 
 import type {
   EvaluationSummary,
 } from '@/lib/types'
 
 
-type OverviewStats = {
-  totalEvaluations: number
-  activeEvaluations: number
-  vendorsAnalyzed: number
-  completedReports: number
-}
-
-
 export default function EvaluationsPage() {
-  const router = useRouter()
+  const router =
+    useRouter()
 
   const {
     language,
     isArabic,
-  } = useLanguage()
+  } =
+    useLanguage()
 
 
   const [
     evaluations,
     setEvaluations,
   ] =
-    useState<
-      EvaluationSummary[]
-    >([])
+    useState<EvaluationSummary[]>([])
+
 
   const [
     loading,
@@ -64,17 +59,24 @@ export default function EvaluationsPage() {
   ] =
     useState(true)
 
+
   const [
     error,
     setError,
   ] =
-    useState<string | null>(
-      null,
-    )
+    useState<string | null>(null)
+
+
+  const [
+    searchQuery,
+    setSearchQuery,
+  ] =
+    useState('')
 
 
   useEffect(() => {
-    let active = true
+    let active =
+      true
 
 
     async function loadEvaluations() {
@@ -112,10 +114,10 @@ export default function EvaluationsPage() {
 
         setError(
           isArabic
-            ? 'تعذر تحميل التقييمات.'
+            ? 'تعذر تحميل سجل المنافسات. حاول مرة أخرى.'
             : err instanceof Error
               ? err.message
-              : 'Failed to load evaluations.',
+              : 'Failed to load competition history.',
         )
       } finally {
         if (active) {
@@ -129,55 +131,143 @@ export default function EvaluationsPage() {
 
 
     return () => {
-      active = false
+      active =
+        false
     }
-  }, [isArabic])
+  }, [
+    isArabic,
+  ])
 
 
-  const overviewStats =
-    useMemo<OverviewStats>(
-      () => ({
-        totalEvaluations:
-          evaluations.length,
-
-        activeEvaluations:
-          evaluations.filter(
-            (evaluation) =>
-              evaluation.status !==
-              'COMPLETED',
-          ).length,
-
-        vendorsAnalyzed:
-          evaluations.reduce(
-            (
-              total,
-              evaluation,
-            ) =>
-              total +
-              evaluation.vendorCount,
-            0,
-          ),
-
-        completedReports:
-          evaluations.filter(
-            (evaluation) =>
-              evaluation.status ===
-              'COMPLETED',
-          ).length,
-      }),
-      [evaluations],
+  const activeEvaluations =
+    useMemo(
+      () =>
+        evaluations.filter(
+          (
+            evaluation,
+          ) =>
+            evaluation.status !==
+            'COMPLETED',
+        ).length,
+      [
+        evaluations,
+      ],
     )
+
+
+  const completedEvaluations =
+    useMemo(
+      () =>
+        evaluations.filter(
+          (
+            evaluation,
+          ) =>
+            evaluation.status ===
+            'COMPLETED',
+        ).length,
+      [
+        evaluations,
+      ],
+    )
+
+
+  const filteredEvaluations =
+    useMemo(
+      () => {
+        const query =
+          searchQuery
+            .trim()
+            .toLowerCase()
+
+
+        if (!query) {
+          return evaluations
+        }
+
+
+        return evaluations.filter(
+          (
+            evaluation,
+          ) => {
+            const name =
+              evaluation.rfpName
+                ?.toLowerCase() ??
+              ''
+
+            const vendor =
+              evaluation.topRankedVendor
+                ?.toLowerCase() ??
+              ''
+
+            const id =
+              String(
+                evaluation.id,
+              ).toLowerCase()
+
+
+            return (
+              name.includes(query) ||
+              vendor.includes(query) ||
+              id.includes(query)
+            )
+          },
+        )
+      },
+      [
+        evaluations,
+        searchQuery,
+      ],
+    )
+
+
+  const ArrowIcon =
+    isArabic
+      ? ArrowLeft
+      : ArrowRight
 
 
   if (loading) {
     return (
-      <div className="mx-auto w-full max-w-[1380px] px-4 py-8 md:px-6 lg:py-10">
+      <div
+        className="
+          min-h-screen
+          bg-white
+        "
+      >
 
-        <div className="h-32 animate-pulse rounded-2xl bg-muted" />
+        <div
+          className="
+            mx-auto
+            w-full
+            max-w-[1500px]
+            px-5
+            py-12
 
-        <div className="mt-7 h-36 animate-pulse rounded-2xl bg-muted" />
+            sm:px-8
 
-        <div className="mt-7 h-[420px] animate-pulse rounded-2xl bg-muted" />
+            lg:px-12
+          "
+        >
+
+          <div
+            className="
+              h-[140px]
+              animate-pulse
+              bg-[#F4F5F7]
+            "
+          />
+
+
+          <div
+            className="
+              mt-9
+              h-[500px]
+              animate-pulse
+              bg-[#F4F5F7]
+            "
+          />
+
+        </div>
 
       </div>
     )
@@ -185,678 +275,1079 @@ export default function EvaluationsPage() {
 
 
   return (
-    <div className="mx-auto w-full max-w-[1380px] px-4 py-8 md:px-6 lg:py-10">
+    <div
+      className="
+        min-h-screen
+        bg-white
+      "
+      dir={
+        isArabic
+          ? 'rtl'
+          : 'ltr'
+      }
+    >
 
-      {/* ===================================== */}
-      {/* PAGE HEADER */}
-      {/* ===================================== */}
+      <main
+        className="
+          mx-auto
+          w-full
+          max-w-[1500px]
+          px-5
+          py-12
 
-      <PageHeader
-        eyebrow={
-          isArabic
-            ? 'إدارة التقييمات'
-            : 'Evaluation Management'
-        }
-        title={
-          isArabic
-            ? 'التقييمات'
-            : 'Evaluations'
-        }
-        description={
-          isArabic
-            ? 'عرض وإدارة ومراجعة جميع تقييمات طلبات العروض ومقترحات الموردين من مكان واحد.'
-            : 'View, manage, and review all RFP and vendor proposal evaluations from one place.'
-        }
-        actions={
-          <Button
-            size="lg"
-            nativeButton={false}
-            render={
-              <Link href="/evaluations/new" />
-            }
-          >
-            <Plus className="size-4" />
+          sm:px-8
 
-            {isArabic
-              ? 'تقييم جديد'
-              : 'New Evaluation'}
-          </Button>
-        }
-      />
+          lg:px-12
+          lg:py-14
+        "
+      >
 
+        {/* ======================================= */}
+        {/* PAGE HEADER */}
+        {/* ======================================= */}
 
-      {/* ===================================== */}
-      {/* ERROR */}
-      {/* ===================================== */}
-
-      {error && (
-        <div
+        <section
           className="
-            mt-6
-            rounded-xl
-            border
-            border-rose-200
-            bg-rose-50
-            px-4
-            py-3
-            text-sm
-            text-rose-700
-          "
-        >
-          {error}
-        </div>
-      )}
+            flex
+            flex-col
+            gap-7
+            border-b
+            border-[#E7E9EF]
+            pb-9
 
-
-      {/* ===================================== */}
-      {/* SUMMARY PANEL */}
-      {/* ===================================== */}
-
-      <section className="mt-8">
-
-        <div
-          className="
-            overflow-hidden
-            rounded-2xl
-            border
-            border-[#DCE4F5]
-            bg-white
-            shadow-sm
+            lg:flex-row
+            lg:items-end
+            lg:justify-between
           "
         >
 
           <div
             className="
-              flex
-              items-center
-              justify-between
-              border-b
-              border-[#DCE4F5]
-              bg-[#F8FAFF]
-              px-6
-              py-3.5
-              sm:px-7
-              lg:px-8
+              max-w-[760px]
             "
           >
 
-            <div>
-
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#5367A5]">
-                {isArabic
-                  ? 'نظرة عامة'
-                  : 'Overview'}
-              </p>
-
-              <h2 className="mt-1 text-lg font-semibold tracking-tight text-[#161F56]">
-                {isArabic
-                  ? 'نشاط التقييمات'
-                  : 'Evaluation Activity'}
-              </h2>
-
-            </div>
-
-
-            <span className="hidden text-xs text-[#667085] md:block">
+            <p
+              className="
+                text-[11px]
+                font-semibold
+                tracking-[0.15em]
+                text-[#9466C4]
+              "
+            >
               {isArabic
-                ? 'ملخص التقييمات الحالي'
-                : 'Current portfolio summary'}
-            </span>
-
-          </div>
+                ? 'إدارة المنافسات'
+                : 'COMPETITION MANAGEMENT'}
+            </p>
 
 
-          <div className="grid grid-cols-2 md:grid-cols-4">
-
-            <SummaryMetric
-              label={
-                isArabic
-                  ? 'إجمالي التقييمات'
-                  : 'Total Evaluations'
-              }
-              value={
-                overviewStats.totalEvaluations
-              }
-              helper={
-                isArabic
-                  ? 'لجميع طلبات العروض'
-                  : 'Across all RFPs'
-              }
-              tone="one"
-            />
-
-            <SummaryMetric
-              label={
-                isArabic
-                  ? 'التقييمات النشطة'
-                  : 'Active Evaluations'
-              }
-              value={
-                overviewStats.activeEvaluations
-              }
-              helper={
-                isArabic
-                  ? 'قيد التنفيذ أو المراجعة'
-                  : 'In progress or review'
-              }
-              tone="two"
-            />
-
-            <SummaryMetric
-              label={
-                isArabic
-                  ? 'الموردون المحللون'
-                  : 'Vendors Analyzed'
-              }
-              value={
-                overviewStats.vendorsAnalyzed
-              }
-              helper={
-                isArabic
-                  ? 'العروض التي تم تقييمها'
-                  : 'Proposals evaluated'
-              }
-              tone="three"
-            />
-
-            <SummaryMetric
-              label={
-                isArabic
-                  ? 'التقارير المكتملة'
-                  : 'Completed Reports'
-              }
-              value={
-                overviewStats.completedReports
-              }
-              helper={
-                isArabic
-                  ? 'جاهزة للمراجعة'
-                  : 'Ready for review'
-              }
-              tone="four"
-              last
-            />
-
-          </div>
-
-        </div>
-
-      </section>
-
-
-      {/* ===================================== */}
-      {/* ALL EVALUATIONS */}
-      {/* ===================================== */}
-
-      <section
-        className="
-          mt-7
-          overflow-hidden
-          rounded-2xl
-          border
-          border-border
-          bg-white
-          shadow-[0_10px_35px_rgba(22,31,86,0.05)]
-        "
-      >
-
-        <div
-          className="
-            flex
-            flex-col
-            gap-4
-            border-b
-            border-border
-            px-6
-            py-5
-            sm:px-7
-            lg:flex-row
-            lg:items-center
-            lg:justify-between
-            lg:px-8
-          "
-        >
-
-          <div>
-
-            <h2 className="text-xl font-semibold tracking-tight text-slate-950">
+            <h1
+              className="
+                mt-3
+                text-[clamp(38px,4vw,58px)]
+                font-medium
+                leading-[1.05]
+                tracking-[-0.04em]
+                text-[#131B4F]
+              "
+            >
               {isArabic
-                ? 'جميع التقييمات'
-                : 'All Evaluations'}
-            </h2>
+                ? 'سجل المنافسات'
+                : 'Competition History'}
+            </h1>
 
-            <p className="mt-1 text-sm text-muted-foreground">
+
+            <p
+              className="
+                mt-4
+                max-w-[680px]
+                text-base
+                leading-8
+                text-[#687086]
+              "
+            >
               {isArabic
-                ? 'راجع حالة التقييم والموردين والترتيب والنتائج.'
-                : 'Review evaluation status, vendors, rankings, and results.'}
+                ? 'تابع المنافسات الحالية والسابقة وافتح أي منافسة لمراجعة الموردين والنتائج.'
+                : 'Track current and previous competitions and open any competition to review vendors and results.'}
             </p>
 
           </div>
 
 
-          <div className="flex items-center gap-3">
+          <Link
+            href="/evaluations/new"
+            className="
+              inline-flex
+              h-13
+              shrink-0
+              items-center
+              justify-center
+              gap-2.5
+              bg-[#131B4F]
+              px-6
+              text-sm
+              font-semibold
+              text-white
+              transition-all
+              duration-300
 
-            <span
+              hover:-translate-y-1
+              hover:shadow-[0_12px_26px_rgba(19,27,79,0.15)]
+            "
+          >
+
+            <Plus
               className="
-                rounded-full
-                border
-                border-primary/10
-                bg-primary/[0.04]
-                px-3
-                py-1.5
-                text-xs
-                font-medium
-                text-primary
+                size-4
               "
-            >
-              {isArabic
-                ? `${evaluations.length} تقييم`
-                : `${evaluations.length} evaluation${
-                    evaluations.length !== 1
-                      ? 's'
-                      : ''
-                  }`}
-            </span>
-
-
-            <Button
-              variant="ghost"
-              nativeButton={false}
-              render={
-                <Link href="/evaluations/new" />
-              }
-              className="gap-2 text-primary"
-            >
-              {isArabic
-                ? 'بدء تقييم جديد'
-                : 'Start New'}
-
-              <ArrowRight
-                className={`size-4 ${
-                  isArabic
-                    ? 'rotate-180'
-                    : ''
-                }`}
-              />
-            </Button>
-
-          </div>
-
-        </div>
-
-
-        {evaluations.length === 0 ? (
-
-          <div className="p-8">
-
-            <EmptyState
-              icon={FileCheck2}
-              title={
-                error
-                  ? isArabic
-                    ? 'تعذر تحميل التقييمات'
-                    : 'Unable to load evaluations'
-                  : isArabic
-                    ? 'لا توجد تقييمات بعد'
-                    : 'No evaluations yet'
-              }
-              description={
-                error
-                  ? isArabic
-                    ? 'تعذر تحميل قائمة التقييمات من النظام.'
-                    : 'The evaluation list could not be loaded from the API.'
-                  : isArabic
-                    ? 'ابدأ أول تقييم للعروض حتى تظهر النتائج هنا.'
-                    : 'Start your first proposal evaluation to see results here.'
-              }
-              action={
-                <Button
-                  nativeButton={false}
-                  render={
-                    <Link href="/evaluations/new" />
-                  }
-                >
-                  <Plus className="size-4" />
-
-                  {isArabic
-                    ? 'تقييم جديد'
-                    : 'New Evaluation'}
-                </Button>
-              }
             />
 
+
+            {isArabic
+              ? 'إضافة منافسة'
+              : 'Add Competition'}
+
+          </Link>
+
+        </section>
+
+
+        {/* ======================================= */}
+        {/* ERROR */}
+        {/* ======================================= */}
+
+        {error && (
+          <div
+            className="
+              mt-7
+              border
+              border-rose-200
+              bg-rose-50
+              px-5
+              py-4
+              text-sm
+              text-rose-700
+            "
+          >
+            {error}
+          </div>
+        )}
+
+
+        {/* ======================================= */}
+        {/* LIST AREA */}
+        {/* ======================================= */}
+
+        <section
+          className="
+            mt-10
+          "
+        >
+
+          {/* TOP AREA */}
+
+          <div
+            className="
+              flex
+              flex-col
+              gap-5
+
+              xl:flex-row
+              xl:items-center
+              xl:justify-between
+            "
+          >
+
+            {/* TITLE + MINI STATS */}
+
+            <div>
+
+              <div
+                className="
+                  flex
+                  flex-wrap
+                  items-center
+                  gap-x-5
+                  gap-y-3
+                "
+              >
+
+                <h2
+                  className="
+                    text-[26px]
+                    font-medium
+                    tracking-[-0.025em]
+                    text-[#131B4F]
+                  "
+                >
+                  {isArabic
+                    ? 'جميع المنافسات'
+                    : 'All Competitions'}
+                </h2>
+
+
+                {/* TOTAL */}
+
+                <div
+                  className="
+                    flex
+                    items-center
+                    gap-2
+                    border-s
+                    border-[#E1E4EA]
+                    ps-5
+                  "
+                >
+
+                  <span
+                    className="
+                      size-2
+                      rounded-full
+                      bg-[#131B4F]
+                    "
+                  />
+
+                  <span
+                    className="
+                      text-xs
+                      text-[#6F7789]
+                    "
+                  >
+                    {isArabic
+                      ? 'الإجمالي'
+                      : 'Total'}
+                  </span>
+
+
+                  <span
+                    className="
+                      text-sm
+                      font-semibold
+                      text-[#131B4F]
+                    "
+                  >
+                    {
+                      evaluations.length
+                    }
+                  </span>
+
+                </div>
+
+
+                {/* ACTIVE */}
+
+                <div
+                  className="
+                    flex
+                    items-center
+                    gap-2
+                  "
+                >
+
+                  <span
+                    className="
+                      size-2
+                      rounded-full
+                      bg-[#EDB27A]
+                    "
+                  />
+
+                  <span
+                    className="
+                      text-xs
+                      text-[#6F7789]
+                    "
+                  >
+                    {isArabic
+                      ? 'قيد التقييم'
+                      : 'Active'}
+                  </span>
+
+
+                  <span
+                    className="
+                      text-sm
+                      font-semibold
+                      text-[#131B4F]
+                    "
+                  >
+                    {
+                      activeEvaluations
+                    }
+                  </span>
+
+                </div>
+
+
+                {/* COMPLETED */}
+
+                <div
+                  className="
+                    flex
+                    items-center
+                    gap-2
+                  "
+                >
+
+                  <span
+                    className="
+                      size-2
+                      rounded-full
+                      bg-[#5FAC81]
+                    "
+                  />
+
+                  <span
+                    className="
+                      text-xs
+                      text-[#6F7789]
+                    "
+                  >
+                    {isArabic
+                      ? 'مكتملة'
+                      : 'Completed'}
+                  </span>
+
+
+                  <span
+                    className="
+                      text-sm
+                      font-semibold
+                      text-[#131B4F]
+                    "
+                  >
+                    {
+                      completedEvaluations
+                    }
+                  </span>
+
+                </div>
+
+              </div>
+
+
+              <p
+                className="
+                  mt-2
+                  text-sm
+                  leading-6
+                  text-[#808797]
+                "
+              >
+                {isArabic
+                  ? 'افتح المنافسة لمراجعة المتطلبات والموردين والمقارنة والنتائج.'
+                  : 'Open a competition to review requirements, vendors, comparison, and results.'}
+              </p>
+
+            </div>
+
+
+            {/* SEARCH */}
+
+            <div
+              className="
+                relative
+                w-full
+
+                xl:w-[340px]
+              "
+            >
+
+              <Search
+                className="
+                  absolute
+                  start-4
+                  top-1/2
+                  size-4
+                  -translate-y-1/2
+                  text-[#9097A7]
+                "
+              />
+
+
+              <input
+                type="search"
+                value={
+                  searchQuery
+                }
+                onChange={
+                  (
+                    event,
+                  ) =>
+                    setSearchQuery(
+                      event.target.value,
+                    )
+                }
+                placeholder={
+                  isArabic
+                    ? 'ابحث باسم المنافسة أو المورد'
+                    : 'Search competition or vendor'
+                }
+                className="
+                  h-12
+                  w-full
+                  border
+                  border-[#DCE0E8]
+                  bg-white
+                  ps-11
+                  pe-4
+                  text-sm
+                  text-[#131B4F]
+                  outline-none
+                  transition-all
+
+                  placeholder:text-[#A0A6B2]
+
+                  focus:border-[#131B4F]
+                  focus:shadow-[0_0_0_3px_rgba(19,27,79,0.05)]
+                "
+              />
+
+            </div>
+
           </div>
 
-        ) : (
 
-          <div className="overflow-x-auto">
+          {/* ===================================== */}
+          {/* TABLE */}
+          {/* ===================================== */}
 
-            <table className="min-w-full">
+          <div
+            className="
+              mt-6
+              overflow-hidden
+              border
+              border-[#E3E6ED]
+              bg-white
+            "
+          >
 
-              <thead>
+            {evaluations.length === 0 ? (
 
-                <tr className="bg-slate-50/70">
+              <div
+                className="
+                  p-8
 
-                  <th className="px-6 py-3.5 text-start text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground sm:px-7 lg:px-8">
-                    {isArabic
-                      ? 'طلب العرض / التقييم'
-                      : 'RFP / Evaluation'}
-                  </th>
+                  sm:p-12
+                "
+              >
 
-                  <th className="px-5 py-3.5 text-start text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    {isArabic
-                      ? 'الموردون'
-                      : 'Vendors'}
-                  </th>
+                <EmptyState
+                  icon={
+                    FileCheck2
+                  }
+                  title={
+                    error
+                      ? isArabic
+                        ? 'تعذر تحميل المنافسات'
+                        : 'Unable to load competitions'
+                      : isArabic
+                        ? 'ما عندك منافسات حتى الآن'
+                        : 'No competitions yet'
+                  }
+                  description={
+                    error
+                      ? isArabic
+                        ? 'تعذر تحميل سجل المنافسات من النظام.'
+                        : 'The competition list could not be loaded from the API.'
+                      : isArabic
+                        ? 'أضف أول منافسة وارفع مستند المنافسة وعروض الموردين حتى تبدأ التقييم.'
+                        : 'Add your first competition and upload its document and vendor proposals to begin the evaluation.'
+                  }
+                  action={
+                    <Link
+                      href="/evaluations/new"
+                      className="
+                        inline-flex
+                        h-11
+                        items-center
+                        justify-center
+                        gap-2
+                        bg-[#131B4F]
+                        px-5
+                        text-sm
+                        font-semibold
+                        text-white
+                      "
+                    >
+                      <Plus
+                        className="
+                          size-4
+                        "
+                      />
 
-                  <th className="px-5 py-3.5 text-start text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    {isArabic
-                      ? 'الحالة'
-                      : 'Status'}
-                  </th>
+                      {isArabic
+                        ? 'إضافة منافسة'
+                        : 'Add Competition'}
+                    </Link>
+                  }
+                />
 
-                  <th className="px-5 py-3.5 text-start text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    {isArabic
-                      ? 'التوصية'
-                      : 'Recommendation'}
-                  </th>
+              </div>
 
-                  <th className="px-5 py-3.5 text-start text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    {isArabic
-                      ? 'المورد الأعلى ترتيبًا'
-                      : 'Top Ranked Vendor'}
-                  </th>
+            ) : filteredEvaluations.length === 0 ? (
 
-                  <th className="px-5 py-3.5 text-start text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    {isArabic
-                      ? 'التاريخ'
-                      : 'Date'}
-                  </th>
+              <div
+                className="
+                  flex
+                  min-h-[260px]
+                  flex-col
+                  items-center
+                  justify-center
+                  px-6
+                  text-center
+                "
+              >
 
-                  <th className="px-6 py-3.5 text-end text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground sm:px-7 lg:px-8">
-                    {isArabic
-                      ? 'الإجراء'
-                      : 'Action'}
-                  </th>
+                <div
+                  className="
+                    flex
+                    size-11
+                    items-center
+                    justify-center
+                    bg-[#F4F5F7]
+                    text-[#131B4F]
+                  "
+                >
 
-                </tr>
+                  <Search
+                    className="
+                      size-5
+                    "
+                  />
 
-              </thead>
+                </div>
 
 
-              <tbody>
+                <h3
+                  className="
+                    mt-4
+                    text-lg
+                    font-semibold
+                    text-[#131B4F]
+                  "
+                >
+                  {isArabic
+                    ? 'ما لقينا منافسة مطابقة'
+                    : 'No matching competition'}
+                </h3>
 
-                {evaluations.map(
-                  (
-                    evaluation,
-                    index,
-                  ) => (
+
+                <p
+                  className="
+                    mt-2
+                    text-sm
+                    text-[#818898]
+                  "
+                >
+                  {isArabic
+                    ? 'جرّب كلمة بحث مختلفة.'
+                    : 'Try a different search term.'}
+                </p>
+
+              </div>
+
+            ) : (
+
+              <div
+                className="
+                  overflow-x-auto
+                "
+              >
+
+                <table
+                  className="
+                    min-w-[1080px]
+                    w-full
+                  "
+                >
+
+                  <thead>
 
                     <tr
-                      key={
-                        evaluation.id
-                      }
-                      tabIndex={0}
-                      role="button"
-                      onClick={() =>
-                        router.push(
-                          `/evaluations/${evaluation.id}`,
-                        )
-                      }
-                      onKeyDown={(event) => {
-                        if (
-                          event.key === 'Enter' ||
-                          event.key === ' '
-                        ) {
-                          event.preventDefault()
-
-                          router.push(
-                            `/evaluations/${evaluation.id}`,
-                          )
-                        }
-                      }}
-                      className={`
-                        cursor-pointer
-                        transition-all
-                        duration-150
-
-                        hover:bg-[#F6F8FF]
-
-                        focus-visible:outline-none
-                        focus-visible:ring-2
-                        focus-visible:ring-inset
-                        focus-visible:ring-[#161F56]/30
-
-                        ${
-                          index !==
-                          evaluations.length - 1
-                            ? 'border-b border-border'
-                            : ''
-                        }
-                      `}
+                      className="
+                        border-b
+                        border-[#E7E9EF]
+                        bg-[#F8F9FB]
+                      "
                     >
 
-                      <td className="px-6 py-5 align-middle sm:px-7 lg:px-8">
+                      <th
+                        className="
+                          px-6
+                          py-4
+                          text-start
+                          text-[11px]
+                          font-semibold
+                          text-[#71798C]
 
-                        <div className="min-w-[280px]">
-
-                          <p className="text-sm font-semibold text-slate-950">
-                            {evaluation.rfpName}
-                          </p>
-
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {evaluation.id}
-                          </p>
-
-                        </div>
-
-                      </td>
-
-
-                      <td className="px-5 py-5 align-middle">
-
-                        <div>
-
-                          <p className="text-sm font-semibold text-slate-900">
-                            {
-                              evaluation.vendorCount
-                            }
-                          </p>
-
-                          <p className="mt-0.5 text-xs text-muted-foreground">
-                            {isArabic
-                              ? evaluation.vendorCount === 1
-                                ? 'عرض'
-                                : 'عروض'
-                              : `proposal${
-                                  evaluation.vendorCount !== 1
-                                    ? 's'
-                                    : ''
-                                }`}
-                          </p>
-
-                        </div>
-
-                      </td>
+                          sm:px-7
+                        "
+                      >
+                        {isArabic
+                          ? 'المنافسة'
+                          : 'Competition'}
+                      </th>
 
 
-                      <td className="px-5 py-5 align-middle">
-
-                        <StatusBadge
-                          status={
-                            evaluation.status
-                          }
-                        />
-
-                      </td>
-
-
-                      <td className="px-5 py-5 align-middle">
-
-                        {evaluation.recommendationStatus ? (
-
-                          <RecommendationBadge
-                            status={
-                              evaluation.recommendationStatus
-                            }
-                          />
-
-                        ) : (
-
-                          <span className="text-sm text-muted-foreground">
-                            —
-                          </span>
-
-                        )}
-
-                      </td>
+                      <th
+                        className="
+                          px-5
+                          py-4
+                          text-start
+                          text-[11px]
+                          font-semibold
+                          text-[#71798C]
+                        "
+                      >
+                        {isArabic
+                          ? 'الموردون'
+                          : 'Vendors'}
+                      </th>
 
 
-                      <td className="px-5 py-5 align-middle">
-
-                        <div className="min-w-[170px]">
-
-                          <p className="text-sm font-medium text-slate-900">
-                            {
-                              evaluation.topRankedVendor ??
-                              '—'
-                            }
-                          </p>
-
-                        </div>
-
-                      </td>
-
-
-                      <td className="px-5 py-5 align-middle">
-
-                        <p className="whitespace-nowrap text-sm text-slate-700">
-                          {formatDate(
-                            evaluation.createdDate,
-                            language,
-                          )}
-                        </p>
-
-                      </td>
+                      <th
+                        className="
+                          px-5
+                          py-4
+                          text-start
+                          text-[11px]
+                          font-semibold
+                          text-[#71798C]
+                        "
+                      >
+                        {isArabic
+                          ? 'الحالة'
+                          : 'Status'}
+                      </th>
 
 
-                      <td className="px-6 py-5 text-end align-middle sm:px-7 lg:px-8">
+                      <th
+                        className="
+                          px-5
+                          py-4
+                          text-start
+                          text-[11px]
+                          font-semibold
+                          text-[#71798C]
+                        "
+                      >
+                        {isArabic
+                          ? 'أعلى مورد'
+                          : 'Top Vendor'}
+                      </th>
 
-                        <div className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
 
-                          {isArabic
-                            ? 'عرض'
-                            : 'View'}
+                      <th
+                        className="
+                          px-5
+                          py-4
+                          text-start
+                          text-[11px]
+                          font-semibold
+                          text-[#71798C]
+                        "
+                      >
+                        {isArabic
+                          ? 'التوصية'
+                          : 'Recommendation'}
+                      </th>
 
-                          <ArrowRight
-                            className={`size-3.5 ${
-                              isArabic
-                                ? 'rotate-180'
-                                : ''
-                            }`}
-                          />
 
-                        </div>
+                      <th
+                        className="
+                          px-5
+                          py-4
+                          text-start
+                          text-[11px]
+                          font-semibold
+                          text-[#71798C]
+                        "
+                      >
+                        {isArabic
+                          ? 'التاريخ'
+                          : 'Date'}
+                      </th>
 
-                      </td>
+
+                      <th
+                        className="
+                          px-6
+                          py-4
+                          text-end
+                          text-[11px]
+                          font-semibold
+                          text-[#71798C]
+
+                          sm:px-7
+                        "
+                      >
+                        {isArabic
+                          ? 'الإجراء'
+                          : 'Action'}
+                      </th>
 
                     </tr>
 
-                  ),
-                )}
+                  </thead>
 
-              </tbody>
 
-            </table>
+                  <tbody>
+
+                    {filteredEvaluations.map(
+                      (
+                        evaluation,
+                        index,
+                      ) => (
+
+                        <tr
+                          key={
+                            evaluation.id
+                          }
+                          role="button"
+                          tabIndex={
+                            0
+                          }
+                          onClick={
+                            () =>
+                              router.push(
+                                `/evaluations/${evaluation.id}`,
+                              )
+                          }
+                          onKeyDown={
+                            (
+                              event,
+                            ) => {
+                              if (
+                                event.key ===
+                                  'Enter' ||
+                                event.key ===
+                                  ' '
+                              ) {
+                                event.preventDefault()
+
+                                router.push(
+                                  `/evaluations/${evaluation.id}`,
+                                )
+                              }
+                            }
+                          }
+                          className={cn(
+                            `
+                              group
+                              cursor-pointer
+                              transition-colors
+                              duration-200
+
+                              hover:bg-[#FAFAFB]
+
+                              focus-visible:outline-none
+                              focus-visible:ring-2
+                              focus-visible:ring-inset
+                              focus-visible:ring-[#131B4F]/20
+                            `,
+                            index !==
+                              filteredEvaluations.length -
+                                1 &&
+                              `
+                                border-b
+                                border-[#ECEEF2]
+                              `,
+                          )}
+                        >
+
+                          {/* COMPETITION */}
+
+                          <td
+                            className="
+                              px-6
+                              py-5
+                              align-middle
+
+                              sm:px-7
+                            "
+                          >
+
+                            <div
+                              className="
+                                flex
+                                min-w-[280px]
+                                items-center
+                                gap-4
+                              "
+                            >
+
+                              <div
+                                className="
+                                  flex
+                                  size-9
+                                  shrink-0
+                                  items-center
+                                  justify-center
+                                  bg-[#F3F4F7]
+                                  text-[#131B4F]
+                                  transition-colors
+                                  duration-300
+
+                                  group-hover:bg-[#131B4F]
+                                  group-hover:text-white
+                                "
+                              >
+
+                                <FileCheck2
+                                  className="
+                                    size-4
+                                  "
+                                />
+
+                              </div>
+
+
+                              <div>
+
+                                <p
+                                  className="
+                                    text-sm
+                                    font-semibold
+                                    leading-6
+                                    text-[#131B4F]
+                                  "
+                                >
+                                  {
+                                    evaluation.rfpName
+                                  }
+                                </p>
+
+
+                                <p
+                                  className="
+                                    mt-0.5
+                                    text-xs
+                                    text-[#979DAA]
+                                  "
+                                >
+                                  {isArabic
+                                    ? 'تقييم عروض الموردين'
+                                    : 'Vendor proposal evaluation'}
+                                </p>
+
+                              </div>
+
+                            </div>
+
+                          </td>
+
+
+                          {/* VENDORS */}
+
+                          <td
+                            className="
+                              px-5
+                              py-5
+                              align-middle
+                            "
+                          >
+
+                            <div
+                              className="
+                                flex
+                                items-center
+                                gap-2
+                              "
+                            >
+
+                              <Users
+                                className="
+                                  size-4
+                                  text-[#9098A9]
+                                "
+                              />
+
+
+                              <span
+                                className="
+                                  text-sm
+                                  font-semibold
+                                  text-[#131B4F]
+                                "
+                              >
+                                {
+                                  evaluation.vendorCount
+                                }
+                              </span>
+
+                            </div>
+
+                          </td>
+
+
+                          {/* STATUS */}
+
+                          <td
+                            className="
+                              px-5
+                              py-5
+                              align-middle
+                            "
+                          >
+
+                            <StatusBadge
+                              status={
+                                evaluation.status
+                              }
+                            />
+
+                          </td>
+
+
+                          {/* TOP VENDOR */}
+
+                          <td
+                            className="
+                              px-5
+                              py-5
+                              align-middle
+                            "
+                          >
+
+                            <p
+                              className="
+                                min-w-[140px]
+                                text-sm
+                                font-medium
+                                text-[#30394F]
+                              "
+                            >
+                              {
+                                evaluation.topRankedVendor ??
+                                '—'
+                              }
+                            </p>
+
+                          </td>
+
+
+                          {/* RECOMMENDATION */}
+
+                          <td
+                            className="
+                              px-5
+                              py-5
+                              align-middle
+                            "
+                          >
+
+                            {evaluation.recommendationStatus ? (
+
+                              <RecommendationBadge
+                                status={
+                                  evaluation.recommendationStatus
+                                }
+                              />
+
+                            ) : (
+
+                              <span
+                                className="
+                                  text-sm
+                                  text-[#9AA0AE]
+                                "
+                              >
+                                —
+                              </span>
+
+                            )}
+
+                          </td>
+
+
+                          {/* DATE */}
+
+                          <td
+                            className="
+                              px-5
+                              py-5
+                              align-middle
+                            "
+                          >
+
+                            <p
+                              className="
+                                whitespace-nowrap
+                                text-sm
+                                text-[#626B7D]
+                              "
+                            >
+                              {formatDate(
+                                evaluation.createdDate,
+                                language,
+                              )}
+                            </p>
+
+                          </td>
+
+
+                          {/* ACTION */}
+
+                          <td
+                            className="
+                              px-6
+                              py-5
+                              text-end
+                              align-middle
+
+                              sm:px-7
+                            "
+                          >
+
+                            <div
+                              className="
+                                inline-flex
+                                items-center
+                                gap-2
+                                text-sm
+                                font-semibold
+                                text-[#131B4F]
+                              "
+                            >
+
+                              <span>
+                                {isArabic
+                                  ? 'فتح'
+                                  : 'Open'}
+                              </span>
+
+
+                              <ArrowIcon
+                                className="
+                                  size-4
+                                  transition-transform
+                                  duration-300
+
+                                  group-hover:-translate-x-1
+                                "
+                              />
+
+                            </div>
+
+                          </td>
+
+                        </tr>
+                      ),
+                    )}
+
+                  </tbody>
+
+                </table>
+
+              </div>
+            )}
 
           </div>
 
-        )}
+        </section>
 
-      </section>
-
-    </div>
-  )
-}
-
-
-/* ========================================== */
-/* SUMMARY METRIC */
-/* ========================================== */
-
-function SummaryMetric({
-  label,
-  value,
-  helper,
-  tone,
-  last = false,
-}: {
-  label: string
-  value: number
-  helper: string
-  tone:
-    | 'one'
-    | 'two'
-    | 'three'
-    | 'four'
-  last?: boolean
-}) {
-  const tones = {
-    one: 'bg-[#F7F9FF]',
-    two: 'bg-[#F3F6FF]',
-    three: 'bg-[#EEF4FF]',
-    four: 'bg-[#EAF1FF]',
-  }
-
-
-  const numberTones = {
-    one: 'text-[#161F56]',
-    two: 'text-[#243A7A]',
-    three: 'text-[#3155A6]',
-    four: 'text-[#3B66C4]',
-  }
-
-
-  return (
-    <div
-      className={`
-        border-b
-        border-[#DCE4F5]
-        px-6
-        py-4
-        sm:px-7
-        md:border-b-0
-        md:border-e
-        lg:px-8
-
-        ${last ? 'md:border-e-0' : ''}
-
-        ${tones[tone]}
-      `}
-    >
-
-      <p className="text-xs font-medium text-[#5D6785]">
-        {label}
-      </p>
-
-
-      <p
-        className={`
-          mt-1.5
-          text-[30px]
-          font-semibold
-          leading-none
-          tracking-tight
-          ${numberTones[tone]}
-        `}
-      >
-        {value}
-      </p>
-
-
-      <p className="mt-2 text-xs text-[#75809A]">
-        {helper}
-      </p>
+      </main>
 
     </div>
   )

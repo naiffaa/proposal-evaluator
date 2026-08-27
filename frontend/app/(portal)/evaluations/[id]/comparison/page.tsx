@@ -6,20 +6,16 @@ import {
   useMemo,
   useState,
   type ComponentType,
+  type ReactNode,
 } from 'react'
 
 import Link from 'next/link'
 
 import {
+  ArrowLeft,
   ArrowRight,
-  Award,
-  BarChart3,
-  CalendarDays,
   CheckCircle2,
-  ChevronRight,
-  FileText,
   GitCompareArrows,
-  LayoutDashboard,
   ShieldAlert,
   ShieldCheck,
   Trophy,
@@ -48,15 +44,21 @@ import type {
 export default function EvaluationComparisonPage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{
+    id: string
+  }>
 }) {
-  const { id } =
+  const {
+    id,
+  } =
     use(params)
+
 
   const {
     language,
     isArabic,
-  } = useLanguage()
+  } =
+    useLanguage()
 
 
   const [
@@ -67,11 +69,13 @@ export default function EvaluationComparisonPage({
       null,
     )
 
+
   const [
     vendors,
     setVendors,
   ] =
     useState<Vendor[]>([])
+
 
   const [
     loading,
@@ -80,8 +84,14 @@ export default function EvaluationComparisonPage({
     useState(true)
 
 
+  /* ========================================== */
+  /* LOAD */
+  /* ========================================== */
+
   useEffect(() => {
-    let active = true
+    let active =
+      true
+
 
     Promise.all([
       evaluationsApi.get(id),
@@ -96,46 +106,81 @@ export default function EvaluationComparisonPage({
             return
           }
 
+
           setEvaluation(
             evaluationData,
           )
+
 
           setVendors(
             vendorData,
           )
 
-          setLoading(false)
+
+          setLoading(
+            false,
+          )
         },
       )
-      .catch((error) => {
-        console.error(
-          'Failed to load vendor comparison:',
+      .catch(
+        (
           error,
-        )
+        ) => {
+          console.error(
+            'Failed to load vendor comparison:',
+            error,
+          )
 
-        if (!active) {
-          return
-        }
 
-        setEvaluation(null)
-        setVendors([])
-        setLoading(false)
-      })
+          if (!active) {
+            return
+          }
+
+
+          setEvaluation(
+            null,
+          )
+
+
+          setVendors(
+            [],
+          )
+
+
+          setLoading(
+            false,
+          )
+        },
+      )
+
 
     return () => {
-      active = false
+      active =
+        false
     }
-  }, [id])
+  }, [
+    id,
+  ])
 
+
+  /* ========================================== */
+  /* DERIVED DATA */
+  /* ========================================== */
 
   const sortedVendors =
     useMemo(
       () =>
         [...vendors].sort(
-          (a, b) =>
-            a.rank - b.rank,
+          (
+            a,
+            b,
+          ) =>
+            a.rank -
+            b.rank,
         ),
-      [vendors],
+      [
+        vendors,
+      ],
     )
 
 
@@ -146,13 +191,16 @@ export default function EvaluationComparisonPage({
 
   const eligibleCount =
     sortedVendors.filter(
-      (vendor) =>
+      (
+        vendor,
+      ) =>
         vendor.eligible,
     ).length
 
 
   const averageScore =
-    sortedVendors.length > 0
+    sortedVendors.length >
+    0
       ? sortedVendors.reduce(
           (
             sum,
@@ -167,20 +215,30 @@ export default function EvaluationComparisonPage({
 
 
   const averageCompliance =
-    sortedVendors.length > 0
+    sortedVendors.length >
+    0
       ? sortedVendors.reduce(
           (
             sum,
             vendor,
           ) =>
             sum +
-            vendor
-              .overallMandatoryCompliance,
+            vendor.overallMandatoryCompliance,
           0,
         ) /
         sortedVendors.length
       : 0
 
+
+  const ArrowIcon =
+    isArabic
+      ? ArrowLeft
+      : ArrowRight
+
+
+  /* ========================================== */
+  /* LOADING */
+  /* ========================================== */
 
   if (loading) {
     return (
@@ -189,35 +247,66 @@ export default function EvaluationComparisonPage({
   }
 
 
+  /* ========================================== */
+  /* NOT FOUND */
+  /* ========================================== */
+
   if (!evaluation) {
     return (
-      <div className="mx-auto w-full max-w-[1400px] px-4 py-8 md:px-6 lg:py-9">
+      <div
+        className="
+          min-h-screen
+          bg-white
+          px-5
+          py-16
 
-        <EmptyState
-          icon={GitCompareArrows}
-          title={
-            isArabic
-              ? 'تعذر العثور على المقارنة'
-              : 'Comparison not found'
-          }
-          description={
-            isArabic
-              ? 'تعذر تحميل مقارنة الموردين لهذا التقييم.'
-              : "We couldn't load the vendor comparison for this evaluation."
-          }
-          action={
-            <Button
-              nativeButton={false}
-              render={
-                <Link href="/evaluations" />
-              }
-            >
-              {isArabic
-                ? 'العودة إلى التقييمات'
-                : 'Back to Evaluations'}
-            </Button>
-          }
-        />
+          sm:px-8
+        "
+      >
+
+        <div
+          className="
+            mx-auto
+            max-w-[1100px]
+            border
+            border-[#E5E7EC]
+            p-10
+          "
+        >
+
+          <EmptyState
+            icon={
+              GitCompareArrows
+            }
+            title={
+              isArabic
+                ? 'تعذر العثور على المقارنة'
+                : 'Comparison not found'
+            }
+            description={
+              isArabic
+                ? 'تعذر تحميل مقارنة الموردين لهذا التقييم.'
+                : "We couldn't load the vendor comparison for this evaluation."
+            }
+            action={
+              <Button
+                nativeButton={
+                  false
+                }
+                render={
+                  <Link
+                    href="/evaluations"
+                  />
+                }
+              >
+                {isArabic
+                  ? 'العودة إلى سجل المنافسات'
+                  : 'Back to Evaluations'}
+              </Button>
+            }
+          />
+
+        </div>
 
       </div>
     )
@@ -225,709 +314,1513 @@ export default function EvaluationComparisonPage({
 
 
   return (
-    <div className="mx-auto w-full max-w-[1400px] px-4 py-8 md:px-6 lg:py-9">
+    <div
+      dir={
+        isArabic
+          ? 'rtl'
+          : 'ltr'
+      }
+      className="
+        min-h-screen
+        bg-white
+        text-[#131B4F]
+      "
+    >
 
       {/* ===================================== */}
-      {/* HEADER */}
+      {/* SECTION 1 — COMPARISON OVERVIEW */}
       {/* ===================================== */}
 
-      <header>
-
-        <h1 className="text-[28px] font-semibold tracking-tight text-slate-950 lg:text-[30px]">
-          {isArabic
-            ? 'مقارنة الموردين'
-            : 'Vendor Comparison'}
-        </h1>
-
-
-        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-500">
-
-          <HeaderMeta
-            icon={FileText}
-            text={
-              evaluation.rfpName
-            }
-          />
-
-          <HeaderMeta
-            icon={Users}
-            text={
-              isArabic
-                ? `${evaluation.vendorCount} ${
-                    evaluation.vendorCount === 1
-                      ? 'مورد'
-                      : 'موردين'
-                  }`
-                : `${evaluation.vendorCount} vendor${
-                    evaluation.vendorCount !== 1
-                      ? 's'
-                      : ''
-                  }`
-            }
-          />
-
-          <HeaderMeta
-            icon={CalendarDays}
-            text={formatDate(
-              evaluation.createdDate,
-              language,
-            )}
-          />
-
-        </div>
-
-      </header>
-
-
-      {/* ===================================== */}
-      {/* EVALUATION WORKSPACE NAV */}
-      {/* ===================================== */}
-
-      <nav
+      <section
         className="
-          mt-7
-          overflow-x-auto
-          rounded-2xl
-          border
-          border-[#DDE3EE]
-          bg-white
-          p-2
-          shadow-[0_5px_20px_rgba(22,31,86,0.045)]
+          bg-[#F1ECE0]
+          px-5
+          py-10
+
+          sm:px-8
+          sm:py-12
+
+          lg:px-12
+          lg:py-14
         "
       >
 
-        <div className="flex min-w-max items-stretch">
+        <div
+          className="
+            mx-auto
+            grid
+            w-full
+            max-w-[1500px]
+            gap-5
 
-          <EvaluationNavItem
-            href={`/evaluations/${id}`}
-            label={
-              isArabic
-                ? 'نظرة عامة'
-                : 'Overview'
-            }
-            helper={
-              isArabic
-                ? 'الملخص'
-                : 'Summary'
-            }
-            icon={LayoutDashboard}
-          />
+            xl:grid-cols-[0.68fr_1fr]
+          "
+        >
 
-          <NavArrow
-            isArabic={
-              isArabic
-            }
-          />
+          {/* ================================= */}
+          {/* NAVY PANEL */}
+          {/* ================================= */}
 
-          <EvaluationNavItem
-            href={`/evaluations/${id}/rfp`}
-            label={
-              isArabic
-                ? 'إطار طلب العرض'
-                : 'RFP Framework'
-            }
-            helper={
-              isArabic
-                ? 'المعايير'
-                : 'Criteria'
-            }
-            icon={FileText}
-          />
+          <div
+            className="
+              relative
+              flex
+              min-h-[520px]
+              flex-col
+              overflow-hidden
+              bg-[#131B4F]
+              p-7
+              text-white
 
-          <NavArrow
-            isArabic={
-              isArabic
-            }
-          />
+              sm:p-9
 
-          <EvaluationNavItem
-            href={`/evaluations/${id}/comparison`}
-            label={
-              isArabic
-                ? 'مقارنة الموردين'
-                : 'Vendor Comparison'
-            }
-            helper={
-              isArabic
-                ? 'التقييم'
-                : 'Scoring'
-            }
-            icon={GitCompareArrows}
-            active
-          />
-
-          <NavArrow
-            isArabic={
-              isArabic
-            }
-          />
-
-          <EvaluationNavItem
-            href={`/evaluations/${id}/compliance`}
-            label={
-              isArabic
-                ? 'الامتثال'
-                : 'Compliance'
-            }
-            helper={
-              isArabic
-                ? 'المتطلبات'
-                : 'Requirements'
-            }
-            icon={ShieldCheck}
-          />
-
-          <NavArrow
-            isArabic={
-              isArabic
-            }
-          />
-
-          <EvaluationNavItem
-            href={`/evaluations/${id}/report`}
-            label={
-              isArabic
-                ? 'التقرير'
-                : 'Report'
-            }
-            helper={
-              isArabic
-                ? 'النتيجة النهائية'
-                : 'Final output'
-            }
-            icon={BarChart3}
-          />
-
-        </div>
-
-      </nav>
-
-
-      {/* ===================================== */}
-      {/* CONTENT */}
-      {/* ===================================== */}
-
-      <main className="mt-6 space-y-5">
-
-        {/* ================================= */}
-        {/* TOP RANKED VENDOR */}
-        {/* ================================= */}
-
-        <section>
-
-          <h2 className="text-xl font-semibold tracking-tight text-slate-950">
-            {isArabic
-              ? 'المورد الأعلى ترتيبًا'
-              : 'Top Ranked Vendor'}
-          </h2>
-
-          <p className="mt-1 text-sm text-slate-500">
-            {isArabic
-              ? 'أعلى عرض ترتيبًا بناءً على نتائج التقييم الموزونة.'
-              : 'Highest ranked proposal based on weighted evaluation results.'}
-          </p>
-
-
-          {topVendor ? (
+              lg:p-10
+            "
+          >
 
             <div
               className="
-                mt-3
-                overflow-hidden
-                rounded-2xl
-                border
-                border-[#DDE3EE]
-                bg-white
-                shadow-[0_8px_26px_rgba(22,31,86,0.04)]
+                pointer-events-none
+                absolute
+                -bottom-[160px]
+                -start-[130px]
+                size-[410px]
+                rounded-full
+                bg-[#9466C4]/22
+                blur-[110px]
+              "
+            />
+
+
+            {/* TOP */}
+
+            <div
+              className="
+                relative
+                z-10
               "
             >
 
-              <div className="px-6 py-6 lg:px-7">
+              <div
+                className="
+                  flex
+                  items-center
+                  justify-between
+                  gap-4
+                "
+              >
 
-                <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-
-                  <div className="flex min-w-0 items-start gap-4">
-
-                    <div
-                      className="
-                        flex
-                        size-12
-                        shrink-0
-                        items-center
-                        justify-center
-                        rounded-xl
-                        bg-[#161F56]
-                        text-white
-                      "
-                    >
-                      <Trophy className="size-5" />
-                    </div>
-
-
-                    <div className="min-w-0">
-
-                      <div className="flex flex-wrap items-center gap-3">
-
-                        <h3 className="text-2xl font-semibold tracking-tight text-slate-950">
-                          {topVendor.name}
-                        </h3>
-
-
-                        <span
-                          className="
-                            inline-flex
-                            items-center
-                            rounded-full
-                            bg-[#F1F4FA]
-                            px-2.5
-                            py-1
-                            text-xs
-                            font-semibold
-                            text-[#161F56]
-                          "
-                        >
-                          {isArabic
-                            ? `الترتيب #${topVendor.rank}`
-                            : `Rank #${topVendor.rank}`}
-                        </span>
-
-                      </div>
-
-
-                      <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-500">
-                        {topVendor.summary}
-                      </p>
-
-                    </div>
-
-                  </div>
-
-
-                  <EligibilityBadge
-                    eligible={
-                      topVendor.eligible
-                    }
-                    isArabic={
-                      isArabic
-                    }
-                  />
-
-                </div>
-
-
-                <div
+                <span
                   className="
-                    mt-6
-                    grid
-                    overflow-hidden
-                    rounded-xl
-                    border
-                    border-[#E6EAF2]
-                    bg-[#FAFBFD]
-                    sm:grid-cols-3
-                  "
-                >
-
-                  <TopMetric
-                    label={
-                      isArabic
-                        ? 'الدرجة الإجمالية'
-                        : 'Overall Score'
-                    }
-                    value={formatPercent(
-                      topVendor.overallScore,
-                      1,
-                    )}
-                  />
-
-
-                  <TopMetric
-                    label={
-                      isArabic
-                        ? 'الامتثال الإلزامي'
-                        : 'Mandatory Compliance'
-                    }
-                    value={formatPercent(
-                      topVendor
-                        .overallMandatoryCompliance,
-                      1,
-                    )}
-                  />
-
-
-                  <TopMetric
-                    label={
-                      isArabic
-                        ? 'مستوى المخاطر'
-                        : 'Risk Level'
-                    }
-                    value={
-                      isArabic
-                        ? `مخاطر ${formatRiskArabic(
-                            topVendor.riskLevel,
-                          )}`
-                        : `${formatRisk(
-                            topVendor.riskLevel,
-                          )} Risk`
-                    }
-                    last
-                  />
-
-                </div>
-
-
-                <Link
-                  href={`/evaluations/${id}/vendors/${topVendor.id}`}
-                  className="
-                    mt-5
-                    inline-flex
-                    items-center
-                    gap-1.5
-                    text-sm
+                    bg-white/10
+                    px-3
+                    py-2
+                    text-[10px]
                     font-semibold
-                    text-[#161F56]
-                    transition-all
-                    duration-200
-                    hover:gap-2.5
+                    tracking-[0.12em]
+                    text-white
                   "
                 >
                   {isArabic
-                    ? 'عرض تفاصيل المورد'
-                    : 'View vendor details'}
+                    ? 'مقارنة الموردين'
+                    : 'VENDOR COMPARISON'}
+                </span>
 
-                  <ArrowRight
-                    className={cn(
-                      'size-4',
-                      isArabic &&
-                        'rotate-180',
-                    )}
-                  />
-                </Link>
+
+                <span
+                  className="
+                    text-xs
+                    text-white/45
+                  "
+                >
+                  #{evaluation.id}
+                </span>
+
+              </div>
+
+
+              <p
+                className="
+                  mt-9
+                  text-[10px]
+                  font-semibold
+                  tracking-[0.13em]
+                  text-[#CDB78F]
+                "
+              >
+                {isArabic
+                  ? 'مقارنة موحدة'
+                  : 'SIDE-BY-SIDE REVIEW'}
+              </p>
+
+
+              <h1
+                className="
+                  mt-4
+                  max-w-[680px]
+                  text-[clamp(40px,4.7vw,64px)]
+                  font-medium
+                  leading-[1.02]
+                  tracking-[-0.055em]
+                  text-white
+                "
+              >
+                {isArabic
+                  ? 'شوف الفرق بين عروض الموردين بوضوح'
+                  : 'See how vendor proposals compare'}
+              </h1>
+
+            </div>
+
+
+            {/* BOTTOM */}
+
+            <div
+              className="
+                relative
+                z-10
+                mt-auto
+                max-w-[610px]
+              "
+            >
+
+              <p
+                className="
+                  text-[15px]
+                  leading-8
+                  text-white/72
+                "
+              >
+                {isArabic
+                  ? 'تجمع المقارنة درجات الموردين، الامتثال، الأهلية والمخاطر في مكان واحد، وتوضح الفروقات بينهم على نفس معايير المنافسة.'
+                  : 'The comparison brings vendor scores, compliance, eligibility, and risk together in one place and highlights differences using the same competition criteria.'}
+              </p>
+
+
+              <div
+                className="
+                  mt-7
+                  flex
+                  flex-wrap
+                  items-center
+                  gap-x-5
+                  gap-y-2
+                  border-t
+                  border-white/15
+                  pt-5
+                  text-[13px]
+                  text-white/55
+                "
+              >
+
+                <span>
+                  {
+                    evaluation.rfpName
+                  }
+                </span>
+
+
+                <span
+                  className="
+                    hidden
+                    size-1
+                    rounded-full
+                    bg-white/30
+
+                    sm:block
+                  "
+                />
+
+
+                <span>
+                  {formatDate(
+                    evaluation.createdDate,
+                    language,
+                  )}
+                </span>
 
               </div>
 
             </div>
 
-          ) : (
-
-            <div
-              className="
-                mt-3
-                rounded-2xl
-                border
-                border-dashed
-                border-[#D7DFEC]
-                bg-white
-                px-6
-                py-14
-                text-center
-              "
-            >
-
-              <GitCompareArrows className="mx-auto size-7 text-slate-400" />
-
-              <p className="mt-3 text-sm font-medium text-slate-700">
-                {isArabic
-                  ? 'لا توجد نتائج للموردين'
-                  : 'No vendor results available'}
-              </p>
-
-            </div>
-
-          )}
-
-        </section>
+          </div>
 
 
-        {/* ================================= */}
-        {/* COMPARISON SNAPSHOT */}
-        {/* ================================= */}
-
-        <section>
-
-          <h2 className="text-xl font-semibold tracking-tight text-slate-950">
-            {isArabic
-              ? 'ملخص المقارنة'
-              : 'Comparison Snapshot'}
-          </h2>
-
-          <p className="mt-1 text-sm text-slate-500">
-            {isArabic
-              ? 'أهم المؤشرات لجميع الموردين الذين تم تقييمهم.'
-              : 'Key metrics across all evaluated vendors.'}
-          </p>
-
+          {/* ================================= */}
+          {/* OVERVIEW CARDS */}
+          {/* ================================= */}
 
           <div
             className="
-              mt-3
               grid
-              overflow-hidden
-              rounded-2xl
-              border
-              border-[#DDE3EE]
-              bg-white
-              shadow-[0_8px_26px_rgba(22,31,86,0.045)]
-              sm:grid-cols-2
-              xl:grid-cols-4
+              gap-5
             "
           >
 
-            <SnapshotMetric
-              label={
+            <ComparisonOverviewCard
+              number="01"
+              eyebrow={
                 isArabic
-                  ? 'الموردون المقارنون'
-                  : 'Vendors Compared'
+                  ? 'العروض المقارنة'
+                  : 'PROPOSALS COMPARED'
               }
-              value={String(
-                sortedVendors.length,
-              )}
-              helper={
+              title={
                 isArabic
-                  ? 'إجمالي العروض التي تم تقييمها'
-                  : 'Total evaluated proposals'
+                  ? `${sortedVendors.length} عروض في المقارنة`
+                  : `${sortedVendors.length} proposals compared`
               }
-              icon={Users}
+              description={
+                isArabic
+                  ? 'تم تقييم جميع الموردين على نفس المعايير والأوزان لضمان مقارنة موحدة.'
+                  : 'Every vendor was evaluated using the same criteria and weights for a consistent comparison.'
+              }
+              icon={
+                Users
+              }
             />
 
 
-            <SnapshotMetric
-              label={
+            <ComparisonOverviewCard
+              number="02"
+              eyebrow={
                 isArabic
-                  ? 'الموردون المؤهلون'
-                  : 'Eligible Vendors'
+                  ? 'الأهلية'
+                  : 'ELIGIBILITY'
               }
-              value={String(
-                eligibleCount,
-              )}
-              helper={
+              title={
                 isArabic
-                  ? 'اجتازوا شروط الأهلية'
-                  : 'Passed eligibility gates'
+                  ? `${eligibleCount} موردين مستوفين للأهلية`
+                  : `${eligibleCount} eligible vendors`
               }
-              icon={CheckCircle2}
+              description={
+                isArabic
+                  ? 'الأهلية تعتمد على استيفاء البنود والمتطلبات الإلزامية في المنافسة.'
+                  : 'Eligibility depends on satisfying the mandatory competition requirements.'
+              }
+              icon={
+                ShieldCheck
+              }
             />
 
 
-            <SnapshotMetric
-              label={
+            <ComparisonOverviewCard
+              number="03"
+              eyebrow={
                 isArabic
-                  ? 'متوسط الدرجة'
-                  : 'Average Score'
+                  ? 'المتصدر'
+                  : 'CURRENT LEADER'
               }
-              value={formatPercent(
-                averageScore,
-                1,
-              )}
-              helper={
-                isArabic
-                  ? 'متوسط جميع الموردين'
-                  : 'Across all vendors'
+              title={
+                topVendor
+                  ? topVendor.name
+                  : (
+                    isArabic
+                      ? 'لا يوجد مورد متصدر'
+                      : 'No leading vendor'
+                  )
               }
-              icon={Award}
-            />
-
-
-            <SnapshotMetric
-              label={
-                isArabic
-                  ? 'متوسط الامتثال'
-                  : 'Average Compliance'
+              description={
+                topVendor
+                  ? isArabic
+                    ? `يتصدر المقارنة بدرجة ${formatPercent(
+                        topVendor.overallScore,
+                        1,
+                      )}.`
+                    : `Currently leads with a score of ${formatPercent(
+                        topVendor.overallScore,
+                        1,
+                      )}.`
+                  : isArabic
+                    ? 'ستظهر النتيجة عند توفر نتائج المقارنة.'
+                    : 'The result will appear once comparison data is available.'
               }
-              value={formatPercent(
-                averageCompliance,
-                1,
-              )}
-              helper={
-                isArabic
-                  ? 'الامتثال للمتطلبات الإلزامية'
-                  : 'Mandatory compliance'
+              icon={
+                Trophy
               }
-              icon={ShieldCheck}
-              last
             />
 
           </div>
 
-        </section>
+        </div>
+
+      </section>
 
 
-        {/* ================================= */}
-        {/* VENDOR PERFORMANCE */}
-        {/* ================================= */}
+      {/* ===================================== */}
+      {/* SECTION 2 — TOP VENDOR */}
+      {/* ===================================== */}
 
-        <section
+      <section
+        className="
+          bg-white
+          px-5
+          py-16
+
+          sm:px-8
+
+          lg:px-12
+          lg:py-20
+        "
+      >
+
+        <div
           className="
-            overflow-hidden
-            rounded-2xl
-            border
-            border-[#DDE3EE]
-            bg-white
-            shadow-[0_8px_28px_rgba(22,31,86,0.04)]
+            mx-auto
+            w-full
+            max-w-[1500px]
           "
         >
 
           <div
             className="
-              flex
-              flex-col
-              gap-4
-              border-b
-              border-[#E7EBF2]
-              px-6
-              py-5
-              sm:flex-row
-              sm:items-center
-              sm:justify-between
-              lg:px-7
+              grid
+              gap-10
+
+              lg:grid-cols-[330px_1fr]
+            "
+          >
+
+            {/* INTRO */}
+
+            <div>
+
+              <SectionEyebrow>
+                {isArabic
+                  ? 'المورد الأعلى'
+                  : 'TOP RANKED'}
+              </SectionEyebrow>
+
+
+              <h2
+                className="
+                  mt-3
+                  text-[clamp(32px,3.4vw,48px)]
+                  font-medium
+                  leading-[1.07]
+                  tracking-[-0.045em]
+                  text-[#131B4F]
+                "
+              >
+                {isArabic
+                  ? 'مين متصدر المقارنة؟'
+                  : 'Who is leading the comparison?'}
+              </h2>
+
+
+              <p
+                className="
+                  mt-5
+                  text-[15px]
+                  leading-8
+                  text-[#727A8C]
+                "
+              >
+                {isArabic
+                  ? 'العرض الأعلى ترتيبًا حسب الدرجة الموزونة وحالة الامتثال والأهلية.'
+                  : 'The highest-ranked proposal based on weighted score, compliance, and eligibility.'
+                }
+              </p>
+
+            </div>
+
+
+            {/* VENDOR FEATURE */}
+
+            {topVendor ? (
+              <div
+                className="
+                  grid
+                  overflow-hidden
+
+                  md:grid-cols-[1fr_0.42fr]
+                "
+              >
+
+                {/* VENDOR */}
+
+                <div
+                  className="
+                    flex
+                    min-h-[340px]
+                    flex-col
+                    justify-between
+                    bg-[#F7F7F5]
+                    p-7
+
+                    sm:p-9
+                  "
+                >
+
+                  <div>
+
+                    <div
+                      className="
+                        flex
+                        flex-wrap
+                        items-center
+                        gap-3
+                      "
+                    >
+
+                      <span
+                        className="
+                          text-[10px]
+                          font-semibold
+                          tracking-[0.13em]
+                          text-[#9466C4]
+                        "
+                      >
+                        {isArabic
+                          ? 'العرض المتصدر'
+                          : 'LEADING PROPOSAL'}
+                      </span>
+
+
+                      <span
+                        className="
+                          bg-white
+                          px-2.5
+                          py-1
+                          text-[10px]
+                          font-semibold
+                          text-[#131B4F]
+                        "
+                      >
+                        #{topVendor.rank}
+                      </span>
+
+                    </div>
+
+
+                    <h3
+                      className="
+                        mt-5
+                        max-w-[700px]
+                        break-words
+                        text-[clamp(30px,3.4vw,48px)]
+                        font-medium
+                        leading-[1.08]
+                        tracking-[-0.045em]
+                        text-[#131B4F]
+                      "
+                    >
+                      {
+                        topVendor.name
+                      }
+                    </h3>
+
+
+                    <p
+                      className="
+                        mt-5
+                        max-w-[760px]
+                        text-[15px]
+                        leading-8
+                        text-[#6F7788]
+                      "
+                    >
+                      {
+                        topVendor.summary
+                      }
+                    </p>
+
+                  </div>
+
+
+                  <div
+                    className="
+                      mt-8
+                      flex
+                      flex-wrap
+                      items-center
+                      gap-3
+                    "
+                  >
+
+                    <EligibilityBadge
+                      eligible={
+                        topVendor.eligible
+                      }
+                      isArabic={
+                        isArabic
+                      }
+                    />
+
+
+                    <RiskBadge
+                      risk={
+                        topVendor.riskLevel
+                      }
+                      isArabic={
+                        isArabic
+                      }
+                    />
+
+                  </div>
+
+                </div>
+
+
+                {/* SCORE */}
+
+                <div
+                  className="
+                    flex
+                    min-h-[340px]
+                    flex-col
+                    justify-between
+                    bg-[#131B4F]
+                    p-7
+                    text-white
+
+                    sm:p-9
+                  "
+                >
+
+                  <div
+                    className="
+                      flex
+                      items-center
+                      justify-between
+                    "
+                  >
+
+                    <p
+                      className="
+                        text-[10px]
+                        font-semibold
+                        tracking-[0.13em]
+                        text-[#CDB78F]
+                      "
+                    >
+                      {isArabic
+                        ? 'الدرجة'
+                        : 'OVERALL SCORE'}
+                    </p>
+
+
+                    <Trophy
+                      className="
+                        size-5
+                        text-[#CDB78F]
+                      "
+                    />
+
+                  </div>
+
+
+                  <div>
+
+                    <p
+                      className="
+                        text-[clamp(64px,7vw,96px)]
+                        font-light
+                        leading-none
+                        tracking-[-0.075em]
+                      "
+                    >
+                      {formatPercent(
+                        topVendor.overallScore,
+                        1,
+                      )}
+                    </p>
+
+
+                    <p
+                      className="
+                        mt-5
+                        text-[13px]
+                        leading-7
+                        text-white/60
+                      "
+                    >
+                      {isArabic
+                        ? `الامتثال الإلزامي ${formatPercent(
+                            topVendor
+                              .overallMandatoryCompliance,
+                            1,
+                          )}`
+                        : `Mandatory compliance ${formatPercent(
+                            topVendor
+                              .overallMandatoryCompliance,
+                            1,
+                          )}`}
+                    </p>
+
+                  </div>
+
+
+                  <Link
+                    href={`/evaluations/${id}/vendors/${topVendor.id}`}
+                    className="
+                      group
+                      inline-flex
+                      w-fit
+                      items-center
+                      gap-2
+                      text-sm
+                      font-semibold
+                      text-white
+                    "
+                  >
+
+                    {isArabic
+                      ? 'عرض تفاصيل المورد'
+                      : 'View vendor details'}
+
+
+                    <ArrowIcon
+                      className={cn(
+                        `
+                          size-4
+                          transition-transform
+                          duration-300
+                        `,
+
+                        isArabic
+                          ? 'group-hover:-translate-x-1'
+                          : 'group-hover:translate-x-1',
+                      )}
+                    />
+
+                  </Link>
+
+                </div>
+
+              </div>
+            ) : (
+              <div
+                className="
+                  border
+                  border-dashed
+                  border-[#D7DBE4]
+                  px-6
+                  py-14
+                  text-center
+                "
+              >
+
+                <GitCompareArrows
+                  className="
+                    mx-auto
+                    size-7
+                    text-[#9AA1AF]
+                  "
+                />
+
+
+                <p
+                  className="
+                    mt-3
+                    text-sm
+                    font-medium
+                    text-[#727A8C]
+                  "
+                >
+                  {isArabic
+                    ? 'لا توجد نتائج للموردين'
+                    : 'No vendor results available'}
+                </p>
+
+              </div>
+            )}
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      {/* ===================================== */}
+      {/* SECTION 3 — SNAPSHOT */}
+      {/* ===================================== */}
+
+      <section
+        className="
+          bg-[#F1ECE0]
+          px-5
+          py-16
+
+          sm:px-8
+
+          lg:px-12
+          lg:py-20
+        "
+      >
+
+        <div
+          className="
+            mx-auto
+            w-full
+            max-w-[1500px]
+          "
+        >
+
+          <SectionEyebrow>
+            {isArabic
+              ? 'ملخص المقارنة'
+              : 'COMPARISON SNAPSHOT'}
+          </SectionEyebrow>
+
+
+          <h2
+            className="
+              mt-3
+              text-[32px]
+              font-medium
+              tracking-[-0.04em]
+              text-[#131B4F]
+
+              sm:text-[40px]
+            "
+          >
+            {isArabic
+              ? 'الأرقام الرئيسية'
+              : 'Key comparison numbers'}
+          </h2>
+
+
+          <div
+            className="
+              mt-10
+              grid
+              border-y
+              border-[#D8CCB6]
+
+              sm:grid-cols-2
+
+              xl:grid-cols-4
+            "
+          >
+
+            <ComparisonMetric
+              value={
+                String(
+                  sortedVendors.length,
+                )
+              }
+              label={
+                isArabic
+                  ? 'العروض المقارنة'
+                  : 'Vendors compared'
+              }
+              helper={
+                isArabic
+                  ? 'إجمالي العروض المقيمة'
+                  : 'Total evaluated proposals'
+              }
+            />
+
+
+            <ComparisonMetric
+              value={
+                String(
+                  eligibleCount,
+                )
+              }
+              label={
+                isArabic
+                  ? 'الموردون المؤهلون'
+                  : 'Eligible vendors'
+              }
+              helper={
+                isArabic
+                  ? 'استوفوا متطلبات الأهلية'
+                  : 'Passed eligibility conditions'
+              }
+            />
+
+
+            <ComparisonMetric
+              value={
+                formatPercent(
+                  averageScore,
+                  1,
+                )
+              }
+              label={
+                isArabic
+                  ? 'متوسط الدرجة'
+                  : 'Average score'
+              }
+              helper={
+                isArabic
+                  ? 'متوسط نتائج جميع العروض'
+                  : 'Average across proposals'
+              }
+            />
+
+
+            <ComparisonMetric
+              value={
+                formatPercent(
+                  averageCompliance,
+                  1,
+                )
+              }
+              label={
+                isArabic
+                  ? 'متوسط الامتثال'
+                  : 'Average compliance'
+              }
+              helper={
+                isArabic
+                  ? 'متوسط استيفاء المتطلبات الإلزامية'
+                  : 'Average mandatory compliance'
+              }
+              last
+            />
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      {/* ===================================== */}
+      {/* SECTION 4 — ALL VENDORS */}
+      {/* ===================================== */}
+
+      <section
+        className="
+          bg-[#F7F7F5]
+          px-5
+          py-16
+
+          sm:px-8
+
+          lg:px-12
+          lg:py-20
+        "
+      >
+
+        <div
+          className="
+            mx-auto
+            w-full
+            max-w-[1500px]
+          "
+        >
+
+          <div
+            className="
+              grid
+              gap-8
+
+              lg:grid-cols-[330px_1fr]
             "
           >
 
             <div>
 
-              <h2 className="text-xl font-semibold tracking-tight text-slate-950">
+              <SectionEyebrow>
                 {isArabic
                   ? 'أداء الموردين'
-                  : 'Vendor Performance'}
+                  : 'VENDOR PERFORMANCE'}
+              </SectionEyebrow>
+
+
+              <h2
+                className="
+                  mt-3
+                  text-[clamp(32px,3.4vw,46px)]
+                  font-medium
+                  leading-[1.08]
+                  tracking-[-0.045em]
+                  text-[#131B4F]
+                "
+              >
+                {isArabic
+                  ? 'قارن كل عرض بشكل مباشر'
+                  : 'Compare every proposal directly'}
               </h2>
 
 
-              <p className="mt-1 text-sm text-slate-500">
+              <p
+                className="
+                  mt-5
+                  text-[15px]
+                  leading-8
+                  text-[#727A8C]
+                "
+              >
                 {isArabic
-                  ? 'قارن الدرجات والامتثال الإلزامي والأهلية ومستوى المخاطر.'
-                  : 'Compare scoring, mandatory compliance, eligibility, and risk.'}
+                  ? 'كل عرض يعرض الدرجة، الامتثال، الأهلية والمخاطر بنفس الشكل عشان تكون المقارنة أسرع.'
+                  : 'Each proposal shows score, compliance, eligibility, and risk in the same format for easier comparison.'}
               </p>
 
             </div>
 
 
-            <span className="rounded-full bg-[#F5F7FC] px-3 py-1.5 text-sm text-slate-500">
-              {isArabic
-                ? `${sortedVendors.length} ${
-                    sortedVendors.length === 1
-                      ? 'مورد'
-                      : 'موردين'
-                  }`
-                : `${sortedVendors.length} vendor${
-                    sortedVendors.length !== 1
-                      ? 's'
-                      : ''
-                  }`}
-            </span>
+            <div>
+
+              {sortedVendors.length === 0 ? (
+                <div
+                  className="
+                    bg-white
+                    px-6
+                    py-16
+                    text-center
+                  "
+                >
+
+                  <GitCompareArrows
+                    className="
+                      mx-auto
+                      size-8
+                      text-[#9AA1AF]
+                    "
+                  />
+
+
+                  <h3
+                    className="
+                      mt-3
+                      text-base
+                      font-semibold
+                      text-[#131B4F]
+                    "
+                  >
+                    {isArabic
+                      ? 'لا توجد نتائج للموردين'
+                      : 'No vendor results available'}
+                  </h3>
+
+                </div>
+              ) : (
+                <div
+                  className={cn(
+                    `
+                      grid
+                      gap-4
+                    `,
+
+                    sortedVendors.length ===
+                      1 &&
+                      'grid-cols-1',
+
+                    sortedVendors.length ===
+                      2 &&
+                      'lg:grid-cols-2',
+
+                    sortedVendors.length >=
+                      3 &&
+                      `
+                        lg:grid-cols-2
+                        2xl:grid-cols-3
+                      `,
+                  )}
+                >
+
+                  {sortedVendors.map(
+                    (
+                      vendor,
+                    ) => (
+                      <VendorSummaryCard
+                        key={
+                          vendor.id
+                        }
+                        vendor={
+                          vendor
+                        }
+                        evaluationId={
+                          id
+                        }
+                        isArabic={
+                          isArabic
+                        }
+                      />
+                    ),
+                  )}
+
+                </div>
+              )}
+
+            </div>
 
           </div>
 
+        </div>
 
-          {sortedVendors.length === 0 ? (
+      </section>
 
-            <div className="px-6 py-16 text-center">
 
-              <GitCompareArrows className="mx-auto size-8 text-slate-400" />
+      {/* ===================================== */}
+      {/* SECTION 5 — CRITERIA COMPARISON */}
+      {/* ===================================== */}
 
-              <h3 className="mt-3 text-base font-semibold text-slate-800">
-                {isArabic
-                  ? 'لا توجد نتائج للموردين'
-                  : 'No vendor results available'}
-              </h3>
+      {sortedVendors.length >
+        0 && (
+        <section
+          className="
+            bg-white
+            px-5
+            py-16
 
-              <p className="mt-2 text-sm text-slate-500">
-                {isArabic
-                  ? 'ستظهر نتائج الموردين بعد اكتمال عملية التقييم.'
-                  : 'Vendor results will appear after evaluation is completed.'}
-              </p>
+            sm:px-8
 
-            </div>
+            lg:px-12
+            lg:py-20
+          "
+        >
 
-          ) : (
+          <div
+            className="
+              mx-auto
+              w-full
+              max-w-[1500px]
+            "
+          >
 
-            <div className="bg-[#F8FAFD] p-5 sm:p-6">
+            <div
+              className="
+                grid
+                gap-8
+
+                lg:grid-cols-[330px_1fr]
+              "
+            >
+
+              <div>
+
+                <SectionEyebrow>
+                  {isArabic
+                    ? 'مقارنة المعايير'
+                    : 'CRITERIA COMPARISON'}
+                </SectionEyebrow>
+
+
+                <h2
+                  className="
+                    mt-3
+                    text-[clamp(32px,3.4vw,46px)]
+                    font-medium
+                    leading-[1.08]
+                    tracking-[-0.045em]
+                    text-[#131B4F]
+                  "
+                >
+                  {isArabic
+                    ? 'وين يتفوق كل مورد؟'
+                    : 'Where does each vendor perform best?'}
+                </h2>
+
+
+                <p
+                  className="
+                    mt-5
+                    text-[15px]
+                    leading-8
+                    text-[#727A8C]
+                  "
+                >
+                  {isArabic
+                    ? 'يعرض الجدول أداء كل مورد على مستوى كل معيار موزون، عشان توضح نقاط القوة والفروقات بينهم.'
+                    : 'The table shows vendor performance for every weighted criterion to surface strengths and differences.'}
+                </p>
+
+              </div>
+
 
               <div
-                className={cn(
-                  'grid gap-4',
-
-                  sortedVendors.length === 1 &&
-                    'grid-cols-1',
-
-                  sortedVendors.length === 2 &&
-                    'lg:grid-cols-2',
-
-                  sortedVendors.length >= 3 &&
-                    'lg:grid-cols-2 xl:grid-cols-3',
-                )}
+                className="
+                  overflow-hidden
+                  border
+                  border-[#E3E5EA]
+                  bg-white
+                "
               >
 
-                {sortedVendors.map(
-                  (vendor) => (
-                    <VendorSummaryCard
-                      key={vendor.id}
-                      vendor={vendor}
-                      evaluationId={id}
-                      isArabic={
-                        isArabic
-                      }
-                    />
-                  ),
-                )}
+                <CriteriaComparisonTable
+                  vendors={
+                    sortedVendors
+                  }
+                  isArabic={
+                    isArabic
+                  }
+                />
 
               </div>
 
             </div>
 
-          )}
+          </div>
 
         </section>
+      )}
 
 
-        {/* ================================= */}
-        {/* CRITERIA COMPARISON */}
-        {/* ================================= */}
+      {/* ===================================== */}
+      {/* SECTION 6 — NEXT STEP */}
+      {/* ===================================== */}
 
-        {sortedVendors.length > 0 && (
+      <section
+        className="
+          bg-[#F1ECE0]
+          px-5
+          py-12
 
-          <section
+          sm:px-8
+
+          lg:px-12
+          lg:py-14
+        "
+      >
+
+        <div
+          className="
+            mx-auto
+            w-full
+            max-w-[1500px]
+          "
+        >
+
+          <div
             className="
+              grid
               overflow-hidden
-              rounded-2xl
-              border
-              border-[#DDE3EE]
               bg-white
-              shadow-[0_8px_28px_rgba(22,31,86,0.04)]
+
+              lg:grid-cols-[1fr_auto]
             "
           >
 
-            <div className="border-b border-[#E7EBF2] px-6 py-5 lg:px-7">
+            <div
+              className="
+                px-6
+                py-7
 
-              <h2 className="text-xl font-semibold tracking-tight text-slate-950">
+                sm:px-8
+
+                lg:px-10
+              "
+            >
+
+              <SectionEyebrow>
                 {isArabic
-                  ? 'مقارنة المعايير'
-                  : 'Criteria Comparison'}
+                  ? 'الخطوة التالية'
+                  : 'NEXT STEP'}
+              </SectionEyebrow>
+
+
+              <h2
+                className="
+                  mt-2
+                  text-[26px]
+                  font-medium
+                  tracking-[-0.035em]
+                  text-[#131B4F]
+
+                  sm:text-[30px]
+                "
+              >
+                {isArabic
+                  ? 'راجع الامتثال قبل الانتقال للقرار النهائي'
+                  : 'Review compliance before the final decision'}
               </h2>
 
 
-              <p className="mt-1 text-sm text-slate-500">
+              <p
+                className="
+                  mt-3
+                  max-w-[780px]
+                  text-[14px]
+                  leading-7
+                  text-[#70788A]
+                "
+              >
                 {isArabic
-                  ? 'قارن أداء الموردين عبر كل معيار موزون في طلب العرض.'
-                  : 'Compare vendor performance across each weighted RFP criterion.'}
+                  ? 'بعد مقارنة الدرجات، راجع المتطلبات الإلزامية وحالات عدم الاستيفاء لكل مورد.'
+                  : 'After comparing scores, review mandatory requirements and any compliance gaps for each vendor.'}
               </p>
 
             </div>
 
 
-            <CriteriaComparisonTable
-              vendors={
-                sortedVendors
-              }
-              isArabic={
-                isArabic
-              }
-            />
+            <Link
+              href={`/evaluations/${id}/compliance`}
+              className="
+                group
+                flex
+                min-h-[88px]
+                min-w-[230px]
+                items-center
+                justify-center
+                gap-3
+                bg-[#131B4F]
+                px-7
+                text-sm
+                font-semibold
+                text-white
+                transition-all
+                duration-300
 
-          </section>
+                hover:bg-[#1D208E]
 
-        )}
+                lg:min-h-full
+              "
+            >
 
-      </main>
+              {isArabic
+                ? 'عرض الامتثال'
+                : 'View Compliance'}
+
+
+              <ArrowIcon
+                className={cn(
+                  `
+                    size-4
+                    transition-transform
+                    duration-300
+                  `,
+
+                  isArabic
+                    ? 'group-hover:-translate-x-1'
+                    : 'group-hover:translate-x-1',
+                )}
+              />
+
+            </Link>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+  )
+}
+
+
+/* ========================================== */
+/* COMPARISON OVERVIEW CARD */
+/* ========================================== */
+
+function ComparisonOverviewCard({
+  number,
+  eyebrow,
+  title,
+  description,
+  icon: Icon,
+}: {
+  number: string
+  eyebrow: string
+  title: string
+  description: string
+  icon: ComponentType<{
+    className?: string
+  }>
+}) {
+  return (
+    <article
+      className="
+        grid
+        min-h-[155px]
+        grid-cols-[1fr_auto]
+        gap-6
+        bg-white
+        px-6
+        py-6
+
+        sm:px-8
+      "
+    >
+
+      <div
+        className="
+          flex
+          items-start
+          gap-4
+        "
+      >
+
+        <div
+          className="
+            mt-1
+            flex
+            size-9
+            shrink-0
+            items-center
+            justify-center
+            bg-[#F1ECE0]
+            text-[#131B4F]
+          "
+        >
+
+          <Icon
+            className="
+              size-4
+            "
+          />
+
+        </div>
+
+
+        <div>
+
+          <p
+            className="
+              text-[10px]
+              font-semibold
+              tracking-[0.12em]
+              text-[#9466C4]
+            "
+          >
+            {eyebrow}
+          </p>
+
+
+          <h3
+            className="
+              mt-2
+              text-[21px]
+              font-medium
+              leading-[1.18]
+              tracking-[-0.03em]
+              text-[#131B4F]
+
+              sm:text-[24px]
+            "
+          >
+            {title}
+          </h3>
+
+
+          <p
+            className="
+              mt-3
+              max-w-[680px]
+              text-[14px]
+              leading-7
+              text-[#737B8D]
+            "
+          >
+            {description}
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <span
+        className="
+          text-[46px]
+          font-light
+          leading-none
+          tracking-[-0.06em]
+          text-[#131B4F]
+
+          sm:text-[54px]
+        "
+      >
+        {number}
+      </span>
+
+    </article>
+  )
+}
+
+
+/* ========================================== */
+/* SECTION EYEBROW */
+/* ========================================== */
+
+function SectionEyebrow({
+  children,
+}: {
+  children: ReactNode
+}) {
+  return (
+    <p
+      className="
+        text-[10px]
+        font-semibold
+        tracking-[0.13em]
+        text-[#9466C4]
+      "
+    >
+      {children}
+    </p>
+  )
+}
+
+
+/* ========================================== */
+/* COMPARISON METRIC */
+/* ========================================== */
+
+function ComparisonMetric({
+  value,
+  label,
+  helper,
+  last = false,
+}: {
+  value: string
+  label: string
+  helper: string
+  last?: boolean
+}) {
+  return (
+    <div
+      className={cn(
+        `
+          min-h-[175px]
+          py-7
+
+          sm:px-6
+        `,
+
+        !last &&
+          `
+            border-b
+            border-[#D8CCB6]
+
+            sm:border-e
+
+            xl:border-b-0
+          `,
+      )}
+    >
+
+      <p
+        className="
+          text-[clamp(38px,3.7vw,52px)]
+          font-medium
+          leading-none
+          tracking-[-0.055em]
+          text-[#131B4F]
+        "
+      >
+        {value}
+      </p>
+
+
+      <p
+        className="
+          mt-5
+          text-xs
+          font-semibold
+          text-[#131B4F]
+        "
+      >
+        {label}
+      </p>
+
+
+      <p
+        className="
+          mt-2
+          text-[13px]
+          leading-6
+          text-[#7F776A]
+        "
+      >
+        {helper}
+      </p>
 
     </div>
   )
@@ -956,52 +1849,101 @@ function VendorSummaryCard({
         h-full
         flex-col
         overflow-hidden
-        rounded-2xl
         border
-        border-[#E2E7F0]
+        border-[#E3E5EA]
         bg-white
         transition-all
-        duration-200
-        hover:-translate-y-0.5
-        hover:border-[#C9D3E7]
-        hover:shadow-[0_10px_28px_rgba(22,31,86,0.08)]
+        duration-300
+
+        hover:-translate-y-1
+        hover:border-[#CDD1DA]
+        hover:shadow-[0_16px_35px_rgba(19,27,79,0.07)]
       "
     >
 
-      <div className="border-b border-[#E7EBF2] px-5 py-5">
+      {/* TOP */}
 
-        <div className="flex items-start justify-between gap-4">
+      <div
+        className="
+          flex
+          items-start
+          justify-between
+          gap-4
+          border-b
+          border-[#ECEEF2]
+          px-5
+          py-5
+        "
+      >
 
-          <div className="flex min-w-0 items-start gap-3">
+        <div
+          className="
+            min-w-0
+          "
+        >
 
-            <div
+          <div
+            className="
+              flex
+              items-center
+              gap-3
+            "
+          >
+
+            <span
               className={cn(
                 `
                   flex
-                  size-10
+                  size-9
                   shrink-0
                   items-center
                   justify-center
-                  rounded-xl
-                  text-sm
+                  text-xs
                   font-semibold
                 `,
-                vendor.rank === 1
-                  ? 'bg-[#161F56] text-white'
-                  : 'bg-[#F1F4FA] text-[#161F56]',
+
+                vendor.rank ===
+                  1
+                  ? `
+                      bg-[#131B4F]
+                      text-white
+                    `
+                  : `
+                      bg-[#F4F5F7]
+                      text-[#131B4F]
+                    `,
               )}
             >
               #{vendor.rank}
-            </div>
+            </span>
 
 
-            <div className="min-w-0">
+            <div
+              className="
+                min-w-0
+              "
+            >
 
-              <h3 className="truncate text-base font-semibold text-slate-950">
+              <h3
+                className="
+                  truncate
+                  text-[18px]
+                  font-medium
+                  tracking-[-0.02em]
+                  text-[#131B4F]
+                "
+              >
                 {vendor.name}
               </h3>
 
-              <p className="mt-1 text-xs text-slate-400">
+
+              <p
+                className="
+                  mt-1
+                  text-[11px]
+                  text-[#969DAC]
+                "
+              >
                 {isArabic
                   ? 'تقييم المورد'
                   : 'Vendor evaluation'}
@@ -1011,145 +1953,229 @@ function VendorSummaryCard({
 
           </div>
 
-
-          {vendor.rank === 1 && (
-            <Award className="size-5 shrink-0 text-amber-500" />
-          )}
-
         </div>
+
+
+        {vendor.rank ===
+          1 && (
+          <Trophy
+            className="
+              size-4
+              shrink-0
+              text-[#CDB78F]
+            "
+          />
+        )}
 
       </div>
 
 
-      <div className="grid grid-cols-2 border-b border-[#E7EBF2]">
+      {/* SCORES */}
+
+      <div
+        className="
+          grid
+          grid-cols-2
+          border-b
+          border-[#ECEEF2]
+        "
+      >
 
         <CardMetric
           label={
             isArabic
-              ? 'الدرجة الإجمالية'
-              : 'Overall Score'
+              ? 'الدرجة'
+              : 'Score'
           }
-          value={formatPercent(
-            vendor.overallScore,
-            1,
-          )}
+          value={
+            formatPercent(
+              vendor.overallScore,
+              1,
+            )
+          }
         />
 
 
         <CardMetric
           label={
             isArabic
-              ? 'الامتثال الإلزامي'
-              : 'Mandatory'
+              ? 'الامتثال'
+              : 'Compliance'
           }
-          value={formatPercent(
-            vendor.overallMandatoryCompliance,
-            1,
-          )}
+          value={
+            formatPercent(
+              vendor.overallMandatoryCompliance,
+              1,
+            )
+          }
           last
         />
 
       </div>
 
 
-      <div className="grid grid-cols-2 gap-5 border-b border-[#E7EBF2] px-5 py-4">
+      {/* STATUS */}
 
-        <div>
+      <div
+        className="
+          flex
+          flex-wrap
+          gap-3
+          border-b
+          border-[#ECEEF2]
+          px-5
+          py-4
+        "
+      >
 
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-            {isArabic
-              ? 'الأهلية'
-              : 'Eligibility'}
-          </p>
-
-          <div className="mt-2">
-
-            <EligibilityBadge
-              eligible={
-                vendor.eligible
-              }
-              isArabic={
-                isArabic
-              }
-            />
-
-          </div>
-
-        </div>
+        <EligibilityBadge
+          eligible={
+            vendor.eligible
+          }
+          isArabic={
+            isArabic
+          }
+        />
 
 
-        <div>
-
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-            {isArabic
-              ? 'المخاطر'
-              : 'Risk'}
-          </p>
-
-          <div className="mt-2">
-
-            <RiskBadge
-              risk={
-                vendor.riskLevel
-              }
-              isArabic={
-                isArabic
-              }
-            />
-
-          </div>
-
-        </div>
+        <RiskBadge
+          risk={
+            vendor.riskLevel
+          }
+          isArabic={
+            isArabic
+          }
+        />
 
       </div>
 
 
-      <div className="flex-1 px-5 py-4">
+      {/* SUMMARY */}
 
-        <p className="text-sm font-semibold text-slate-800">
-          {isArabic
-            ? 'التقييم'
-            : 'Assessment'}
-        </p>
+      <div
+        className="
+          flex-1
+          px-5
+          py-5
+        "
+      >
 
-        <p className="mt-2 line-clamp-4 text-sm leading-6 text-slate-500">
+        <p
+          className="
+            line-clamp-4
+            text-[14px]
+            leading-7
+            text-[#646D7F]
+          "
+        >
           {vendor.summary}
         </p>
 
       </div>
 
 
-      <div className="border-t border-[#E7EBF2] px-5 py-4">
+      {/* LINK */}
+
+      <div
+        className="
+          border-t
+          border-[#ECEEF2]
+          px-5
+          py-4
+        "
+      >
 
         <span
           className="
             inline-flex
             items-center
-            gap-1.5
+            gap-2
             text-sm
             font-semibold
-            text-[#161F56]
-            transition-all
-            duration-200
-            group-hover:gap-2.5
+            text-[#131B4F]
           "
         >
           {isArabic
-            ? 'عرض تفاصيل المورد'
-            : 'View vendor details'}
+            ? 'عرض التفاصيل'
+            : 'View details'}
+
 
           <ArrowRight
             className={cn(
-              'size-4',
+              `
+                size-4
+                transition-transform
+                duration-300
+              `,
+
               isArabic &&
                 'rotate-180',
+
+              isArabic
+                ? 'group-hover:translate-x-[-4px]'
+                : 'group-hover:translate-x-1',
             )}
           />
+
         </span>
 
       </div>
 
     </Link>
+  )
+}
+
+
+/* ========================================== */
+/* CARD METRIC */
+/* ========================================== */
+
+function CardMetric({
+  label,
+  value,
+  last = false,
+}: {
+  label: string
+  value: string
+  last?: boolean
+}) {
+  return (
+    <div
+      className={cn(
+        `
+          px-5
+          py-4
+        `,
+
+        !last &&
+          'border-e border-[#ECEEF2]',
+      )}
+    >
+
+      <p
+        className="
+          text-[10px]
+          font-medium
+          text-[#8C94A4]
+        "
+      >
+        {label}
+      </p>
+
+
+      <p
+        className="
+          mt-2
+          text-[22px]
+          font-semibold
+          tracking-[-0.04em]
+          text-[#131B4F]
+        "
+      >
+        {value}
+      </p>
+
+    </div>
   )
 }
 
@@ -1169,34 +2195,95 @@ function CriteriaComparisonTable({
     vendors[0]?.criterionScores ??
     []
 
-  return (
-    <div className="overflow-x-auto">
 
-      <table className="w-full min-w-[820px]">
+  return (
+    <div
+      className="
+        overflow-x-auto
+
+        [scrollbar-color:#B9BEC8_transparent]
+        [scrollbar-width:thin]
+
+        [&::-webkit-scrollbar]:h-[7px]
+
+        [&::-webkit-scrollbar-track]:bg-transparent
+
+        [&::-webkit-scrollbar-thumb]:rounded-full
+        [&::-webkit-scrollbar-thumb]:bg-[#B9BEC8]
+
+        hover:[&::-webkit-scrollbar-thumb]:bg-[#9299A8]
+      "
+    >
+
+      <table
+        className="
+          w-full
+          min-w-[850px]
+        "
+      >
 
         <thead>
 
-          <tr className="border-b border-[#E7EBF2] bg-[#F8FAFD]">
+          <tr
+            className="
+              border-b
+              border-[#E7E9EE]
+              bg-[#FAFBFC]
+            "
+          >
 
-            <th className="px-6 py-4 text-start text-xs font-semibold text-slate-500 lg:px-7">
+            <th
+              className="
+                px-6
+                py-4
+                text-start
+                text-[11px]
+                font-semibold
+                text-[#6F7788]
+              "
+            >
               {isArabic
                 ? 'المعيار'
                 : 'Criterion'}
             </th>
 
-            <th className="px-5 py-4 text-start text-xs font-semibold text-slate-500">
+
+            <th
+              className="
+                px-5
+                py-4
+                text-start
+                text-[11px]
+                font-semibold
+                text-[#6F7788]
+              "
+            >
               {isArabic
                 ? 'الوزن'
                 : 'Weight'}
             </th>
 
+
             {vendors.map(
-              (vendor) => (
+              (
+                vendor,
+              ) => (
                 <th
-                  key={vendor.id}
-                  className="px-5 py-4 text-start text-xs font-semibold text-slate-500"
+                  key={
+                    vendor.id
+                  }
+                  className="
+                    px-5
+                    py-4
+                    text-start
+                    text-[11px]
+                    font-semibold
+                    text-[#6F7788]
+                  "
                 >
-                  {vendor.name}
+                  {
+                    vendor.name
+                  }
                 </th>
               ),
             )}
@@ -1213,23 +2300,41 @@ function CriteriaComparisonTable({
               criterion,
               index,
             ) => (
-
               <tr
                 key={
                   criterion.criterionId
                 }
                 className={cn(
-                  'transition-colors hover:bg-[#FBFCFE]',
+                  `
+                    transition-colors
+
+                    hover:bg-[#FBFCFD]
+                  `,
 
                   index !==
-                    criteria.length - 1 &&
-                    'border-b border-[#E7EBF2]',
+                    criteria.length -
+                      1 &&
+                    `
+                      border-b
+                      border-[#ECEEF2]
+                    `,
                 )}
               >
 
-                <td className="px-6 py-5 lg:px-7">
+                <td
+                  className="
+                    px-6
+                    py-5
+                  "
+                >
 
-                  <p className="text-sm font-semibold text-slate-900">
+                  <p
+                    className="
+                      text-[14px]
+                      font-semibold
+                      text-[#131B4F]
+                    "
+                  >
                     {
                       criterion.criterionName
                     }
@@ -1238,41 +2343,84 @@ function CriteriaComparisonTable({
                 </td>
 
 
-                <td className="px-5 py-5">
+                <td
+                  className="
+                    px-5
+                    py-5
+                  "
+                >
 
-                  <span className="inline-flex rounded-full bg-[#F1F4FA] px-2.5 py-1 text-xs font-semibold text-[#161F56]">
-                    {criterion.weight}%
+                  <span
+                    className="
+                      bg-[#F4F5F7]
+                      px-2.5
+                      py-1
+                      text-xs
+                      font-semibold
+                      text-[#131B4F]
+                    "
+                  >
+                    {
+                      criterion.weight
+                    }
+                    %
                   </span>
 
                 </td>
 
 
                 {vendors.map(
-                  (vendor) => {
+                  (
+                    vendor,
+                  ) => {
                     const score =
                       vendor.criterionScores.find(
-                        (item) =>
+                        (
+                          item,
+                        ) =>
                           item.criterionId ===
                           criterion.criterionId,
                       )
 
+
                     const scoreValue =
                       score?.score ??
                       0
+
 
                     return (
                       <td
                         key={
                           vendor.id
                         }
-                        className="px-5 py-5"
+                        className="
+                          px-5
+                          py-5
+                        "
                       >
 
-                        <div className="min-w-[150px]">
+                        <div
+                          className="
+                            min-w-[150px]
+                          "
+                        >
 
-                          <div className="mb-2 flex items-center justify-between">
+                          <div
+                            className="
+                              mb-2
+                              flex
+                              items-center
+                              justify-between
+                            "
+                          >
 
-                            <span className="text-sm font-semibold text-slate-900">
+                            <span
+                              className="
+                                text-sm
+                                font-semibold
+                                text-[#131B4F]
+                              "
+                            >
                               {
                                 scoreValue
                               }
@@ -1282,16 +2430,30 @@ function CriteriaComparisonTable({
 
                             {vendor.rank ===
                               1 && (
-                              <Trophy className="size-3.5 text-amber-500" />
+                              <Trophy
+                                className="
+                                  size-3.5
+                                  text-[#CDB78F]
+                                "
+                              />
                             )}
 
                           </div>
 
 
-                          <div className="h-1.5 overflow-hidden rounded-full bg-[#EDF0F5]">
+                          <div
+                            className="
+                              h-1.5
+                              overflow-hidden
+                              bg-[#ECEEF2]
+                            "
+                          >
 
                             <div
-                              className="h-full rounded-full bg-[#161F56]"
+                              className="
+                                h-full
+                                bg-[#131B4F]
+                              "
                               style={{
                                 width: `${Math.min(
                                   Math.max(
@@ -1313,376 +2475,12 @@ function CriteriaComparisonTable({
                 )}
 
               </tr>
-
             ),
           )}
 
         </tbody>
 
       </table>
-
-    </div>
-  )
-}
-
-
-/* ========================================== */
-/* WORKSPACE NAV ITEM */
-/* ========================================== */
-
-function EvaluationNavItem({
-  href,
-  label,
-  helper,
-  icon: Icon,
-  active = false,
-}: {
-  href: string
-  label: string
-  helper: string
-  icon: ComponentType<{
-    className?: string
-  }>
-  active?: boolean
-}) {
-  return (
-    <Link
-      href={href}
-      className={cn(
-        `
-          group
-          relative
-          flex
-          min-w-[176px]
-          items-center
-          gap-3
-          rounded-xl
-          px-4
-          py-3
-          transition-all
-          duration-200
-          ease-out
-        `,
-
-        active
-          ? `
-              bg-[#161F56]
-              text-white
-              shadow-[0_5px_16px_rgba(22,31,86,0.20)]
-            `
-          : `
-              text-slate-600
-              hover:-translate-y-[1px]
-              hover:bg-[#F3F6FC]
-            `,
-      )}
-    >
-
-      <div
-        className={cn(
-          `
-            flex
-            size-9
-            shrink-0
-            items-center
-            justify-center
-            rounded-lg
-            transition-all
-            duration-200
-          `,
-
-          active
-            ? `
-                bg-white/10
-                text-white
-              `
-            : `
-                bg-[#F2F5FB]
-                text-[#60709A]
-                group-hover:bg-white
-                group-hover:text-[#161F56]
-                group-hover:shadow-sm
-              `,
-        )}
-      >
-
-        <Icon className="size-4" />
-
-      </div>
-
-
-      <div>
-
-        <p
-          className={cn(
-            `
-              text-sm
-              font-semibold
-              transition-colors
-              duration-200
-            `,
-
-            active
-              ? 'text-white'
-              : 'text-slate-700 group-hover:text-[#161F56]',
-          )}
-        >
-          {label}
-        </p>
-
-
-        <p
-          className={cn(
-            `
-              mt-0.5
-              text-[10px]
-              transition-colors
-              duration-200
-            `,
-
-            active
-              ? 'text-white/55'
-              : 'text-slate-400 group-hover:text-[#7180A7]',
-          )}
-        >
-          {helper}
-        </p>
-
-      </div>
-
-
-      <span
-        className={cn(
-          `
-            absolute
-            bottom-0
-            start-4
-            end-4
-            h-[2px]
-            rounded-full
-            transition-transform
-            duration-200
-          `,
-
-          active
-            ? 'scale-x-100 bg-white/60'
-            : `
-                scale-x-0
-                bg-[#161F56]
-                group-hover:scale-x-100
-              `,
-        )}
-      />
-
-    </Link>
-  )
-}
-
-
-/* ========================================== */
-/* NAV FLOW ARROW */
-/* ========================================== */
-
-function NavArrow({
-  isArabic,
-}: {
-  isArabic: boolean
-}) {
-  return (
-    <div className="flex w-7 shrink-0 items-center justify-center">
-
-      <ChevronRight
-        className={cn(
-          'size-3.5 text-slate-300',
-          isArabic &&
-            'rotate-180',
-        )}
-      />
-
-    </div>
-  )
-}
-
-
-/* ========================================== */
-/* HEADER META */
-/* ========================================== */
-
-function HeaderMeta({
-  icon: Icon,
-  text,
-}: {
-  icon: ComponentType<{
-    className?: string
-  }>
-  text: string
-}) {
-  return (
-    <span className="inline-flex items-center gap-1.5">
-
-      <Icon className="size-4 text-[#6C789A]" />
-
-      {text}
-
-    </span>
-  )
-}
-
-
-/* ========================================== */
-/* SNAPSHOT METRIC */
-/* ========================================== */
-
-function SnapshotMetric({
-  label,
-  value,
-  helper,
-  icon: Icon,
-  last = false,
-}: {
-  label: string
-  value: string
-  helper: string
-  icon: ComponentType<{
-    className?: string
-  }>
-  last?: boolean
-}) {
-  return (
-    <div
-      className={cn(
-        `
-          group
-          flex
-          min-h-[110px]
-          items-center
-          gap-4
-          px-5
-          py-4
-          transition-colors
-          duration-200
-          hover:bg-[#F7F9FE]
-        `,
-
-        !last &&
-          `
-            border-b
-            border-[#E7EBF2]
-            sm:border-e
-            xl:border-b-0
-          `,
-      )}
-    >
-
-      <div
-        className="
-          flex
-          size-10
-          shrink-0
-          items-center
-          justify-center
-          rounded-xl
-          bg-[#F2F5FB]
-          text-[#60709A]
-          transition-all
-          duration-200
-          group-hover:bg-[#E9EFFB]
-          group-hover:text-[#161F56]
-        "
-      >
-
-        <Icon className="size-4" />
-
-      </div>
-
-
-      <div className="min-w-0 flex-1">
-
-        <p className="text-[11px] font-medium text-slate-500">
-          {label}
-        </p>
-
-        <p className="mt-1 truncate text-lg font-semibold text-slate-950">
-          {value}
-        </p>
-
-        <p className="mt-0.5 text-xs text-slate-400">
-          {helper}
-        </p>
-
-      </div>
-
-    </div>
-  )
-}
-
-
-/* ========================================== */
-/* TOP METRIC */
-/* ========================================== */
-
-function TopMetric({
-  label,
-  value,
-  last = false,
-}: {
-  label: string
-  value: string
-  last?: boolean
-}) {
-  return (
-    <div
-      className={cn(
-        'px-4 py-4',
-
-        !last &&
-          'border-b border-[#E6EAF2] sm:border-b-0 sm:border-e',
-      )}
-    >
-
-      <p className="text-xs font-medium text-slate-500">
-        {label}
-      </p>
-
-      <p className="mt-2 text-lg font-semibold text-[#161F56]">
-        {value}
-      </p>
-
-    </div>
-  )
-}
-
-
-/* ========================================== */
-/* CARD METRIC */
-/* ========================================== */
-
-function CardMetric({
-  label,
-  value,
-  last = false,
-}: {
-  label: string
-  value: string
-  last?: boolean
-}) {
-  return (
-    <div
-      className={cn(
-        'px-5 py-4',
-
-        !last &&
-          'border-e border-[#E7EBF2]',
-      )}
-    >
-
-      <p className="text-xs font-medium text-slate-500">
-        {label}
-      </p>
-
-      <p className="mt-2 text-xl font-semibold tracking-tight text-[#161F56]">
-        {value}
-      </p>
 
     </div>
   )
@@ -1701,57 +2499,61 @@ function EligibilityBadge({
   isArabic: boolean
 }) {
   return eligible ? (
-
     <span
       className="
         inline-flex
         w-fit
         items-center
         gap-1.5
-        rounded-full
-        border
-        border-emerald-200
-        bg-emerald-50
+        bg-[#EEF8F2]
         px-2.5
-        py-1
+        py-1.5
         text-xs
         font-semibold
-        text-emerald-700
+        text-[#25724C]
       "
     >
-      <CheckCircle2 className="size-3.5" />
+
+      <CheckCircle2
+        className="
+          size-3.5
+        "
+      />
+
 
       {isArabic
         ? 'مؤهل'
         : 'Eligible'}
+
     </span>
-
   ) : (
-
     <span
       className="
         inline-flex
         w-fit
         items-center
         gap-1.5
-        rounded-full
-        border
-        border-rose-200
-        bg-rose-50
+        bg-[#FFF1F1]
         px-2.5
-        py-1
+        py-1.5
         text-xs
         font-semibold
-        text-rose-700
+        text-[#A44444]
       "
     >
-      <ShieldAlert className="size-3.5" />
+
+      <ShieldAlert
+        className="
+          size-3.5
+        "
+      />
+
 
       {isArabic
         ? 'غير مؤهل'
         : 'Not Eligible'}
-    </span>
 
+    </span>
   )
 }
 
@@ -1769,13 +2571,13 @@ function RiskBadge({
 }) {
   const styles = {
     LOW:
-      'border-emerald-200 bg-emerald-50 text-emerald-700',
+      'bg-[#EEF8F2] text-[#25724C]',
 
     MEDIUM:
-      'border-amber-200 bg-amber-50 text-amber-700',
+      'bg-[#FFF8E8] text-[#966515]',
 
     HIGH:
-      'border-rose-200 bg-rose-50 text-rose-700',
+      'bg-[#FFF1F1] text-[#A44444]',
   }
 
 
@@ -1787,10 +2589,8 @@ function RiskBadge({
           w-fit
           items-center
           gap-1.5
-          rounded-full
-          border
           px-2.5
-          py-1
+          py-1.5
           text-xs
           font-semibold
         `,
@@ -1798,7 +2598,13 @@ function RiskBadge({
         styles[risk],
       )}
     >
-      <ShieldCheck className="size-3.5" />
+
+      <ShieldCheck
+        className="
+          size-3.5
+        "
+      />
+
 
       {isArabic
         ? `مخاطر ${formatRiskArabic(
@@ -1807,6 +2613,7 @@ function RiskBadge({
         : `${formatRisk(
             risk,
           )} Risk`}
+
     </span>
   )
 }
@@ -1837,6 +2644,7 @@ function formatRiskArabic(
     HIGH: 'مرتفعة',
   }
 
+
   return labels[risk]
 }
 
@@ -1847,17 +2655,127 @@ function formatRiskArabic(
 
 function LoadingState() {
   return (
-    <div className="mx-auto w-full max-w-[1400px] px-4 py-8 md:px-6 lg:py-9">
+    <div
+      className="
+        min-h-screen
+        bg-white
+      "
+    >
 
-      <div className="h-20 animate-pulse rounded-2xl bg-muted" />
+      <div
+        className="
+          bg-[#F1ECE0]
+          px-5
+          py-10
 
-      <div className="mt-5 h-20 animate-pulse rounded-2xl bg-muted" />
+          sm:px-8
 
-      <div className="mt-6 h-72 animate-pulse rounded-2xl bg-muted" />
+          lg:px-12
+        "
+      >
 
-      <div className="mt-5 h-72 animate-pulse rounded-2xl bg-muted" />
+        <div
+          className="
+            mx-auto
+            grid
+            max-w-[1500px]
+            gap-5
 
-      <div className="mt-5 h-96 animate-pulse rounded-2xl bg-muted" />
+            xl:grid-cols-[0.68fr_1fr]
+          "
+        >
+
+          <div
+            className="
+              h-[520px]
+              animate-pulse
+              bg-[#131B4F]/90
+            "
+          />
+
+
+          <div
+            className="
+              grid
+              gap-5
+            "
+          >
+
+            <div
+              className="
+                h-[155px]
+                animate-pulse
+                bg-white
+              "
+            />
+
+
+            <div
+              className="
+                h-[155px]
+                animate-pulse
+                bg-white
+              "
+            />
+
+
+            <div
+              className="
+                h-[155px]
+                animate-pulse
+                bg-white
+              "
+            />
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div
+        className="
+          mx-auto
+          max-w-[1500px]
+          px-5
+          py-16
+
+          sm:px-8
+
+          lg:px-12
+        "
+      >
+
+        <div
+          className="
+            h-[260px]
+            animate-pulse
+            bg-[#F5F6F8]
+          "
+        />
+
+
+        <div
+          className="
+            mt-12
+            h-[180px]
+            animate-pulse
+            bg-[#F5F6F8]
+          "
+        />
+
+
+        <div
+          className="
+            mt-12
+            h-[420px]
+            animate-pulse
+            bg-[#F5F6F8]
+          "
+        />
+
+      </div>
 
     </div>
   )

@@ -5,6 +5,8 @@ from pathlib import Path
 
 import oci
 
+from services.oci_auth import get_oci_auth_context
+
 
 class DocumentParser:
     def __init__(
@@ -21,43 +23,60 @@ class DocumentParser:
         self.output_prefix = output_prefix
 
         # ==================================================
-        # OCI Instance Principal Authentication
+        # OCI Authentication
         # ==================================================
         #
-        # The application is running inside an OCI Compute
-        # instance, so ~/.oci/config and API keys are not
-        # required.
-        #
-        # Authentication is performed using the identity
-        # of the Compute instance.
+        # auto:
+        # - OCI Compute -> Instance Principal
+        # - Local machine -> ~/.oci/config
         # ==================================================
 
-        self.signer = (
-            oci.auth.signers.InstancePrincipalsSecurityTokenSigner()
+        auth_context = (
+            get_oci_auth_context()
         )
 
-        self.region = self.signer.region
-        self.compartment_id = self.signer.tenancy_id
+        self.auth_mode = (
+            auth_context.mode
+        )
 
-        self.config = {
-            "region": self.region,
-        }
+        self.signer = (
+            auth_context.signer
+        )
+
+        self.region = (
+            auth_context.region
+        )
+
+        self.compartment_id = (
+            auth_context.compartment_id
+        )
+
+        self.config = (
+            auth_context.config
+        )
 
         # ==================================================
         # OCI Clients
         # ==================================================
 
+        client_kwargs = {}
+
+        if self.signer is not None:
+            client_kwargs[
+                "signer"
+            ] = self.signer
+
         self.object_storage = (
             oci.object_storage.ObjectStorageClient(
                 self.config,
-                signer=self.signer,
+                **client_kwargs,
             )
         )
 
         self.document_client = (
             oci.ai_document.AIServiceDocumentClient(
                 self.config,
-                signer=self.signer,
+                **client_kwargs,
             )
         )
 
@@ -75,7 +94,7 @@ class DocumentParser:
         print("--------------------------------")
         print("OCI Document Parser initialized")
         print("--------------------------------")
-        print("Authentication: Instance Principal")
+        print(f"Authentication: {self.auth_mode}")
         print(f"Region: {self.region}")
         print(f"Bucket: {self.bucket_name}")
         print(f"Namespace: {self.namespace}")
@@ -274,7 +293,7 @@ class DocumentParser:
         self,
         job_id,
         timeout_seconds=1200,
-        polling_seconds=5,
+        polling_seconds=2,
     ):
         start_time = time.time()
 
@@ -606,6 +625,8 @@ class DocumentParser:
             file_path
         )
 
+        parse_started = time.perf_counter()
+
         print()
         print("=" * 60)
         print("OCI DOCUMENT PROCESSING")
@@ -693,6 +714,16 @@ class DocumentParser:
             f"{len(final_text)}"
         )
 
+        elapsed = (
+            time.perf_counter()
+            - parse_started
+        )
+
+        print(
+            f"Document processing time: "
+            f"{elapsed:.2f}s"
+        )
+
         return {
             "file_name": file_path.name,
             "object_name": object_name,
@@ -701,6 +732,25 @@ class DocumentParser:
             "result_files": result_files,
             "text": final_text,
         }
+
+
+    # ======================================================
+    # Cleanup
+    # ======================================================
+
+    def close(self):
+        for client in (
+            self.document_client,
+            self.object_storage,
+        ):
+            close_method = getattr(
+                client,
+                "close",
+                None,
+            )
+
+            if callable(close_method):
+                close_method()
 
 
 # =========================================================

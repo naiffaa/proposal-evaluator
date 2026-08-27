@@ -6,52 +6,52 @@ import { Geist_Mono } from 'next/font/google'
 import './globals.css'
 
 
-const ksfDisplay = localFont({
+const ksfText = localFont({
   src: [
     {
-      path: '../fonts/KSFdisplay-Thin.woff2',
+      path: '../fonts/KSFText-Thin.woff2',
       weight: '100',
       style: 'normal',
     },
     {
-      path: '../fonts/KSFdisplay-ExtraLight.woff2',
+      path: '../fonts/KSFText-ExtraLight.woff2',
       weight: '200',
       style: 'normal',
     },
     {
-      path: '../fonts/KSFdisplay-Light.woff2',
+      path: '../fonts/KSFText-Light.woff2',
       weight: '300',
       style: 'normal',
     },
     {
-      path: '../fonts/KSFdisplay-Regular.woff2',
+      path: '../fonts/KSFText-Regular.woff2',
       weight: '400',
       style: 'normal',
     },
     {
-      path: '../fonts/KSFdisplay-Medium.woff2',
+      path: '../fonts/KSFText-Medium.woff2',
       weight: '500',
       style: 'normal',
     },
     {
-      path: '../fonts/KSFdisplay-SemiBold.woff2',
+      path: '../fonts/KSFText-SemiBold.woff2',
       weight: '600',
       style: 'normal',
     },
     {
-      path: '../fonts/KSFdisplay-Bold.woff2',
+      path: '../fonts/KSFText-Bold.woff2',
       weight: '700',
       style: 'normal',
     },
     {
-      path: '../fonts/KSFdisplay-Heavy.woff2',
+      path: '../fonts/KSFText-Heavy.woff2',
       weight: '800',
       style: 'normal',
     },
   ],
 
-  // نخلي نفس اسم الـ CSS variable الحالي
-  // عشان globals.css وباقي المشروع ما يحتاجون تعديل.
+  // نخلي نفس الـ variable عشان globals.css
+  // وباقي المشروع ما يحتاج أي تعديل
   variable: '--font-ksf-text',
 
   display: 'swap',
@@ -93,7 +93,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${ksfDisplay.variable} ${geistMono.variable} bg-background`}
+      className={`${ksfText.variable} ${geistMono.variable} bg-background`}
     >
       <body className="font-sans antialiased">
         {children}

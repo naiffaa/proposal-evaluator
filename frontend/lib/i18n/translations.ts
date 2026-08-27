@@ -85,8 +85,8 @@ export const translations = {
       portal: 'البوابة',
 
       home: 'الرئيسية',
-      newEvaluation: 'تقييم جديد',
-      evaluations: 'التقييمات',
+      newEvaluation: 'إضافة منافسة',
+      evaluations: 'سجل المنافسات',
 
       notifications: 'الإشعارات',
 

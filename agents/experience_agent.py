@@ -1,6 +1,11 @@
 import json
 
 from services.llm_client import LLMClient
+from config import FAST_MODEL_NAME, PROPOSAL_CONTEXT_MAX_CHARS
+from utils.proposal_context import (
+    build_relevant_context,
+    requirement_query_parts,
+)
 
 
 class ExperienceAgent:
@@ -38,7 +43,7 @@ class ExperienceAgent:
     }
 
     def __init__(self):
-        self.llm = LLMClient()
+        self.llm = LLMClient(model=FAST_MODEL_NAME)
 
     # =====================================================
     # JSON cleanup
@@ -1033,6 +1038,20 @@ class ExperienceAgent:
             )
         )
 
+        relevant_context = build_relevant_context(
+            proposal_text=proposal_text,
+            query_parts=[
+                criterion,
+                criterion_description,
+                *requirement_query_parts(
+                    prepared_requirements
+                ),
+            ],
+            domain_hint="experience",
+            max_chars=PROPOSAL_CONTEXT_MAX_CHARS,
+            top_k=8,
+        )
+
         prompt = f"""
 You are the Experience and Qualifications Evaluation Agent
 in an enterprise proposal evaluation system.
@@ -1246,13 +1265,14 @@ VENDOR PROPOSAL
 ==================================================
 
 <PROPOSAL_DOCUMENT>
-{proposal_text}
+{relevant_context}
 </PROPOSAL_DOCUMENT>
 """
 
         response = (
             self.llm.ask(
-                prompt
+                prompt,
+                label="ExperienceAgent",
             )
         )
 
@@ -1279,6 +1299,17 @@ VENDOR PROPOSAL
 
         The criterion itself is the scoring basis.
         """
+
+        relevant_context = build_relevant_context(
+            proposal_text=proposal_text,
+            query_parts=[
+                criterion,
+                criterion_description,
+            ],
+            domain_hint="experience",
+            max_chars=PROPOSAL_CONTEXT_MAX_CHARS,
+            top_k=8,
+        )
 
         prompt = f"""
 You are the Experience and Qualifications Evaluation Agent
@@ -1481,13 +1512,14 @@ VENDOR PROPOSAL
 ==================================================
 
 <PROPOSAL_DOCUMENT>
-{proposal_text}
+{relevant_context}
 </PROPOSAL_DOCUMENT>
 """
 
         response = (
             self.llm.ask(
-                prompt
+                prompt,
+                label="ExperienceAgent",
             )
         )
 

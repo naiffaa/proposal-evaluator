@@ -1,6 +1,11 @@
 import json
 
 from services.llm_client import LLMClient
+from config import FAST_MODEL_NAME, PROPOSAL_CONTEXT_MAX_CHARS
+from utils.proposal_context import (
+    build_relevant_context,
+    requirement_query_parts,
+)
 
 
 class FinancialAgent:
@@ -34,7 +39,7 @@ class FinancialAgent:
     }
 
     def __init__(self):
-        self.llm = LLMClient()
+        self.llm = LLMClient(model=FAST_MODEL_NAME)
 
     # =====================================================
     # JSON cleanup
@@ -816,6 +821,20 @@ class FinancialAgent:
             ensure_ascii=False,
         )
 
+        relevant_context = build_relevant_context(
+            proposal_text=proposal_text,
+            query_parts=[
+                criterion,
+                criterion_description,
+                *requirement_query_parts(
+                    prepared_requirements
+                ),
+            ],
+            domain_hint="financial",
+            max_chars=PROPOSAL_CONTEXT_MAX_CHARS,
+            top_k=8,
+        )
+
         prompt = f"""
 You are the Financial and Commercial Evaluation Agent
 in an enterprise proposal evaluation system.
@@ -989,13 +1008,14 @@ VENDOR PROPOSAL
 ==================================================
 
 <PROPOSAL_DOCUMENT>
-{proposal_text}
+{relevant_context}
 </PROPOSAL_DOCUMENT>
 """
 
         response = (
             self.llm.ask(
-                prompt
+                prompt,
+                label="FinancialAgent",
             )
         )
 
@@ -1016,6 +1036,17 @@ VENDOR PROPOSAL
         criterion,
         criterion_description,
     ):
+        relevant_context = build_relevant_context(
+            proposal_text=proposal_text,
+            query_parts=[
+                criterion,
+                criterion_description,
+            ],
+            domain_hint="financial",
+            max_chars=PROPOSAL_CONTEXT_MAX_CHARS,
+            top_k=8,
+        )
+
         prompt = f"""
 You are the Financial and Commercial Evaluation Agent
 in an enterprise proposal evaluation system.
@@ -1197,13 +1228,14 @@ VENDOR PROPOSAL
 ==================================================
 
 <PROPOSAL_DOCUMENT>
-{proposal_text}
+{relevant_context}
 </PROPOSAL_DOCUMENT>
 """
 
         response = (
             self.llm.ask(
-                prompt
+                prompt,
+                label="FinancialAgent",
             )
         )
 

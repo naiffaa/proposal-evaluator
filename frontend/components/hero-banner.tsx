@@ -85,7 +85,9 @@ export function HeroBanner() {
               lg:text-[36px]
             "
           >
-            {isArabic ? 'بوابة تقييم العروض' : 'Proposal Evaluation Portal'}
+            {isArabic
+              ? 'من طلب المنافسة إلى قرار أوضح'
+              : 'From Procurement Request to a Clearer Decision'}
           </h1>
 
           {/* DESCRIPTION */}
@@ -113,8 +115,8 @@ export function HeroBanner() {
             `}
           >
             {isArabic
-              ? 'حلّل طلبات العروض، وقارن عروض الموردين، وقيّم الامتثال، وراجع نتائج التقييم من خلال سير عمل للمشتريات مدعوم بالذكاء الاصطناعي.'
-              : 'Analyze RFPs, compare vendor proposals, assess compliance, and review evaluation outcomes through an AI-assisted procurement workflow.'}
+              ? 'حلّل مستندات المنافسة، قارن عروض الموردين، وراجع الامتثال والنتائج في مكان واحد.'
+              : 'Analyze competition documents, compare vendor proposals, and review compliance and results in one place.'}
           </p>
         </div>
       </div>

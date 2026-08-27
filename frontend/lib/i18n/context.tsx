@@ -33,7 +33,7 @@ export function LanguageProvider({
   children: React.ReactNode
 }) {
   const [language, setLanguageState] =
-    useState<Language>('en')
+    useState<Language>('ar')
 
 
   useEffect(() => {
