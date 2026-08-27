@@ -1,5 +1,6 @@
 import threading
 import time
+from typing import Optional
 
 import httpx
 
@@ -21,7 +22,7 @@ from config import (
 class LLMClient:
     def __init__(
         self,
-        model: str | None = None,
+        model: Optional[str] = None,
     ):
         self.model = (
             str(model).strip()
@@ -163,8 +164,8 @@ class LLMClient:
         self,
         prompt: str,
         *,
-        model: str | None = None,
-        label: str | None = None,
+        model: Optional[str] = None,
+        label: Optional[str] = None,
     ) -> str:
         if not prompt or not prompt.strip():
             raise ValueError(
