@@ -6,3 +6,9 @@ oci-genai-auth
 fastapi
 uvicorn
 python-multipart
+PyMuPDF
+python-docx
+python-pptx
+openpyxl
+beautifulsoup4
+striprtf

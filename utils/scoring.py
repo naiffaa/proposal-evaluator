@@ -5,36 +5,16 @@ def calculate_weighted_score(
     """
     Calculate the final weighted proposal score.
 
+    Criterion weights are expected to be finalized by the
+    RFP framework before vendor evaluation.
+
+    Weight sources may be:
+    - explicit_rfp
+    - importance_derived
+
     The LLM never calculates the final weighted score.
-    All arithmetic is performed deterministically in Python.
-
-    Args:
-        evaluations:
-            List of evaluation result dictionaries.
-            Each item should contain:
-            - criterion
-            - score
-            - requirement_results
-
-        criteria:
-            List of RFP criteria.
-            Each item must contain:
-            - name
-            - weight
-
-    Returns:
-        dict:
-            {
-                "criterion_scores": [...],
-                "final_score": 0.0,
-                "overall_mandatory_compliance": 0.0,
-                "mandatory_summary": {...}
-            }
+    All arithmetic is deterministic Python.
     """
-
-    # =====================================================
-    # Basic validation
-    # =====================================================
 
     if not isinstance(
         evaluations,
@@ -57,16 +37,11 @@ def calculate_weighted_score(
             "criteria cannot be empty."
         )
 
-    # =====================================================
-    # Validate criteria and weights
-    # =====================================================
-
     weights = {}
-
+    criterion_metadata = {}
     total_weight = 0.0
 
     for criterion in criteria:
-
         if not isinstance(
             criterion,
             dict,
@@ -99,7 +74,6 @@ def calculate_weighted_score(
                     0,
                 )
             )
-
         except (
             TypeError,
             ValueError,
@@ -118,7 +92,36 @@ def calculate_weighted_score(
                 f"Weight cannot exceed 100: {name}"
             )
 
-        weights[name] = weight
+        weights[
+            name
+        ] = weight
+
+        criterion_metadata[
+            name
+        ] = {
+            "weight_source": (
+                criterion.get(
+                    "weight_source",
+                    "unknown",
+                )
+            ),
+            "weight_evidence": (
+                criterion.get(
+                    "weight_evidence",
+                    "",
+                )
+            ),
+            "importance_total": (
+                criterion.get(
+                    "importance_total"
+                )
+            ),
+            "average_importance": (
+                criterion.get(
+                    "average_importance"
+                )
+            ),
+        }
 
         total_weight += weight
 
@@ -135,14 +138,9 @@ def calculate_weighted_score(
             f"{round(total_weight, 2)}, not 100."
         )
 
-    # =====================================================
-    # Map evaluations by criterion
-    # =====================================================
-
     evaluation_map = {}
 
     for evaluation in evaluations:
-
         if not isinstance(
             evaluation,
             dict,
@@ -163,7 +161,9 @@ def calculate_weighted_score(
                 "Evaluation is missing criterion name."
             )
 
-        if criterion_name in evaluation_map:
+        if criterion_name in (
+            evaluation_map
+        ):
             raise ValueError(
                 f"Duplicate evaluation found for "
                 f"criterion: {criterion_name}"
@@ -180,29 +180,17 @@ def calculate_weighted_score(
             criterion_name
         ] = evaluation
 
-    # =====================================================
-    # Ensure every RFP criterion was evaluated
-    # =====================================================
-
     for criterion_name in weights:
-
-        if criterion_name not in evaluation_map:
+        if criterion_name not in (
+            evaluation_map
+        ):
             raise ValueError(
                 f"No evaluation result found for "
                 f"criterion: {criterion_name}"
             )
 
-    # =====================================================
-    # Calculate weighted scores
-    # =====================================================
-
     criterion_scores = []
-
     final_score = 0.0
-
-    # =====================================================
-    # Mandatory requirement tracking
-    # =====================================================
 
     total_mandatory_requirements = 0
     fully_met_mandatory_requirements = 0
@@ -212,18 +200,17 @@ def calculate_weighted_score(
 
     mandatory_results = []
 
-    # =====================================================
-    # Process criteria
-    # =====================================================
-
     for criterion in criteria:
-
         name = str(
-            criterion["name"]
+            criterion[
+                "name"
+            ]
         ).strip()
 
         weight = float(
-            criterion["weight"]
+            criterion[
+                "weight"
+            ]
         )
 
         evaluation = (
@@ -232,10 +219,6 @@ def calculate_weighted_score(
             ]
         )
 
-        # =================================================
-        # Criterion score
-        # =================================================
-
         try:
             score = float(
                 evaluation.get(
@@ -243,7 +226,6 @@ def calculate_weighted_score(
                     0,
                 )
             )
-
         except (
             TypeError,
             ValueError,
@@ -262,8 +244,11 @@ def calculate_weighted_score(
 
         weighted_score = (
             score
-            * (
-                weight / 100.0
+            *
+            (
+                weight
+                /
+                100.0
             )
         )
 
@@ -273,10 +258,6 @@ def calculate_weighted_score(
         )
 
         final_score += weighted_score
-
-        # =================================================
-        # Requirement results
-        # =================================================
 
         requirement_results = (
             evaluation.get(
@@ -290,7 +271,7 @@ def calculate_weighted_score(
             list,
         ):
             raise ValueError(
-                f"requirement_results must be a list "
+                "requirement_results must be a list "
                 f"for criterion: {name}"
             )
 
@@ -300,12 +281,9 @@ def calculate_weighted_score(
         criterion_mandatory_failed = 0
         criterion_mandatory_not_provided = 0
 
-        # =================================================
-        # Evaluate mandatory requirements directly
-        # =================================================
-
-        for requirement in requirement_results:
-
+        for requirement in (
+            requirement_results
+        ):
             if not isinstance(
                 requirement,
                 dict,
@@ -315,9 +293,11 @@ def calculate_weighted_score(
                     f"in criterion: {name}"
                 )
 
-            mandatory = requirement.get(
-                "mandatory",
-                False,
+            mandatory = (
+                requirement.get(
+                    "mandatory",
+                    False,
+                )
             )
 
             if isinstance(
@@ -325,14 +305,15 @@ def calculate_weighted_score(
                 str,
             ):
                 mandatory = (
-                    mandatory.strip().lower()
+                    mandatory
+                    .strip()
+                    .lower()
                     in {
                         "true",
                         "yes",
                         "1",
                     }
                 )
-
             else:
                 mandatory = bool(
                     mandatory
@@ -359,28 +340,24 @@ def calculate_weighted_score(
             ).strip().upper()
 
             if status == "FULL_MATCH":
-
                 fully_met_mandatory_requirements += 1
                 criterion_mandatory_full += 1
 
             elif status == "PARTIAL_MATCH":
-
                 partially_met_mandatory_requirements += 1
                 criterion_mandatory_partial += 1
 
             elif status == "NOT_PROVIDED":
-
                 not_provided_mandatory_requirements += 1
                 criterion_mandatory_not_provided += 1
 
             elif status == "NO_MATCH":
-
                 failed_mandatory_requirements += 1
                 criterion_mandatory_failed += 1
 
             else:
                 raise ValueError(
-                    f"Invalid mandatory requirement status "
+                    "Invalid mandatory requirement status "
                     f"'{status}' for "
                     f"{requirement_id or 'unknown requirement'} "
                     f"in criterion: {name}"
@@ -389,29 +366,32 @@ def calculate_weighted_score(
             mandatory_results.append(
                 {
                     "criterion": name,
-                    "requirement_id": requirement_id,
+                    "requirement_id": (
+                        requirement_id
+                    ),
                     "status": status,
                 }
             )
 
-        # =================================================
-        # Criterion mandatory compliance
-        # =================================================
-
         if criterion_mandatory_total > 0:
-
             criterion_mandatory_compliance = (
                 criterion_mandatory_full
-                / criterion_mandatory_total
+                /
+                criterion_mandatory_total
             ) * 100
 
             criterion_mandatory_compliance = round(
                 criterion_mandatory_compliance,
                 2,
             )
-
         else:
             criterion_mandatory_compliance = None
+
+        metadata = (
+            criterion_metadata[
+                name
+            ]
+        )
 
         criterion_scores.append(
             {
@@ -423,6 +403,26 @@ def calculate_weighted_score(
                 "weight": round(
                     weight,
                     2,
+                ),
+                "weight_source": (
+                    metadata[
+                        "weight_source"
+                    ]
+                ),
+                "weight_evidence": (
+                    metadata[
+                        "weight_evidence"
+                    ]
+                ),
+                "importance_total": (
+                    metadata[
+                        "importance_total"
+                    ]
+                ),
+                "average_importance": (
+                    metadata[
+                        "average_importance"
+                    ]
                 ),
                 "weighted_score": (
                     weighted_score
@@ -448,10 +448,6 @@ def calculate_weighted_score(
             }
         )
 
-    # =====================================================
-    # Final weighted score
-    # =====================================================
-
     final_score = round(
         final_score,
         2,
@@ -465,42 +461,19 @@ def calculate_weighted_score(
         ),
     )
 
-    # =====================================================
-    # Overall mandatory compliance
-    # =====================================================
-    #
-    # IMPORTANT:
-    #
-    # This is calculated from mandatory requirements
-    # themselves.
-    #
-    # FULL_MATCH counts as compliant.
-    #
-    # PARTIAL_MATCH, NO_MATCH, and NOT_PROVIDED
-    # do NOT count as fully compliant.
-    #
-    # Criteria with zero mandatory requirements are
-    # excluded completely.
-    # =====================================================
-
     if total_mandatory_requirements > 0:
-
         overall_mandatory_compliance = (
             fully_met_mandatory_requirements
-            / total_mandatory_requirements
+            /
+            total_mandatory_requirements
         ) * 100
 
         overall_mandatory_compliance = round(
             overall_mandatory_compliance,
             2,
         )
-
     else:
         overall_mandatory_compliance = None
-
-    # =====================================================
-    # Mandatory summary
-    # =====================================================
 
     mandatory_summary = {
         "total_mandatory_requirements": (
@@ -520,10 +493,6 @@ def calculate_weighted_score(
         ),
     }
 
-    # =====================================================
-    # Final result
-    # =====================================================
-
     return {
         "criterion_scores": (
             criterion_scores
@@ -540,4 +509,21 @@ def calculate_weighted_score(
         "mandatory_results": (
             mandatory_results
         ),
+        "weighting": {
+            "total_weight": (
+                round(
+                    total_weight,
+                    2,
+                )
+            ),
+            "sources": list(
+                {
+                    metadata[
+                        "weight_source"
+                    ]
+                    for metadata
+                    in criterion_metadata.values()
+                }
+            ),
+        },
     }

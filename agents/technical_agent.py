@@ -7,7 +7,11 @@ from concurrent.futures import (
 )
 
 from services.llm_client import LLMClient
-from config import FAST_MODEL_NAME, TECHNICAL_CONTEXT_MAX_CHARS
+from config import (
+    FAST_MODEL_NAME,
+    TECHNICAL_CONTEXT_MAX_CHARS,
+)
+
 from utils.proposal_context import (
     build_relevant_context,
     requirement_query_parts,
@@ -26,12 +30,14 @@ class TechnicalAgent:
     - evaluates requirements in controlled batches
     - runs a limited number of batches concurrently
     - preserves the original RFP requirement order
+    - repairs ONLY safely recoverable missing requirement IDs
     - enforces status / score consistency
     - calculates the final criterion score deterministically
 
     Resilience:
     - one JSON syntax repair attempt per batch
-    - one full batch retry if structure is invalid
+    - deterministic missing-ID repair when structurally safe
+    - one full batch retry if structure is still invalid
     """
 
     VALID_STATUSES = {
@@ -45,20 +51,18 @@ class TechnicalAgent:
     # Performance configuration
     # =====================================================
 
-    # 44 requirements:
-    # 12 + 12 + 12 + 8 = 4 batches
-    #
-    # This is still small enough to keep JSON stable.
     BATCH_SIZE = 16
 
-    # Run only two technical batches simultaneously.
-    #
-    # This gives a meaningful speed improvement while
-    # remaining conservative with OCI request concurrency.
     MAX_BATCH_WORKERS = 2
 
-    def __init__(self):
-        self.llm = LLMClient(model=FAST_MODEL_NAME)
+    def __init__(
+        self,
+    ):
+        self.llm = (
+            LLMClient(
+                model=FAST_MODEL_NAME
+            )
+        )
 
     # =====================================================
     # Boolean normalization
@@ -125,7 +129,8 @@ class TechnicalAgent:
             str,
         ):
             raise ValueError(
-                "Technical Agent response must be text."
+                "Technical Agent response "
+                "must be text."
             )
 
         cleaned = (
@@ -168,10 +173,9 @@ class TechnicalAgent:
         llm,
     ):
         """
-        Repair syntax only.
+        Repair JSON syntax only.
 
-        Uses the isolated LLM client owned by the
-        current batch worker.
+        This MUST NOT change semantic evaluation content.
         """
 
         repair_prompt = f"""
@@ -233,14 +237,16 @@ STRICT RULES:
         )
 
         try:
+
             return json.loads(
                 cleaned
             )
 
         except json.JSONDecodeError:
 
+            print()
             print(
-                "\nTechnical Agent batch returned "
+                "Technical Agent batch returned "
                 "invalid JSON."
             )
 
@@ -256,26 +262,32 @@ STRICT RULES:
             )
 
             try:
-                parsed = json.loads(
-                    repaired
+
+                parsed = (
+                    json.loads(
+                        repaired
+                    )
                 )
 
                 print(
-                    "Technical Agent batch JSON repaired "
-                    "successfully."
+                    "Technical Agent batch JSON "
+                    "repaired successfully."
                 )
 
                 return parsed
 
             except json.JSONDecodeError as error:
+
                 raise ValueError(
-                    "Technical Agent returned invalid JSON "
-                    "and the repaired response remained "
-                    "invalid."
+                    "Technical Agent returned invalid "
+                    "JSON and the repaired response "
+                    "remained invalid."
                     "\n\n"
-                    f"Original response:\n{response_text}"
+                    f"Original response:\n"
+                    f"{response_text}"
                     "\n\n"
-                    f"Repaired response:\n{repaired}"
+                    f"Repaired response:\n"
+                    f"{repaired}"
                 ) from error
 
     # =====================================================
@@ -291,15 +303,18 @@ STRICT RULES:
             list,
         ):
             raise ValueError(
-                "Technical requirements must be a list."
+                "Technical requirements must "
+                "be a list."
             )
 
         if not requirements:
             raise ValueError(
-                "Technical requirements cannot be empty."
+                "Technical requirements cannot "
+                "be empty."
             )
 
         prepared = []
+
         seen_ids = set()
 
         for (
@@ -315,8 +330,8 @@ STRICT RULES:
                 dict,
             ):
                 raise ValueError(
-                    f"Technical requirement {index} "
-                    "must be an object."
+                    f"Technical requirement "
+                    f"{index} must be an object."
                 )
 
             requirement_id = str(
@@ -351,8 +366,8 @@ STRICT RULES:
 
             if not requirement_id:
                 raise ValueError(
-                    f"Technical requirement {index} "
-                    "is missing an id."
+                    f"Technical requirement "
+                    f"{index} is missing an id."
                 )
 
             if (
@@ -360,8 +375,8 @@ STRICT RULES:
                 in seen_ids
             ):
                 raise ValueError(
-                    "Duplicate technical requirement ID: "
-                    f"{requirement_id}"
+                    "Duplicate technical requirement "
+                    f"ID: {requirement_id}"
                 )
 
             seen_ids.add(
@@ -370,8 +385,9 @@ STRICT RULES:
 
             if not requirement_text:
                 raise ValueError(
-                    f"Technical requirement {index} "
-                    "has empty requirement text."
+                    f"Technical requirement "
+                    f"{index} has empty "
+                    "requirement text."
                 )
 
             if not source:
@@ -396,6 +412,26 @@ STRICT RULES:
                     "mandatory": (
                         mandatory
                     ),
+
+                    # Keep importance metadata when available.
+                    "importance_score": (
+                        requirement.get(
+                            "importance_score"
+                        )
+                    ),
+
+                    "importance_level": (
+                        requirement.get(
+                            "importance_level"
+                        )
+                    ),
+
+                    "importance_reason": (
+                        requirement.get(
+                            "importance_reason",
+                            "",
+                        )
+                    ),
                 }
             )
 
@@ -409,10 +445,6 @@ STRICT RULES:
         self,
         requirements,
     ):
-        """
-        Split requirements into ordered fixed-size batches.
-        """
-
         return [
             requirements[
                 index:
@@ -430,6 +462,201 @@ STRICT RULES:
         ]
 
     # =====================================================
+    # SAFE deterministic missing-ID repair
+    # =====================================================
+
+    def _repair_missing_requirement_ids(
+        self,
+        result,
+        requirements,
+    ):
+        """
+        Safely restore omitted requirement_id values.
+
+        Repair is allowed ONLY when:
+
+        - result is a dict
+        - requirement_results is a list
+        - result count exactly matches requirement count
+        - every result item is a dict
+        - every PRESENT requirement_id already matches the
+          expected requirement at the same position
+        - no duplicate present IDs exist
+
+        If those conditions are true, blank IDs are filled
+        from the frozen RFP order.
+
+        We DO NOT repair:
+        - wrong IDs
+        - reordered IDs
+        - missing results
+        - extra results
+        - duplicate IDs
+        """
+
+        if not isinstance(
+            result,
+            dict,
+        ):
+            return (
+                result,
+                0,
+            )
+
+        requirement_results = (
+            result.get(
+                "requirement_results"
+            )
+        )
+
+        if not isinstance(
+            requirement_results,
+            list,
+        ):
+            return (
+                result,
+                0,
+            )
+
+        if (
+            len(
+                requirement_results
+            )
+            !=
+            len(
+                requirements
+            )
+        ):
+            return (
+                result,
+                0,
+            )
+
+        expected_ids = [
+            str(
+                item.get(
+                    "id",
+                    "",
+                )
+            ).strip()
+
+            for item
+            in requirements
+        ]
+
+        seen_present_ids = set()
+
+        # =================================================
+        # First pass:
+        # Verify every ID the LLM DID return.
+        # =================================================
+
+        for (
+            index,
+            item,
+        ) in enumerate(
+            requirement_results
+        ):
+
+            if not isinstance(
+                item,
+                dict,
+            ):
+                return (
+                    result,
+                    0,
+                )
+
+            received_id = str(
+                item.get(
+                    "requirement_id",
+                    "",
+                )
+            ).strip()
+
+            if not received_id:
+                continue
+
+            expected_id = (
+                expected_ids[
+                    index
+                ]
+            )
+
+            if (
+                received_id
+                !=
+                expected_id
+            ):
+                # There is a real mismatch or reordering.
+                # Never auto-repair.
+                return (
+                    result,
+                    0,
+                )
+
+            if (
+                received_id
+                in seen_present_ids
+            ):
+                # Duplicate IDs are unsafe.
+                return (
+                    result,
+                    0,
+                )
+
+            seen_present_ids.add(
+                received_id
+            )
+
+        # =================================================
+        # Second pass:
+        # Restore ONLY missing IDs.
+        # =================================================
+
+        repaired_count = 0
+
+        for (
+            index,
+            item,
+        ) in enumerate(
+            requirement_results
+        ):
+
+            received_id = str(
+                item.get(
+                    "requirement_id",
+                    "",
+                )
+            ).strip()
+
+            if received_id:
+                continue
+
+            item[
+                "requirement_id"
+            ] = (
+                expected_ids[
+                    index
+                ]
+            )
+
+            repaired_count += 1
+
+        if repaired_count:
+
+            print(
+                "Technical deterministic repair: "
+                f"restored {repaired_count} missing "
+                "requirement_id field(s)."
+            )
+
+        return (
+            result,
+            repaired_count,
+        )
+
+    # =====================================================
     # Structural validation
     # =====================================================
 
@@ -443,7 +670,8 @@ STRICT RULES:
             dict,
         ):
             return (
-                "Technical Agent result must be an object."
+                "Technical Agent result must "
+                "be an object."
             )
 
         requirement_results = (
@@ -471,16 +699,18 @@ STRICT RULES:
             )
         ):
             return (
-                "Technical Agent returned the wrong number "
-                "of requirement results. "
+                "Technical Agent returned the wrong "
+                "number of requirement results. "
                 f"Expected {len(requirements)}, "
-                f"received {len(requirement_results)}."
+                f"received "
+                f"{len(requirement_results)}."
             )
 
         expected_ids = [
             item[
                 "id"
             ]
+
             for item
             in requirements
         ]
@@ -500,8 +730,9 @@ STRICT RULES:
                 dict,
             ):
                 return (
-                    "Technical Agent returned a non-object "
-                    f"result at position {index}."
+                    "Technical Agent returned "
+                    "a non-object result at "
+                    f"position {index}."
                 )
 
             requirement_id = str(
@@ -512,9 +743,11 @@ STRICT RULES:
             ).strip()
 
             if not requirement_id:
+
                 return (
-                    "Technical Agent returned a requirement "
-                    "result with a missing requirement_id. "
+                    "Technical Agent returned a "
+                    "requirement result with a "
+                    "missing requirement_id. "
                     f"Position {index}, expected "
                     f"{expected_ids[index - 1]}."
                 )
@@ -534,6 +767,7 @@ STRICT RULES:
                 received_ids
             )
         ):
+
             return (
                 "Technical Agent returned duplicate "
                 "requirement IDs."
@@ -564,12 +798,14 @@ STRICT RULES:
                     !=
                     received_id
                 ):
+
                     return (
-                        "Technical Agent returned unexpected "
-                        "requirement IDs or order. "
-                        f"Position {index}: expected "
-                        f"{expected_id}, received "
-                        f"{received_id}."
+                        "Technical Agent returned "
+                        "unexpected requirement IDs "
+                        "or order. "
+                        f"Position {index}: "
+                        f"expected {expected_id}, "
+                        f"received {received_id}."
                     )
 
         return None
@@ -608,7 +844,8 @@ STRICT RULES:
         ):
             raise ValueError(
                 "Unexpected requirement ID. "
-                f"Expected {expected_requirement['id']}, "
+                f"Expected "
+                f"{expected_requirement['id']}, "
                 f"received {requirement_id}."
             )
 
@@ -621,14 +858,17 @@ STRICT RULES:
 
         if (
             status
-            not in self.VALID_STATUSES
+            not in
+            self.VALID_STATUSES
         ):
             raise ValueError(
                 f"Invalid match status for "
-                f"{requirement_id}: {status}"
+                f"{requirement_id}: "
+                f"{status}"
             )
 
         try:
+
             match_score = float(
                 result.get(
                     "match_score",
@@ -640,6 +880,7 @@ STRICT RULES:
             TypeError,
             ValueError,
         ) as error:
+
             raise ValueError(
                 f"Invalid match score for "
                 f"{requirement_id}."
@@ -654,18 +895,22 @@ STRICT RULES:
         )
 
         if (
-            status ==
+            status
+            ==
             "FULL_MATCH"
         ):
+
             match_score = max(
                 90.0,
                 match_score,
             )
 
         elif (
-            status ==
+            status
+            ==
             "PARTIAL_MATCH"
         ):
+
             match_score = max(
                 1.0,
                 min(
@@ -678,6 +923,7 @@ STRICT RULES:
             "NO_MATCH",
             "NOT_PROVIDED",
         }:
+
             match_score = 0.0
 
         proposal_evidence = str(
@@ -700,7 +946,8 @@ STRICT RULES:
             )
 
         if (
-            status ==
+            status
+            ==
             "NOT_PROVIDED"
         ):
             proposal_evidence = (
@@ -733,6 +980,25 @@ STRICT RULES:
                 expected_requirement[
                     "mandatory"
                 ]
+            ),
+
+            "importance_score": (
+                expected_requirement.get(
+                    "importance_score"
+                )
+            ),
+
+            "importance_level": (
+                expected_requirement.get(
+                    "importance_level"
+                )
+            ),
+
+            "importance_reason": (
+                expected_requirement.get(
+                    "importance_reason",
+                    "",
+                )
             ),
 
             "status": (
@@ -774,23 +1040,37 @@ STRICT RULES:
             )
         )
 
-        relevant_context = build_relevant_context(
-            proposal_text=proposal_text,
-            query_parts=[
-                criterion,
-                *requirement_query_parts(
-                    batch_requirements
+        relevant_context = (
+            build_relevant_context(
+                proposal_text=(
+                    proposal_text
                 ),
-            ],
-            domain_hint="technical",
-            max_chars=TECHNICAL_CONTEXT_MAX_CHARS,
-            top_k=10,
+
+                query_parts=[
+                    criterion,
+
+                    *requirement_query_parts(
+                        batch_requirements
+                    ),
+                ],
+
+                domain_hint=(
+                    "technical"
+                ),
+
+                max_chars=(
+                    TECHNICAL_CONTEXT_MAX_CHARS
+                ),
+
+                top_k=10,
+            )
         )
 
         expected_ids = [
             item[
                 "id"
             ]
+
             for item
             in batch_requirements
         ]
@@ -818,6 +1098,8 @@ Required IDs:
 {json.dumps(expected_ids)}
 
 Use each ID exactly once and in exactly that order.
+
+EVERY result object MUST contain requirement_id.
 """
 
         return f"""
@@ -873,7 +1155,7 @@ No meaningful evidence exists.
 EVIDENCE
 ==================================================
 
-Search the entire proposal text supplied below.
+Search the relevant proposal context supplied below.
 
 Consider:
 
@@ -935,9 +1217,17 @@ Required IDs in exact order:
 
 {json.dumps(expected_ids)}
 
-Every result MUST contain requirement_id.
+CRITICAL:
 
-Do not add or remove requirements.
+Every result object MUST contain requirement_id.
+
+Do not omit requirement_id.
+
+Do not add requirements.
+
+Do not remove requirements.
+
+Do not reorder requirements.
 
 Do not use Markdown.
 
@@ -948,7 +1238,7 @@ Use exactly:
 {{
   "requirement_results": [
     {{
-      "requirement_id": "R001",
+      "requirement_id": "REQ-0001",
       "status": "FULL_MATCH",
       "match_score": 95,
       "proposal_evidence":
@@ -975,7 +1265,7 @@ VENDOR PROPOSAL
 """
 
     # =====================================================
-    # Run batch attempt
+    # Run one batch attempt
     # =====================================================
 
     def _run_batch_attempt(
@@ -1045,22 +1335,20 @@ VENDOR PROPOSAL
         batch_number,
         total_batches,
     ):
-        """
-        Evaluate one technical batch using its own
-        isolated LLM client.
-        """
-
+        print()
         print(
-            f"\nTechnical batch "
+            f"Technical batch "
             f"{batch_number}/{total_batches}"
         )
 
         print(
             "IDs: "
-            + ", ".join(
+            +
+            ", ".join(
                 item[
                     "id"
                 ]
+
                 for item
                 in batch_requirements
             )
@@ -1106,6 +1394,20 @@ VENDOR PROPOSAL
                 )
             )
 
+            # =================================================
+            # SAFE deterministic ID repair
+            # =================================================
+
+            (
+                first_result,
+                first_repaired_ids,
+            ) = (
+                self._repair_missing_requirement_ids(
+                    first_result,
+                    batch_requirements,
+                )
+            )
+
             first_error = (
                 self._get_structure_error(
                     first_result,
@@ -1115,10 +1417,20 @@ VENDOR PROPOSAL
 
             if not first_error:
 
-                print(
-                    f"Technical batch "
-                    f"{batch_number} completed."
-                )
+                if first_repaired_ids:
+
+                    print(
+                        f"Technical batch "
+                        f"{batch_number} completed "
+                        "after deterministic ID repair."
+                    )
+
+                else:
+
+                    print(
+                        f"Technical batch "
+                        f"{batch_number} completed."
+                    )
 
                 return (
                     first_result
@@ -1129,12 +1441,14 @@ VENDOR PROPOSAL
             # =================================================
 
             print(
-                f"Technical batch {batch_number} "
-                "returned invalid structure."
+                f"Technical batch "
+                f"{batch_number} returned "
+                "invalid structure."
             )
 
             print(
-                f"Reason: {first_error}"
+                f"Reason: "
+                f"{first_error}"
             )
 
             print(
@@ -1174,6 +1488,20 @@ VENDOR PROPOSAL
                 )
             )
 
+            # =================================================
+            # SAFE repair after retry
+            # =================================================
+
+            (
+                second_result,
+                second_repaired_ids,
+            ) = (
+                self._repair_missing_requirement_ids(
+                    second_result,
+                    batch_requirements,
+                )
+            )
+
             second_error = (
                 self._get_structure_error(
                     second_result,
@@ -1184,9 +1512,9 @@ VENDOR PROPOSAL
             if second_error:
 
                 raise ValueError(
-                    f"Technical batch {batch_number} "
-                    "returned invalid structure "
-                    "after one retry."
+                    f"Technical batch "
+                    f"{batch_number} returned invalid "
+                    "structure after one retry."
                     "\n\n"
                     f"Batch IDs: "
                     f"{[item['id'] for item in batch_requirements]}"
@@ -1198,11 +1526,21 @@ VENDOR PROPOSAL
                     f"{second_error}"
                 )
 
-            print(
-                f"Technical batch "
-                f"{batch_number} retry completed "
-                "successfully."
-            )
+            if second_repaired_ids:
+
+                print(
+                    f"Technical batch "
+                    f"{batch_number} retry completed "
+                    "after deterministic ID repair."
+                )
+
+            else:
+
+                print(
+                    f"Technical batch "
+                    f"{batch_number} retry completed "
+                    "successfully."
+                )
 
             return (
                 second_result
@@ -1234,6 +1572,7 @@ VENDOR PROPOSAL
         validated_results = []
 
         strengths = []
+
         gaps = []
 
         for (
@@ -1260,6 +1599,7 @@ VENDOR PROPOSAL
                 item[
                     "match_score"
                 ]
+
                 for item
                 in validated_results
             )
@@ -1280,8 +1620,10 @@ VENDOR PROPOSAL
 
         mandatory_results = [
             item
+
             for item
             in validated_results
+
             if item[
                 "mandatory"
             ]
@@ -1291,11 +1633,14 @@ VENDOR PROPOSAL
 
             mandatory_met = sum(
                 1
+
                 for item
                 in mandatory_results
+
                 if item[
                     "status"
-                ] ==
+                ]
+                ==
                 "FULL_MATCH"
             )
 
@@ -1319,55 +1664,69 @@ VENDOR PROPOSAL
 
         full_match_count = sum(
             1
+
             for item
             in validated_results
+
             if item[
                 "status"
-            ] ==
+            ]
+            ==
             "FULL_MATCH"
         )
 
         partial_match_count = sum(
             1
+
             for item
             in validated_results
+
             if item[
                 "status"
-            ] ==
+            ]
+            ==
             "PARTIAL_MATCH"
         )
 
         no_match_count = sum(
             1
+
             for item
             in validated_results
+
             if item[
                 "status"
-            ] ==
+            ]
+            ==
             "NO_MATCH"
         )
 
         not_provided_count = sum(
             1
+
             for item
             in validated_results
+
             if item[
                 "status"
-            ] ==
+            ]
+            ==
             "NOT_PROVIDED"
         )
 
         # =================================================
-        # Deterministic strengths
+        # Strengths
         # =================================================
 
         strongest = sorted(
             validated_results,
+
             key=lambda item: (
                 item[
                     "match_score"
                 ]
             ),
+
             reverse=True,
         )[:5]
 
@@ -1376,8 +1735,11 @@ VENDOR PROPOSAL
             if (
                 item[
                     "match_score"
-                ] > 0
+                ]
+                >
+                0
             ):
+
                 strengths.append(
                     f"{item['requirement']}: "
                     f"{item['status']} "
@@ -1385,11 +1747,12 @@ VENDOR PROPOSAL
                 )
 
         # =================================================
-        # Deterministic gaps
+        # Gaps
         # =================================================
 
         weakest = sorted(
             validated_results,
+
             key=lambda item: (
                 item[
                     "match_score"
@@ -1402,25 +1765,23 @@ VENDOR PROPOSAL
             if (
                 item[
                     "status"
-                ] !=
+                ]
+                !=
                 "FULL_MATCH"
             ):
+
                 gaps.append(
                     f"{item['requirement']}: "
                     f"{item['status']}"
                 )
 
-        # =================================================
-        # Rationale
-        # =================================================
-
         rationale = (
-            f"Technical evaluation completed across "
+            "Technical evaluation completed across "
             f"{len(validated_results)} requirements. "
             f"{full_match_count} full matches, "
             f"{partial_match_count} partial matches, "
-            f"{no_match_count} explicit no-matches, and "
-            f"{not_provided_count} not provided."
+            f"{no_match_count} explicit no-matches, "
+            f"and {not_provided_count} not provided."
         )
 
         return {
@@ -1432,9 +1793,11 @@ VENDOR PROPOSAL
                 criterion_score
             ),
 
-            "mandatory_compliance_percentage": round(
-                mandatory_compliance,
-                2,
+            "mandatory_compliance_percentage": (
+                round(
+                    mandatory_compliance,
+                    2,
+                )
             ),
 
             "requirement_results": (
@@ -1519,6 +1882,7 @@ VENDOR PROPOSAL
         )
 
         if not criterion:
+
             raise ValueError(
                 "Criterion cannot be empty."
             )
@@ -1527,8 +1891,10 @@ VENDOR PROPOSAL
             proposal_text,
             str,
         ):
+
             raise ValueError(
-                "Vendor proposal text must be a string."
+                "Vendor proposal text must "
+                "be a string."
             )
 
         proposal_text = (
@@ -1536,8 +1902,10 @@ VENDOR PROPOSAL
         )
 
         if not proposal_text:
+
             raise ValueError(
-                "Vendor proposal text cannot be empty."
+                "Vendor proposal text cannot "
+                "be empty."
             )
 
         prepared_requirements = (
@@ -1558,12 +1926,14 @@ VENDOR PROPOSAL
             )
         )
 
+        print()
         print(
-            "\n================================"
+            "================================"
         )
 
         print(
-            "TECHNICAL PARALLEL BATCHED EVALUATION"
+            "TECHNICAL PARALLEL BATCHED "
+            "EVALUATION"
         )
 
         print(
@@ -1602,7 +1972,9 @@ VENDOR PROPOSAL
         batch_results_by_index = {}
 
         with ThreadPoolExecutor(
-            max_workers=worker_count
+            max_workers=(
+                worker_count
+            )
         ) as executor:
 
             future_map = {}
@@ -1632,10 +2004,6 @@ VENDOR PROPOSAL
                     batch_index
                 )
 
-            # =============================================
-            # Collect as completed
-            # =============================================
-
             for future in as_completed(
                 future_map
             ):
@@ -1656,7 +2024,8 @@ VENDOR PROPOSAL
 
                     raise RuntimeError(
                         f"Technical batch "
-                        f"{batch_index}/{total_batches} "
+                        f"{batch_index}/"
+                        f"{total_batches} "
                         f"failed: {error}"
                     ) from error
 
@@ -1679,8 +2048,10 @@ VENDOR PROPOSAL
 
             if (
                 batch_index
-                not in batch_results_by_index
+                not in
+                batch_results_by_index
             ):
+
                 raise RuntimeError(
                     f"Missing Technical batch "
                     f"{batch_index} result."
@@ -1716,11 +2087,15 @@ VENDOR PROPOSAL
                 prepared_requirements
             )
         ):
+
             raise ValueError(
-                "Technical batched evaluation produced "
-                "an incorrect total number of results. "
-                f"Expected {len(prepared_requirements)}, "
-                f"received {len(all_results)}."
+                "Technical batched evaluation "
+                "produced an incorrect total "
+                "number of results. "
+                f"Expected "
+                f"{len(prepared_requirements)}, "
+                f"received "
+                f"{len(all_results)}."
             )
 
         # =================================================
@@ -1731,6 +2106,7 @@ VENDOR PROPOSAL
             item[
                 "id"
             ]
+
             for item
             in prepared_requirements
         ]
@@ -1742,6 +2118,7 @@ VENDOR PROPOSAL
                     "",
                 )
             ).strip()
+
             for item
             in all_results
         ]
@@ -1751,13 +2128,17 @@ VENDOR PROPOSAL
             !=
             expected_ids
         ):
+
             raise ValueError(
-                "Technical batched evaluation produced "
-                "incorrect global requirement order."
+                "Technical batched evaluation "
+                "produced incorrect global "
+                "requirement order."
                 "\n"
-                f"Expected: {expected_ids}"
+                f"Expected: "
+                f"{expected_ids}"
                 "\n"
-                f"Received: {received_ids}"
+                f"Received: "
+                f"{received_ids}"
             )
 
         # =================================================
