@@ -1,31 +1,58 @@
 import json
+import math
 import re
 from collections import OrderedDict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from services.llm_client import LLMClient
 
 
 class RFPAgent:
     """
-    Analyze an RFP and create a traceable evaluation framework.
+    Dynamic, domain-agnostic RFP analysis.
 
-    Architecture:
+    Core design:
 
-    1. Numbered requirements are extracted deterministically.
-    2. Original requirement IDs are preserved.
-    3. Explicit mandatory/preferential labels are preserved.
-    4. Explicit RFP criterion weights are used when they are
-       clearly stated in the RFP.
-    5. If explicit criterion weights are not available, each
-       requirement receives an importance score from 1 to 5.
-    6. Criterion weights are then derived from the summed
-       importance of their requirements, not requirement count.
-    7. Python performs all final arithmetic deterministically.
+    1. Numbered RFP requirements are extracted deterministically.
+       The LLM never controls the requirement count.
 
-    This avoids the previous behavior where a criterion with
-    many low-impact requirements automatically received an
-    excessive share of the final score.
+    2. Original requirement IDs such as GEN-001 / REQ-0001
+       are preserved exactly.
+
+    3. Explicit mandatory / preferential labels are preserved
+       from the source document.
+
+    4. Evaluation criteria are NOT hardcoded.
+       The LLM discovers the criteria dynamically from the
+       actual RFP content and returns them in the same dominant
+       language as the RFP.
+
+    5. Requirements are assigned to the discovered criteria
+       in controlled LLM batches using requirement IDs.
+
+    6. Python validates that every extracted requirement is
+       assigned exactly once and no IDs are lost, duplicated,
+       invented, or reordered.
+
+    7. If the RFP contains a complete explicit evaluation-weight
+       scheme, those weights are used.
+
+    8. Otherwise the LLM assigns criterion-level importance
+       from 1 to 5 based on the actual RFP, and Python normalizes
+       those criterion importance scores to a final 100%.
+
+       Requirement count does NOT determine criterion weight.
+
+    9. A concise RFP summary is generated separately.
+
+    This architecture works for technical, construction,
+    consulting, logistics, healthcare, legal, operational,
+    or other RFP domains without fixed criterion names.
     """
+
+    # =====================================================
+    # Requirement extraction
+    # =====================================================
 
     REQUIREMENT_ID_PATTERN = re.compile(
         r"""
@@ -47,6 +74,27 @@ class RFPAgent:
         flags=re.IGNORECASE,
     )
 
+    # =====================================================
+    # Dynamic criteria configuration
+    # =====================================================
+
+    MIN_CRITERIA = 2
+    MAX_CRITERIA = 12
+
+    ASSIGNMENT_BATCH_SIZE = 45
+    MAX_ASSIGNMENT_WORKERS = 2
+    MAX_ASSIGNMENT_RETRIES = 1
+
+    # Keep criteria discovery compact enough that the model
+    # can reliably finish the JSON response.
+    DISCOVERY_REQUIREMENT_TEXT_LIMIT = 180
+    DISCOVERY_RFP_CONTEXT_LIMIT = 40000
+    MAX_DISCOVERY_RETRIES = 2
+
+    # =====================================================
+    # Requirement importance
+    # =====================================================
+
     IMPORTANCE_LEVELS = {
         1: "Low",
         2: "Moderate",
@@ -55,65 +103,286 @@ class RFPAgent:
         5: "Critical",
     }
 
-    def __init__(self):
-        self.llm = LLMClient()
+    def __init__(
+        self,
+    ):
+        self.llm = (
+            LLMClient()
+        )
 
     # =====================================================
-    # Helpers
+    # Generic helpers
     # =====================================================
 
-    def _normalize_text(self, value):
+    def _normalize_text(
+        self,
+        value,
+    ):
         if value is None:
             return ""
 
         return re.sub(
             r"\s+",
             " ",
-            str(value),
+            str(
+                value
+            ),
         ).strip()
 
-    def _normalize_search_text(self, value):
-        return self._normalize_text(value).lower()
+    def _normalize_search_text(
+        self,
+        value,
+    ):
+        return (
+            self._normalize_text(
+                value
+            )
+            .lower()
+        )
 
-    def _clean_json_response(self, response_text):
-        if not isinstance(response_text, str):
+    def _clean_json_response(
+        self,
+        response_text,
+    ):
+        if not isinstance(
+            response_text,
+            str,
+        ):
             raise ValueError(
                 "RFP Agent response must be text."
             )
 
-        text = response_text.strip()
+        text = (
+            response_text.strip()
+        )
 
-        if text.startswith("```json"):
+        if text.startswith(
+            "```json"
+        ):
             text = text[7:]
-        elif text.startswith("```"):
+
+        elif text.startswith(
+            "```"
+        ):
             text = text[3:]
 
-        if text.endswith("```"):
+        if text.endswith(
+            "```"
+        ):
             text = text[:-3]
 
-        return text.strip()
+        return (
+            text.strip()
+        )
+
+    def _extract_first_json_object(
+        self,
+        text,
+    ):
+        """
+        Extract the first balanced JSON object from a model response.
+
+        This handles common wrappers such as prose or code fences
+        without trying to guess arbitrary malformed JSON.
+        """
+
+        if not isinstance(
+            text,
+            str,
+        ):
+            return None
+
+        start = text.find(
+            "{"
+        )
+
+        if start < 0:
+            return None
+
+        depth = 0
+        in_string = False
+        escaped = False
+
+        for index in range(
+            start,
+            len(
+                text
+            ),
+        ):
+            char = text[
+                index
+            ]
+
+            if in_string:
+                if escaped:
+                    escaped = False
+                    continue
+
+                if char == "\\":
+                    escaped = True
+                    continue
+
+                if char == '"':
+                    in_string = False
+
+                continue
+
+            if char == '"':
+                in_string = True
+                continue
+
+            if char == "{":
+                depth += 1
+
+            elif char == "}":
+                depth -= 1
+
+                if depth == 0:
+                    return text[
+                        start:
+                        index + 1
+                    ]
+
+        return None
+
+    def _parse_json(
+        self,
+        response_text,
+        context_label,
+    ):
+        cleaned = (
+            self._clean_json_response(
+                response_text
+            )
+        )
+
+        try:
+            return (
+                json.loads(
+                    cleaned
+                )
+            )
+
+        except json.JSONDecodeError:
+            extracted = (
+                self._extract_first_json_object(
+                    cleaned
+                )
+            )
+
+            if extracted:
+                try:
+                    return (
+                        json.loads(
+                            extracted
+                        )
+                    )
+
+                except json.JSONDecodeError:
+                    pass
+
+            raise ValueError(
+                f"{context_label} returned invalid JSON."
+            )
 
     # =====================================================
-    # Requirement ID
+    # Language detection
     # =====================================================
 
-    def _canonical_requirement_id(self, match):
-        gen_forward = match.group(1)
-        req_forward = match.group(2)
-        gen_reverse = match.group(3)
-        req_reverse = match.group(4)
+    def _detect_document_language(
+        self,
+        text,
+    ):
+        """
+        Lightweight deterministic language hint.
+
+        The LLM is still instructed to preserve the source
+        document language when naming criteria.
+        """
+
+        if not isinstance(
+            text,
+            str,
+        ):
+            return "unknown"
+
+        sample = text[
+            :50000
+        ]
+
+        arabic_chars = len(
+            re.findall(
+                r"[\u0600-\u06FF]",
+                sample,
+            )
+        )
+
+        latin_chars = len(
+            re.findall(
+                r"[A-Za-z]",
+                sample,
+            )
+        )
+
+        if (
+            arabic_chars
+            >
+            latin_chars
+        ):
+            return "Arabic"
+
+        if (
+            latin_chars
+            >
+            arabic_chars
+        ):
+            return "English"
+
+        return "mixed"
+
+    # =====================================================
+    # Canonical requirement ID
+    # =====================================================
+
+    def _canonical_requirement_id(
+        self,
+        match,
+    ):
+        gen_forward = (
+            match.group(1)
+        )
+
+        req_forward = (
+            match.group(2)
+        )
+
+        gen_reverse = (
+            match.group(3)
+        )
+
+        req_reverse = (
+            match.group(4)
+        )
 
         if gen_forward:
-            return f"GEN-{int(gen_forward):03d}"
+            return (
+                f"GEN-{int(gen_forward):03d}"
+            )
 
         if req_forward:
-            return f"REQ-{int(req_forward):04d}"
+            return (
+                f"REQ-{int(req_forward):04d}"
+            )
 
         if gen_reverse:
-            return f"GEN-{int(gen_reverse):03d}"
+            return (
+                f"GEN-{int(gen_reverse):03d}"
+            )
 
         if req_reverse:
-            return f"REQ-{int(req_reverse):04d}"
+            return (
+                f"REQ-{int(req_reverse):04d}"
+            )
 
         return None
 
@@ -128,15 +397,19 @@ class RFPAgent:
     ):
         page_number = None
 
-        for match in self.PAGE_PATTERN.finditer(
-            text,
-            0,
-            position,
+        for match in (
+            self.PAGE_PATTERN
+            .finditer(
+                text,
+                0,
+                position,
+            )
         ):
             try:
                 page_number = int(
                     match.group(1)
                 )
+
             except (
                 TypeError,
                 ValueError,
@@ -152,7 +425,7 @@ class RFPAgent:
     ):
         start = max(
             0,
-            position - 1600,
+            position - 1800,
         )
 
         preceding = text[
@@ -160,10 +433,14 @@ class RFPAgent:
         ]
 
         lines = [
-            self._normalize_text(line)
+            self._normalize_text(
+                line
+            )
             for line
             in preceding.splitlines()
-            if self._normalize_text(line)
+            if self._normalize_text(
+                line
+            )
         ]
 
         if not lines:
@@ -177,8 +454,12 @@ class RFPAgent:
             "ممتثل",
         ]
 
-        for line in reversed(lines):
-            normalized = line.lower()
+        for line in reversed(
+            lines
+        ):
+            normalized = (
+                line.lower()
+            )
 
             if any(
                 ignored in normalized
@@ -194,7 +475,7 @@ class RFPAgent:
             ):
                 continue
 
-            if len(line) > 120:
+            if len(line) > 140:
                 continue
 
             if len(line) < 3:
@@ -205,7 +486,7 @@ class RFPAgent:
         return "RFP"
 
     # =====================================================
-    # Requirement metadata
+    # Requirement source metadata
     # =====================================================
 
     def _extract_response_evidence(
@@ -238,8 +519,10 @@ class RFPAgent:
                 maxsplit=1,
             )[0]
 
-            evidence = self._normalize_text(
-                evidence
+            evidence = (
+                self._normalize_text(
+                    evidence
+                )
             )
 
             if evidence:
@@ -252,7 +535,9 @@ class RFPAgent:
         block,
     ):
         normalized = (
-            block
+            str(
+                block
+            )
             .replace(
                 "إلزامى",
                 "إلزامي",
@@ -293,12 +578,16 @@ class RFPAgent:
                 "تفضيلي",
             )
 
-        mandatory_pos = normalized.find(
-            "إلزامي"
+        mandatory_pos = (
+            normalized.find(
+                "إلزامي"
+            )
         )
 
-        preferred_pos = normalized.find(
-            "تفضيلي"
+        preferred_pos = (
+            normalized.find(
+                "تفضيلي"
+            )
         )
 
         if (
@@ -332,7 +621,9 @@ class RFPAgent:
         self,
         block,
     ):
-        text = str(block)
+        text = str(
+            block
+        )
 
         split_patterns = [
             r"\|\s*:\s*إلزامي",
@@ -346,7 +637,9 @@ class RFPAgent:
 
         cut_positions = []
 
-        for pattern in split_patterns:
+        for pattern in (
+            split_patterns
+        ):
             match = re.search(
                 pattern,
                 text,
@@ -360,7 +653,9 @@ class RFPAgent:
 
         if cut_positions:
             text = text[
-                :min(cut_positions)
+                :min(
+                    cut_positions
+                )
             ]
 
         text = re.sub(
@@ -384,12 +679,14 @@ class RFPAgent:
             flags=re.IGNORECASE,
         )
 
-        return self._normalize_text(
-            text
+        return (
+            self._normalize_text(
+                text
+            )
         )
 
     # =====================================================
-    # Importance model
+    # Generic requirement-level importance
     # =====================================================
 
     def _calculate_requirement_importance(
@@ -397,44 +694,41 @@ class RFPAgent:
         requirement,
     ):
         """
-        Produce a deterministic importance score from 1 to 5.
+        Generic, domain-agnostic requirement importance.
 
-        The score uses evidence in the RFP itself:
-        - explicit mandatory/preferential status
-        - security/privacy/regulatory language
-        - patient safety and clinical continuity
-        - availability/DR/RTO/RPO/SLA thresholds
-        - critical integration/interoperability
-        - migration/data integrity
-        - explicit quantitative thresholds
-        - general operational significance
+        This does NOT assume the RFP is technical.
 
-        No LLM call is required per requirement.
+        Signals:
+        - explicit mandatory / preferential status
+        - legal / regulatory / safety / security language
+        - pass-fail / disqualification language
+        - measurable threshold / SLA / deadline / capacity
+        - formal evidence / certification requirement
+        - consequence / continuity / criticality wording
+
+        Criterion weight is NOT calculated from requirement count.
         """
 
-        text = self._normalize_search_text(
-            requirement.get(
-                "requirement",
-                "",
+        text = (
+            self._normalize_search_text(
+                requirement.get(
+                    "requirement",
+                    "",
+                )
             )
         )
 
-        section = self._normalize_search_text(
-            requirement.get(
-                "section",
-                "",
-            )
-        )
-
-        evidence = self._normalize_search_text(
-            requirement.get(
-                "response_evidence_required",
-                "",
+        evidence = (
+            self._normalize_search_text(
+                requirement.get(
+                    "response_evidence_required",
+                    "",
+                )
             )
         )
 
         combined = (
-            f"{section} {text} {evidence}"
+            f"{text} {evidence}"
         )
 
         mandatory = bool(
@@ -454,166 +748,113 @@ class RFPAgent:
 
         reasons = []
 
-        # Base score
         if mandatory:
             score = 3
             reasons.append(
                 "Explicit mandatory requirement"
             )
+
         elif preferential:
             score = 1
             reasons.append(
                 "Explicit preferential requirement"
             )
+
         else:
             score = 2
             reasons.append(
                 "General RFP requirement"
             )
 
-        # Critical domains
-        critical_domain_groups = {
-            "Cybersecurity / Privacy": [
-                "الأمن السيبراني",
-                "الأمن",
-                "الخصوصية",
-                "حماية البيانات",
-                "تشفير",
-                "التشفير",
-                "صلاحيات",
-                "التحكم بالوصول",
-                "اختراق",
-                "security",
-                "cybersecurity",
-                "privacy",
-                "encryption",
-                "access control",
-                "authentication",
-                "authorization",
-            ],
-            "Patient Safety / Clinical Continuity": [
-                "سلامة المريض",
-                "سلامة المرضى",
-                "patient safety",
-                "clinical safety",
-                "استمرارية الرعاية",
-                "continuity of care",
-                "الأدوية",
-                "medication",
-                "حساسية",
-                "allergy",
-                "جرعة",
-                "dose",
-            ],
-            "Availability / Disaster Recovery": [
-                "التوافر",
-                "عالي التوافر",
-                "استمرارية الأعمال",
-                "التعافي من الكوارث",
-                "rto",
-                "rpo",
-                "disaster recovery",
-                "business continuity",
-                "high availability",
-                "uptime",
-                "availability",
-                "failover",
-            ],
-            "Regulatory / Legal Compliance": [
-                "امتثال",
-                "تنظيمي",
-                "قانوني",
-                "تشريعي",
-                "سياسة إلزامية",
-                "compliance",
-                "regulatory",
-                "legal",
-                "law",
-                "policy requirement",
-            ],
-        }
+        critical_keywords = [
+            "استبعاد",
+            "غير مؤهل",
+            "شرط تأهيل",
+            "شرط إلزامي",
+            "سلامة",
+            "أمن",
+            "خصوصية",
+            "حماية",
+            "قانون",
+            "نظام",
+            "لائحة",
+            "امتثال",
+            "ترخيص",
+            "اعتماد",
+            "استمرارية",
+            "تعافي",
+            "مخالفة",
+            "disqualification",
+            "eligibility",
+            "pass/fail",
+            "mandatory gate",
+            "safety",
+            "security",
+            "privacy",
+            "legal",
+            "regulatory",
+            "compliance",
+            "license",
+            "certification",
+            "business continuity",
+            "disaster recovery",
+        ]
 
-        for domain, keywords in (
-            critical_domain_groups.items()
+        if any(
+            keyword in combined
+            for keyword
+            in critical_keywords
         ):
-            if any(
-                keyword in combined
-                for keyword
-                in keywords
-            ):
-                score = max(
-                    score,
-                    5,
-                )
-                reasons.append(
-                    domain
-                )
+            score = max(
+                score,
+                5,
+            )
 
-        # High-impact domains
-        high_impact_groups = {
-            "Critical Integration / Interoperability": [
-                "التكامل",
-                "التشغيل البيني",
-                "hl7",
-                "fhir",
-                "dicom",
-                "api",
-                "integration",
-                "interoperability",
-            ],
-            "Migration / Data Integrity": [
-                "ترحيل البيانات",
-                "جودة البيانات",
-                "سلامة البيانات",
-                "تكامل البيانات",
-                "data migration",
-                "data quality",
-                "data integrity",
-                "data validation",
-            ],
-            "Core Clinical / Operational Capability": [
-                "السجل الصحي",
-                "السجل الطبي",
-                "ehr",
-                "emr",
-                "المرضى",
-                "المريض",
-                "patient",
-                "clinical",
-                "الطوارئ",
-                "emergency",
-                "المختبر",
-                "laboratory",
-                "الأشعة",
-                "radiology",
-                "الصيدلية",
-                "pharmacy",
-            ],
-        }
+            reasons.append(
+                "Critical qualification / legal / safety signal"
+            )
 
-        for domain, keywords in (
-            high_impact_groups.items()
+        high_keywords = [
+            "أساسي",
+            "حرج",
+            "جوهري",
+            "رئيسي",
+            "حد أدنى",
+            "حد أقصى",
+            "موعد نهائي",
+            "ضمان",
+            "غرامة",
+            "critical",
+            "essential",
+            "key requirement",
+            "minimum",
+            "maximum",
+            "deadline",
+            "warranty",
+            "penalty",
+        ]
+
+        if any(
+            keyword in combined
+            for keyword
+            in high_keywords
         ):
-            if any(
-                keyword in combined
-                for keyword
-                in keywords
-            ):
-                score = max(
-                    score,
-                    4,
-                )
-                reasons.append(
-                    domain
-                )
+            score = max(
+                score,
+                4,
+            )
 
-        # Explicit measurable threshold / SLA
+            reasons.append(
+                "High-impact requirement wording"
+            )
+
         threshold_patterns = [
             r"\b\d+(?:\.\d+)?\s*%",
+            r"\b\d+\s*(?:day|days|week|weeks|month|months|year|years)\b",
+            r"\b\d+\s*(?:يوم|أيام|أسبوع|أسابيع|شهر|أشهر|سنة|سنوات)\b",
             r"\b\d+\s*(?:ms|sec|second|seconds|minute|minutes|hour|hours)\b",
             r"\b\d+\s*(?:ثانية|ثوان|دقيقة|دقائق|ساعة|ساعات)\b",
-            r"\b(rto|rpo|sla)\b",
-            r"\b\d+(?:\.\d+)?\s*(?:gb|tb|mb)\b",
+            r"\b(sla|rto|rpo)\b",
         ]
 
         if any(
@@ -629,24 +870,25 @@ class RFPAgent:
                 score,
                 4,
             )
+
             reasons.append(
-                "Explicit measurable threshold / SLA"
+                "Explicit measurable threshold"
             )
 
-        # Response evidence that asks for formal proof raises
-        # importance at least one level, capped at 5.
         formal_evidence_keywords = [
             "شهادة",
             "تقرير",
             "إثبات",
             "وثيقة",
             "اعتماد",
+            "مرجع",
             "certificate",
             "certification",
             "report",
             "evidence",
             "document",
             "audit",
+            "reference",
         ]
 
         if (
@@ -672,8 +914,6 @@ class RFPAgent:
                 "Formal response evidence requested"
             )
 
-        # Preferential requirements should not become Critical
-        # merely because they contain a broad keyword.
         if preferential:
             score = min(
                 score,
@@ -690,24 +930,25 @@ class RFPAgent:
             )
         )
 
-        # De-duplicate reasons while preserving order.
         clean_reasons = []
 
         for reason in reasons:
-            if reason not in clean_reasons:
+            if reason not in (
+                clean_reasons
+            ):
                 clean_reasons.append(
                     reason
                 )
 
         return {
-            "importance_score": (
-                score
-            ),
+            "importance_score": score,
+
             "importance_level": (
                 self.IMPORTANCE_LEVELS[
                     score
                 ]
             ),
+
             "importance_reason": (
                 "; ".join(
                     clean_reasons
@@ -735,7 +976,10 @@ class RFPAgent:
 
         extracted = OrderedDict()
 
-        for index, match in enumerate(
+        for (
+            index,
+            match,
+        ) in enumerate(
             matches
         ):
             requirement_id = (
@@ -747,29 +991,39 @@ class RFPAgent:
             if not requirement_id:
                 continue
 
-            if requirement_id in extracted:
+            if requirement_id in (
+                extracted
+            ):
                 continue
 
-            block_start = match.end()
+            block_start = (
+                match.end()
+            )
 
             if (
                 index + 1
                 <
-                len(matches)
+                len(
+                    matches
+                )
             ):
                 block_end = (
                     matches[
                         index + 1
-                    ].start()
+                    ]
+                    .start()
                 )
+
             else:
                 block_end = len(
                     rfp_text
                 )
 
-            raw_block = rfp_text[
-                block_start:block_end
-            ]
+            raw_block = (
+                rfp_text[
+                    block_start:block_end
+                ]
+            )
 
             requirement_text = (
                 self._clean_requirement_body(
@@ -831,53 +1085,48 @@ class RFPAgent:
 
             requirement = {
                 "id": requirement_id,
+
                 "requirement": (
                     requirement_text
                 ),
+
                 "source": source,
+
                 "page": page_number,
+
                 "section": heading,
+
                 "mandatory": mandatory,
+
                 "requirement_type": (
                     requirement_type
                 ),
+
                 "mandatory_evidence": (
                     requirement_type
                     if mandatory
                     else ""
                 ),
+
                 "response_evidence_required": (
                     response_evidence
                 ),
             }
 
-            importance = (
+            requirement.update(
                 self._calculate_requirement_importance(
                     requirement
                 )
             )
 
-            requirement.update(
-                importance
-            )
-
             extracted[
                 requirement_id
-            ] = requirement
+            ] = (
+                requirement
+            )
 
         requirements = list(
             extracted.values()
-        )
-
-        print()
-        print(
-            "================================"
-        )
-        print(
-            "DETERMINISTIC RFP EXTRACTION"
-        )
-        print(
-            "================================"
         )
 
         mandatory_count = sum(
@@ -902,19 +1151,6 @@ class RFPAgent:
             )
         )
 
-        print(
-            "Numbered requirements found: "
-            f"{len(requirements)}"
-        )
-        print(
-            "Explicit mandatory requirements: "
-            f"{mandatory_count}"
-        )
-        print(
-            "Explicit preferential requirements: "
-            f"{preferred_count}"
-        )
-
         importance_counts = {
             score: sum(
                 1
@@ -935,6 +1171,28 @@ class RFPAgent:
             )
         }
 
+        print()
+        print(
+            "================================"
+        )
+        print(
+            "DETERMINISTIC RFP EXTRACTION"
+        )
+        print(
+            "================================"
+        )
+        print(
+            "Numbered requirements found: "
+            f"{len(requirements)}"
+        )
+        print(
+            "Explicit mandatory requirements: "
+            f"{mandatory_count}"
+        )
+        print(
+            "Explicit preferential requirements: "
+            f"{preferred_count}"
+        )
         print(
             "Importance distribution: "
             f"{importance_counts}"
@@ -950,668 +1208,1639 @@ class RFPAgent:
                 f"{requirements[-1]['id']}"
             )
 
-        return requirements
+        return (
+            requirements
+        )
 
     # =====================================================
-    # Criterion classification
+    # Requirement catalog for LLM
     # =====================================================
 
-    def _classify_requirement(
-        self,
-        requirement,
-    ):
-        text = self._normalize_search_text(
-            requirement.get(
-                "requirement",
-                "",
-            )
-        )
-
-        section = self._normalize_search_text(
-            requirement.get(
-                "section",
-                "",
-            )
-        )
-
-        combined = (
-            f"{section} {text}"
-        )
-
-        # Financial Proposal means vendor commercial/pricing,
-        # not hospital operational finance functionality.
-        financial_keywords = [
-            "العرض المالي",
-            "الأسعار المقدمة",
-            "جدول الأسعار",
-            "التسعير التجاري",
-            "تكلفة العرض",
-            "قيمة العرض",
-            "commercial proposal",
-            "financial proposal",
-            "pricing schedule",
-            "bid price",
-            "proposal price",
-            "total cost of ownership",
-            "tco",
-        ]
-
-        if any(
-            keyword in combined
-            for keyword
-            in financial_keywords
-        ):
-            return "financial"
-
-        team_keywords = [
-            "فريق المشروع",
-            "الموارد المقترحة",
-            "أعضاء الفريق",
-            "السيرة الذاتية",
-            "الشهادات المهنية",
-            "خبرات الفريق",
-            "key personnel",
-            "key staff",
-            "project team",
-            "professional certification",
-            "professional certifications",
-            "key experts",
-            "cv",
-            "resume",
-        ]
-
-        if any(
-            keyword in combined
-            for keyword
-            in team_keywords
-        ):
-            return "team"
-
-        experience_keywords = [
-            "خبرة مقدم العرض",
-            "خبرة الشركة",
-            "الخبرات السابقة",
-            "مشاريع مماثلة",
-            "مشروعات مماثلة",
-            "مراجع العملاء",
-            "vendor experience",
-            "company experience",
-            "past performance",
-            "similar project",
-            "similar projects",
-            "track record",
-            "client references",
-        ]
-
-        if any(
-            keyword in combined
-            for keyword
-            in experience_keywords
-        ):
-            return "experience"
-
-        project_plan_keywords = [
-            "الحوكمة",
-            "إدارة المشروع",
-            "خطة المشروع",
-            "الجدول الزمني",
-            "إدارة المخاطر",
-            "مرحلة الاكتشاف",
-            "التحليل والتصميم",
-            "خطة التنفيذ",
-            "خطة الترحيل",
-            "خطة الاختبارات",
-            "خطة التدريب",
-            "إدارة التغيير",
-            "خطة الدعم",
-            "project management",
-            "project plan",
-            "implementation plan",
-            "timeline",
-            "schedule",
-            "migration plan",
-            "testing plan",
-            "training plan",
-            "change management",
-        ]
-
-        if any(
-            keyword in combined
-            for keyword
-            in project_plan_keywords
-        ):
-            return "project_plan"
-
-        return "technical"
-
-    def _group_requirements(
+    def _build_requirement_catalog(
         self,
         requirements,
     ):
-        grouped = {
-            "technical": [],
-            "project_plan": [],
-            "experience": [],
-            "team": [],
-            "financial": [],
-        }
+        catalog = []
 
         for requirement in requirements:
-            requirement_type = (
-                self._classify_requirement(
-                    requirement
+            text = (
+                self._normalize_text(
+                    requirement.get(
+                        "requirement",
+                        "",
+                    )
                 )
             )
 
-            grouped[
-                requirement_type
-            ].append(
-                requirement
+            if (
+                len(text)
+                >
+                self.DISCOVERY_REQUIREMENT_TEXT_LIMIT
+            ):
+                text = (
+                    text[
+                        :self.DISCOVERY_REQUIREMENT_TEXT_LIMIT
+                    ]
+                    +
+                    "..."
+                )
+
+            catalog.append(
+                {
+                    "id": (
+                        requirement[
+                            "id"
+                        ]
+                    ),
+
+                    "section": (
+                        requirement.get(
+                            "section",
+                            ""
+                        )
+                    ),
+
+                    "mandatory": (
+                        requirement.get(
+                            "mandatory",
+                            False,
+                        )
+                    ),
+
+                    "importance_score": (
+                        requirement.get(
+                            "importance_score",
+                            1,
+                        )
+                    ),
+
+                    "requirement": text,
+                }
             )
 
-        return grouped
+        return (
+            catalog
+        )
 
     # =====================================================
-    # Explicit weight detection
+    # Dynamic criteria discovery
     # =====================================================
 
-    def _build_explicit_weight_prompt(
+    def _build_criteria_discovery_prompt(
         self,
         rfp_text,
+        requirements,
+        document_language,
+        retry_reason=None,
     ):
+        catalog = (
+            self._build_requirement_catalog(
+                requirements
+            )
+        )
+
+        catalog_text = (
+            json.dumps(
+                catalog,
+                ensure_ascii=False,
+            )
+        )
+
+        rfp_context = (
+            rfp_text[
+                :self.DISCOVERY_RFP_CONTEXT_LIMIT
+            ]
+        )
+
+        retry_section = ""
+
+        if retry_reason:
+            retry_section = f"""
+==================================================
+RETRY
+==================================================
+
+The previous response was invalid.
+
+Reason:
+
+{retry_reason}
+
+Return ONLY one valid JSON object.
+Do not use markdown fences.
+Do not add explanation before or after the JSON.
+Keep descriptions concise.
+"""
+
         return f"""
-You are reviewing an RFP only to determine whether it
-contains EXPLICIT evaluation/scoring weights for vendor
-evaluation criteria.
+You are a senior procurement evaluator.
 
-Do NOT infer weights.
-Do NOT calculate weights from requirement counts.
-Do NOT invent criteria.
-Do NOT treat operational percentages, SLAs, penalties,
-availability percentages, taxes, discounts, or technical
-thresholds as evaluation weights.
+Your task is to DISCOVER the evaluation criteria dynamically
+from this specific RFP.
 
-A valid explicit weight must clearly state that a named
-evaluation criterion contributes a specific percentage or
-points to the vendor/bid evaluation score.
+This system is DOMAIN-AGNOSTIC.
 
-Return ONLY valid JSON:
+The RFP may be about technology, construction, consulting,
+logistics, operations, healthcare, legal services, facilities,
+professional services, or any other procurement domain.
+
+DO NOT use a fixed list of technical criteria.
+
+==================================================
+LANGUAGE
+==================================================
+
+Dominant document language hint:
+
+{document_language}
+
+Return criterion names and descriptions in the SAME
+dominant language as the RFP.
+
+If the RFP is Arabic, criterion names and descriptions
+must be Arabic.
+
+If the RFP is English, use English.
+
+==================================================
+CRITERIA DISCOVERY RULES
+==================================================
+
+1. Discover criteria from the actual RFP structure,
+   requirement themes, evaluation language and sections.
+
+2. Prefer explicit evaluation criteria stated by the RFP.
+
+3. If the RFP does not explicitly define evaluation criteria,
+   infer a small, meaningful set of procurement evaluation
+   criteria from the content.
+
+4. Criteria must be broad enough to avoid hundreds of tiny
+   categories, but specific enough to represent materially
+   different evaluation dimensions.
+
+5. Return between {self.MIN_CRITERIA} and
+   {self.MAX_CRITERIA} criteria.
+
+6. Do NOT create empty criteria.
+
+7. Do NOT assign requirement IDs yet.
+   Requirement assignment happens in a separate controlled step.
+
+==================================================
+EXPLICIT WEIGHT RULES
+==================================================
+
+8. If the RFP EXPLICITLY states that a criterion contributes
+   a specific percentage or points to the vendor/bid evaluation
+   score, return that explicit_weight.
+
+9. Do NOT infer explicit weights.
+
+10. Do NOT confuse SLA percentages, uptime percentages,
+    discounts, penalties, taxes, technical thresholds,
+    or completion percentages with evaluation weights.
+
+11. If a criterion has no explicit evaluation weight,
+    explicit_weight must be null.
+
+==================================================
+CRITERION IMPORTANCE
+==================================================
+
+12. Give every criterion a criterion_importance_score
+    from 1 to 5 based on the RFP itself.
+
+13. Criterion importance must NOT depend on how many numbered
+    requirements happen to be in that criterion.
+
+14. Base criterion importance on:
+    - RFP objectives
+    - mandatory nature
+    - business impact
+    - delivery risk
+    - eligibility importance
+    - safety / legal / operational impact
+    - explicit emphasis in the document
+
+==================================================
+OUTPUT
+==================================================
+
+Return ONLY valid JSON.
+No markdown.
+No prose before or after the JSON.
 
 {{
-  "explicit_weights_found": true,
   "criteria": [
     {{
-      "criterion_type": "technical",
-      "weight": 50,
-      "source_text": "Exact or near-exact RFP evidence"
+      "criterion_id": "C01",
+      "name": "Criterion name in RFP language",
+      "description": "Concise description in RFP language",
+      "source": "RFP section or basis",
+      "criterion_importance_score": 5,
+      "criterion_importance_reason": "Short factual reason",
+      "explicit_weight": null,
+      "explicit_weight_evidence": ""
     }}
   ]
 }}
 
-Allowed criterion_type values:
-- technical
-- project_plan
-- experience
-- team
-- financial
+{retry_section}
 
-If no explicit evaluation weights are clearly stated,
-return:
+==================================================
+RFP CONTEXT
+==================================================
 
-{{
-  "explicit_weights_found": false,
-  "criteria": []
-}}
+The following is a bounded source excerpt used for high-level
+scope and any explicit evaluation language:
 
-<RFP_DOCUMENT>
-{rfp_text}
-</RFP_DOCUMENT>
+<RFP_CONTEXT>
+{rfp_context}
+</RFP_CONTEXT>
+
+==================================================
+NUMBERED REQUIREMENT CATALOG
+==================================================
+
+The catalog below is the authoritative breadth signal.
+It contains ALL extracted numbered requirement IDs, but each
+requirement text is shortened only for criteria discovery.
+
+{catalog_text}
 """
 
-    def _extract_explicit_weights(
+    def _validate_discovered_criteria(
         self,
-        rfp_text,
-        grouped,
+        data,
     ):
-        prompt = (
-            self._build_explicit_weight_prompt(
-                rfp_text
-            )
-        )
-
-        response_text = (
-            self.llm.ask(
-                prompt,
-                label="RFP-ExplicitWeights",
-            )
-        )
-
-        cleaned = (
-            self._clean_json_response(
-                response_text
-            )
-        )
-
-        try:
-            data = json.loads(
-                cleaned
-            )
-        except json.JSONDecodeError:
-            return None
-
         if not isinstance(
             data,
             dict,
         ):
-            return None
+            raise ValueError(
+                "Criteria discovery result must be an object."
+            )
 
-        if not data.get(
-            "explicit_weights_found",
-            False,
-        ):
-            return None
-
-        raw_criteria = data.get(
-            "criteria",
-            [],
+        raw_criteria = (
+            data.get(
+                "criteria",
+                []
+            )
         )
 
         if not isinstance(
             raw_criteria,
             list,
         ):
-            return None
+            raise ValueError(
+                "Criteria discovery is missing criteria."
+            )
 
-        allowed_types = {
-            key
-            for key, value
-            in grouped.items()
-            if value
-        }
+        if not (
+            self.MIN_CRITERIA
+            <=
+            len(
+                raw_criteria
+            )
+            <=
+            self.MAX_CRITERIA
+        ):
+            raise ValueError(
+                "Dynamic criteria count is outside "
+                f"the allowed range "
+                f"{self.MIN_CRITERIA}-{self.MAX_CRITERIA}. "
+                f"Received {len(raw_criteria)}."
+            )
 
-        weights = {}
-        sources = {}
+        cleaned = []
 
-        for item in raw_criteria:
+        seen_ids = set()
+        seen_names = set()
+
+        for (
+            index,
+            criterion,
+        ) in enumerate(
+            raw_criteria,
+            start=1,
+        ):
             if not isinstance(
-                item,
+                criterion,
                 dict,
             ):
-                continue
-
-            criterion_type = str(
-                item.get(
-                    "criterion_type",
-                    "",
+                raise ValueError(
+                    f"Criterion {index} must be an object."
                 )
-            ).strip().lower()
 
-            if criterion_type not in (
-                allowed_types
-            ):
-                continue
-
-            try:
-                weight = float(
-                    item.get(
-                        "weight"
+            criterion_id = (
+                self._normalize_text(
+                    criterion.get(
+                        "criterion_id",
+                        "",
                     )
                 )
+            )
+
+            if not criterion_id:
+                criterion_id = (
+                    f"C{index:02d}"
+                )
+
+            if criterion_id in (
+                seen_ids
+            ):
+                raise ValueError(
+                    "Duplicate criterion_id: "
+                    f"{criterion_id}"
+                )
+
+            seen_ids.add(
+                criterion_id
+            )
+
+            name = (
+                self._normalize_text(
+                    criterion.get(
+                        "name",
+                        "",
+                    )
+                )
+            )
+
+            if not name:
+                raise ValueError(
+                    f"Criterion {criterion_id} "
+                    "is missing a name."
+                )
+
+            normalized_name = (
+                name.lower()
+            )
+
+            if normalized_name in (
+                seen_names
+            ):
+                raise ValueError(
+                    "Duplicate criterion name: "
+                    f"{name}"
+                )
+
+            seen_names.add(
+                normalized_name
+            )
+
+            description = (
+                self._normalize_text(
+                    criterion.get(
+                        "description",
+                        "",
+                    )
+                )
+            )
+
+            source = (
+                self._normalize_text(
+                    criterion.get(
+                        "source",
+                        "",
+                    )
+                )
+            )
+
+            importance_reason = (
+                self._normalize_text(
+                    criterion.get(
+                        "criterion_importance_reason",
+                        "",
+                    )
+                )
+            )
+
+            try:
+                importance = float(
+                    criterion.get(
+                        "criterion_importance_score",
+                        3,
+                    )
+                )
+
             except (
                 TypeError,
                 ValueError,
             ):
-                continue
+                importance = 3.0
 
-            if (
-                weight <= 0
-                or
-                weight > 100
-            ):
-                continue
+            importance = max(
+                1.0,
+                min(
+                    5.0,
+                    importance,
+                ),
+            )
 
-            weights[
-                criterion_type
-            ] = weight
-
-            sources[
-                criterion_type
-            ] = self._normalize_text(
-                item.get(
-                    "source_text",
-                    "",
+            explicit_weight = (
+                criterion.get(
+                    "explicit_weight"
                 )
             )
 
-        if set(weights) != allowed_types:
-            # Do not use a partial explicit scheme because
-            # that would silently assign missing criteria 0%.
-            return None
+            if explicit_weight is not None:
+                try:
+                    explicit_weight = float(
+                        explicit_weight
+                    )
+
+                except (
+                    TypeError,
+                    ValueError,
+                ):
+                    explicit_weight = None
+
+            if (
+                explicit_weight is not None
+                and
+                (
+                    explicit_weight <= 0
+                    or
+                    explicit_weight > 100
+                )
+            ):
+                explicit_weight = None
+
+            explicit_weight_evidence = (
+                self._normalize_text(
+                    criterion.get(
+                        "explicit_weight_evidence",
+                        "",
+                    )
+                )
+            )
+
+            cleaned.append(
+                {
+                    "criterion_id": (
+                        criterion_id
+                    ),
+
+                    "name": name,
+
+                    "description": (
+                        description
+                    ),
+
+                    "source": (
+                        source
+                    ),
+
+                    "criterion_importance_score": (
+                        round(
+                            importance,
+                            3,
+                        )
+                    ),
+
+                    "criterion_importance_reason": (
+                        importance_reason
+                    ),
+
+                    "explicit_weight": (
+                        explicit_weight
+                    ),
+
+                    "explicit_weight_evidence": (
+                        explicit_weight_evidence
+                    ),
+                }
+            )
+
+        return (
+            cleaned
+        )
+
+    def _discover_dynamic_criteria(
+        self,
+        rfp_text,
+        requirements,
+        document_language,
+    ):
+        last_error = None
+        retry_reason = None
+
+        for attempt in range(
+            1,
+            self.MAX_DISCOVERY_RETRIES
+            +
+            2,
+        ):
+            prompt = (
+                self._build_criteria_discovery_prompt(
+                    rfp_text=rfp_text,
+                    requirements=requirements,
+                    document_language=document_language,
+                    retry_reason=retry_reason,
+                )
+            )
+
+            response = (
+                self.llm.ask(
+                    prompt,
+                    label="RFP-CriteriaDiscovery",
+                )
+            )
+
+            try:
+                data = (
+                    self._parse_json(
+                        response,
+                        "RFP criteria discovery",
+                    )
+                )
+
+                return (
+                    self._validate_discovered_criteria(
+                        data
+                    )
+                )
+
+            except Exception as error:
+                last_error = str(
+                    error
+                )
+
+                if (
+                    attempt
+                    >=
+                    self.MAX_DISCOVERY_RETRIES
+                    +
+                    1
+                ):
+                    break
+
+                retry_reason = (
+                    last_error
+                )
+
+                print(
+                    "Retrying RFP criteria discovery "
+                    f"({attempt + 1}/"
+                    f"{self.MAX_DISCOVERY_RETRIES + 1}) "
+                    f"because: {last_error}"
+                )
+
+        raise RuntimeError(
+            "RFP criteria discovery failed after "
+            f"{self.MAX_DISCOVERY_RETRIES + 1} attempts. "
+            f"{last_error}"
+        )
+
+    # =====================================================
+    # Requirement assignment
+    # =====================================================
+
+    def _build_assignment_batches(
+        self,
+        requirements,
+    ):
+        return [
+            requirements[
+                index:
+                index
+                +
+                self.ASSIGNMENT_BATCH_SIZE
+            ]
+            for index
+            in range(
+                0,
+                len(
+                    requirements
+                ),
+                self.ASSIGNMENT_BATCH_SIZE,
+            )
+        ]
+
+    def _format_criteria_for_assignment(
+        self,
+        criteria,
+    ):
+        return [
+            {
+                "criterion_id": (
+                    criterion[
+                        "criterion_id"
+                    ]
+                ),
+
+                "name": (
+                    criterion[
+                        "name"
+                    ]
+                ),
+
+                "description": (
+                    criterion[
+                        "description"
+                    ]
+                ),
+            }
+            for criterion
+            in criteria
+        ]
+
+    def _format_assignment_requirements(
+        self,
+        batch,
+    ):
+        return [
+            {
+                "requirement_id": (
+                    item[
+                        "id"
+                    ]
+                ),
+
+                "section": (
+                    item.get(
+                        "section",
+                        "",
+                    )
+                ),
+
+                "requirement": (
+                    item.get(
+                        "requirement",
+                        "",
+                    )
+                ),
+            }
+            for item
+            in batch
+        ]
+
+    def _build_assignment_prompt(
+        self,
+        criteria,
+        batch,
+        batch_number,
+        total_batches,
+        retry_reason=None,
+    ):
+        criteria_json = (
+            json.dumps(
+                self._format_criteria_for_assignment(
+                    criteria
+                ),
+                ensure_ascii=False,
+            )
+        )
+
+        requirements_json = (
+            json.dumps(
+                self._format_assignment_requirements(
+                    batch
+                ),
+                ensure_ascii=False,
+            )
+        )
+
+        retry_section = ""
+
+        if retry_reason:
+            retry_section = f"""
+==================================================
+RETRY
+==================================================
+
+The previous output was invalid.
+
+Reason:
+
+{retry_reason}
+
+Return exactly one assignment for every requirement_id.
+Do not omit IDs.
+Do not invent IDs.
+Do not duplicate IDs.
+Preserve requirement IDs exactly.
+"""
+
+        return f"""
+You are assigning RFP requirements to evaluation criteria.
+
+This is assignment batch {batch_number} of {total_batches}.
+
+The criteria were already discovered dynamically from the
+same RFP.
+
+==================================================
+RULES
+==================================================
+
+1. Assign EVERY requirement to exactly ONE criterion.
+
+2. Use only the supplied criterion_id values.
+
+3. Use only the supplied requirement_id values.
+
+4. Do NOT create new criteria.
+
+5. Do NOT omit requirements.
+
+6. Do NOT duplicate requirements.
+
+7. Choose the criterion that best represents the MAIN
+   evaluation purpose of the requirement.
+
+8. Use semantic meaning, not keyword matching only.
+
+9. If a requirement could fit multiple criteria, choose the
+   single criterion most directly responsible for evaluating it.
+
+10. Return only valid JSON.
+
+{retry_section}
+
+==================================================
+CRITERIA
+==================================================
+
+{criteria_json}
+
+==================================================
+REQUIREMENTS
+==================================================
+
+{requirements_json}
+
+==================================================
+OUTPUT
+==================================================
+
+{{
+  "assignments": [
+    {{
+      "requirement_id": "REQ-0001",
+      "criterion_id": "C01"
+    }}
+  ]
+}}
+"""
+
+    def _validate_assignment_result(
+        self,
+        data,
+        batch,
+        criteria,
+    ):
+        if not isinstance(
+            data,
+            dict,
+        ):
+            return (
+                None,
+                "Assignment result must be an object."
+            )
+
+        assignments = (
+            data.get(
+                "assignments"
+            )
+        )
+
+        if not isinstance(
+            assignments,
+            list,
+        ):
+            return (
+                None,
+                "Assignment result is missing assignments."
+            )
+
+        expected_ids = [
+            item[
+                "id"
+            ]
+            for item
+            in batch
+        ]
+
+        valid_criterion_ids = {
+            item[
+                "criterion_id"
+            ]
+            for item
+            in criteria
+        }
+
+        if (
+            len(
+                assignments
+            )
+            !=
+            len(
+                expected_ids
+            )
+        ):
+            return (
+                None,
+                "Assignment count mismatch. "
+                f"Expected {len(expected_ids)}, "
+                f"received {len(assignments)}."
+            )
+
+        assignment_map = {}
+
+        for (
+            index,
+            item,
+        ) in enumerate(
+            assignments,
+            start=1,
+        ):
+            if not isinstance(
+                item,
+                dict,
+            ):
+                return (
+                    None,
+                    f"Assignment {index} must be an object."
+                )
+
+            requirement_id = (
+                self._normalize_text(
+                    item.get(
+                        "requirement_id",
+                        "",
+                    )
+                )
+            )
+
+            criterion_id = (
+                self._normalize_text(
+                    item.get(
+                        "criterion_id",
+                        "",
+                    )
+                )
+            )
+
+            if not requirement_id:
+                return (
+                    None,
+                    f"Assignment {index} is missing requirement_id."
+                )
+
+            if requirement_id not in (
+                expected_ids
+            ):
+                return (
+                    None,
+                    "Unexpected requirement_id: "
+                    f"{requirement_id}"
+                )
+
+            if requirement_id in (
+                assignment_map
+            ):
+                return (
+                    None,
+                    "Duplicate requirement_id: "
+                    f"{requirement_id}"
+                )
+
+            if criterion_id not in (
+                valid_criterion_ids
+            ):
+                return (
+                    None,
+                    "Unexpected criterion_id: "
+                    f"{criterion_id}"
+                )
+
+            assignment_map[
+                requirement_id
+            ] = (
+                criterion_id
+            )
+
+        missing = [
+            requirement_id
+            for requirement_id
+            in expected_ids
+            if requirement_id not in (
+                assignment_map
+            )
+        ]
+
+        if missing:
+            return (
+                None,
+                "Missing requirement assignments: "
+                f"{missing}"
+            )
+
+        ordered = {
+            requirement_id: (
+                assignment_map[
+                    requirement_id
+                ]
+            )
+            for requirement_id
+            in expected_ids
+        }
+
+        return (
+            ordered,
+            None,
+        )
+
+    def _assign_batch(
+        self,
+        criteria,
+        batch,
+        batch_number,
+        total_batches,
+    ):
+        last_error = None
+
+        attempts = (
+            self.MAX_ASSIGNMENT_RETRIES
+            +
+            1
+        )
+
+        llm = (
+            LLMClient()
+        )
+
+        try:
+            retry_reason = None
+
+            for attempt in range(
+                1,
+                attempts + 1,
+            ):
+                prompt = (
+                    self._build_assignment_prompt(
+                        criteria=criteria,
+                        batch=batch,
+                        batch_number=batch_number,
+                        total_batches=total_batches,
+                        retry_reason=retry_reason,
+                    )
+                )
+
+                response = (
+                    llm.ask(
+                        prompt,
+                        label=(
+                            f"RFPCriteriaAssign"
+                            f"{batch_number}"
+                        ),
+                    )
+                )
+
+                try:
+                    data = (
+                        self._parse_json(
+                            response,
+                            (
+                                "RFP criterion assignment "
+                                f"batch {batch_number}"
+                            ),
+                        )
+                    )
+
+                except Exception as error:
+                    last_error = str(
+                        error
+                    )
+
+                    if attempt >= attempts:
+                        break
+
+                    retry_reason = (
+                        last_error
+                    )
+
+                    continue
+
+                (
+                    assignment_map,
+                    structure_error,
+                ) = (
+                    self._validate_assignment_result(
+                        data=data,
+                        batch=batch,
+                        criteria=criteria,
+                    )
+                )
+
+                if not structure_error:
+                    return (
+                        assignment_map
+                    )
+
+                last_error = (
+                    structure_error
+                )
+
+                if attempt >= attempts:
+                    break
+
+                retry_reason = (
+                    structure_error
+                )
+
+            raise RuntimeError(
+                "RFP criterion assignment batch "
+                f"{batch_number} failed. "
+                f"{last_error}"
+            )
+
+        finally:
+            llm.close()
+
+    def _assign_requirements_to_criteria(
+        self,
+        requirements,
+        criteria,
+    ):
+        batches = (
+            self._build_assignment_batches(
+                requirements
+            )
+        )
+
+        total_batches = len(
+            batches
+        )
+
+        worker_count = min(
+            self.MAX_ASSIGNMENT_WORKERS,
+            total_batches,
+        )
+
+        print()
+        print(
+            "================================"
+        )
+        print(
+            "DYNAMIC REQUIREMENT ASSIGNMENT"
+        )
+        print(
+            "================================"
+        )
+        print(
+            f"Requirements: {len(requirements)}"
+        )
+        print(
+            f"Criteria: {len(criteria)}"
+        )
+        print(
+            f"Assignment batches: {total_batches}"
+        )
+        print(
+            f"Parallel assignment workers: {worker_count}"
+        )
+
+        results_by_batch = {}
+
+        with ThreadPoolExecutor(
+            max_workers=worker_count
+        ) as executor:
+            future_map = {}
+
+            for (
+                batch_index,
+                batch,
+            ) in enumerate(
+                batches,
+                start=1,
+            ):
+                future = (
+                    executor.submit(
+                        self._assign_batch,
+                        criteria,
+                        batch,
+                        batch_index,
+                        total_batches,
+                    )
+                )
+
+                future_map[
+                    future
+                ] = (
+                    batch_index
+                )
+
+            for future in (
+                as_completed(
+                    future_map
+                )
+            ):
+                batch_index = (
+                    future_map[
+                        future
+                    ]
+                )
+
+                results_by_batch[
+                    batch_index
+                ] = (
+                    future.result()
+                )
+
+                print(
+                    "Criterion assignment batch "
+                    f"{batch_index}/{total_batches} "
+                    "completed."
+                )
+
+        global_map = {}
+
+        for batch_index in range(
+            1,
+            total_batches + 1,
+        ):
+            if batch_index not in (
+                results_by_batch
+            ):
+                raise RuntimeError(
+                    "Missing criterion assignment "
+                    f"batch {batch_index}."
+                )
+
+            for (
+                requirement_id,
+                criterion_id,
+            ) in (
+                results_by_batch[
+                    batch_index
+                ].items()
+            ):
+                if requirement_id in (
+                    global_map
+                ):
+                    raise RuntimeError(
+                        "Duplicate requirement assignment "
+                        f"across batches: {requirement_id}"
+                    )
+
+                global_map[
+                    requirement_id
+                ] = (
+                    criterion_id
+                )
+
+        expected_ids = [
+            item[
+                "id"
+            ]
+            for item
+            in requirements
+        ]
+
+        if set(
+            global_map.keys()
+        ) != set(
+            expected_ids
+        ):
+            missing = (
+                set(
+                    expected_ids
+                )
+                -
+                set(
+                    global_map.keys()
+                )
+            )
+
+            extra = (
+                set(
+                    global_map.keys()
+                )
+                -
+                set(
+                    expected_ids
+                )
+            )
+
+            raise RuntimeError(
+                "Dynamic criterion assignment lost "
+                "or invented requirements. "
+                f"Missing={sorted(missing)}, "
+                f"Extra={sorted(extra)}"
+            )
+
+        return (
+            global_map
+        )
+
+    # =====================================================
+    # Build criteria from dynamic assignment
+    # =====================================================
+
+    def _build_dynamic_criteria(
+        self,
+        requirements,
+        discovered_criteria,
+        assignment_map,
+    ):
+        requirement_map = {
+            item[
+                "id"
+            ]: item
+            for item
+            in requirements
+        }
+
+        grouped = {
+            criterion[
+                "criterion_id"
+            ]: []
+            for criterion
+            in discovered_criteria
+        }
+
+        for requirement in requirements:
+            requirement_id = (
+                requirement[
+                    "id"
+                ]
+            )
+
+            criterion_id = (
+                assignment_map[
+                    requirement_id
+                ]
+            )
+
+            if criterion_id not in (
+                grouped
+            ):
+                raise RuntimeError(
+                    "Assignment references unknown criterion: "
+                    f"{criterion_id}"
+                )
+
+            grouped[
+                criterion_id
+            ].append(
+                requirement_map[
+                    requirement_id
+                ]
+            )
+
+        # Remove empty criteria defensively.
+        active_discovered = [
+            criterion
+            for criterion
+            in discovered_criteria
+            if grouped[
+                criterion[
+                    "criterion_id"
+                ]
+            ]
+        ]
+
+        if len(
+            active_discovered
+        ) < self.MIN_CRITERIA:
+            raise RuntimeError(
+                "Dynamic criterion discovery produced "
+                "too few active criteria after assignment."
+            )
+
+        return (
+            active_discovered,
+            grouped,
+        )
+
+    # =====================================================
+    # Dynamic weights
+    # =====================================================
+
+    def _has_complete_explicit_weights(
+        self,
+        criteria,
+    ):
+        if not criteria:
+            return False
+
+        explicit_weights = []
+
+        for criterion in criteria:
+            weight = (
+                criterion.get(
+                    "explicit_weight"
+                )
+            )
+
+            if weight is None:
+                return False
+
+            try:
+                weight = float(
+                    weight
+                )
+
+            except (
+                TypeError,
+                ValueError,
+            ):
+                return False
+
+            explicit_weights.append(
+                weight
+            )
 
         total = round(
             sum(
-                weights.values()
+                explicit_weights
             ),
             4,
         )
 
-        if abs(
-            total - 100.0
-        ) > 0.05:
-            return None
+        return (
+            abs(
+                total
+                -
+                100.0
+            )
+            <=
+            0.05
+        )
 
-        return {
-            "weights": weights,
-            "sources": sources,
-        }
-
-    # =====================================================
-    # Importance-derived weights
-    # =====================================================
-
-    def _calculate_importance_weights(
+    def _normalize_importance_weights(
         self,
-        grouped,
+        criteria,
     ):
-        non_empty = {
-            key: value
-            for key, value
-            in grouped.items()
-            if value
-        }
+        """
+        Normalize criterion importance to 100%.
 
-        importance_totals = {
-            key: sum(
-                float(
-                    requirement.get(
-                        "importance_score",
-                        1,
-                    )
+        Requirement count is intentionally ignored.
+        """
+
+        total_importance = sum(
+            float(
+                criterion.get(
+                    "criterion_importance_score",
+                    3,
                 )
-                for requirement
-                in requirements
             )
-            for key, requirements
-            in non_empty.items()
-        }
-
-        grand_total = sum(
-            importance_totals.values()
+            for criterion
+            in criteria
         )
 
-        if grand_total <= 0:
+        if total_importance <= 0:
             raise ValueError(
-                "Unable to calculate importance-derived "
-                "criterion weights."
+                "Criterion importance total "
+                "must be greater than zero."
             )
-
-        keys = list(
-            non_empty.keys()
-        )
 
         weights = {}
+
         running_total = 0.0
 
-        for index, key in enumerate(
-            keys
+        for (
+            index,
+            criterion,
+        ) in enumerate(
+            criteria
         ):
-            if index == len(keys) - 1:
+            criterion_id = (
+                criterion[
+                    "criterion_id"
+                ]
+            )
+
+            if (
+                index
+                ==
+                len(
+                    criteria
+                )
+                -
+                1
+            ):
                 weight = round(
-                    100.0 - running_total,
+                    100.0
+                    -
+                    running_total,
                     2,
                 )
+
             else:
                 weight = round(
                     (
-                        importance_totals[
-                            key
-                        ]
+                        float(
+                            criterion[
+                                "criterion_importance_score"
+                            ]
+                        )
                         /
-                        grand_total
+                        total_importance
                     )
                     *
                     100.0,
                     2,
                 )
 
-                running_total += weight
+                running_total += (
+                    weight
+                )
 
             weights[
-                key
-            ] = weight
+                criterion_id
+            ] = (
+                weight
+            )
 
-        return (
-            weights,
-            importance_totals,
-        )
+        return weights
 
-    # =====================================================
-    # Criterion display
-    # =====================================================
-
-    def _criterion_definition(
+    def _finalize_criteria_weights(
         self,
-        criterion_type,
+        discovered_criteria,
+        grouped,
     ):
-        definitions = {
-            "technical": {
-                "name": (
-                    "Technical Requirements"
-                ),
-                "description": (
-                    "Functional, clinical, integration, "
-                    "security, data, architecture, platform "
-                    "and non-functional requirements."
-                ),
-            },
-            "project_plan": {
-                "name": (
-                    "Project Plan & Implementation"
-                ),
-                "description": (
-                    "Governance, project management, "
-                    "implementation, migration, testing, "
-                    "training, change management and "
-                    "delivery requirements."
-                ),
-            },
-            "experience": {
-                "name": (
-                    "Vendor Experience"
-                ),
-                "description": (
-                    "Vendor experience, references and "
-                    "previous implementation requirements."
-                ),
-            },
-            "team": {
-                "name": (
-                    "Team Qualifications"
-                ),
-                "description": (
-                    "Project team, personnel, qualification "
-                    "and professional certification "
-                    "requirements."
-                ),
-            },
-            "financial": {
-                "name": (
-                    "Financial Proposal"
-                ),
-                "description": (
-                    "Vendor pricing, commercial offer, "
-                    "cost and financial proposal "
-                    "requirements."
-                ),
-            },
-        }
-
-        return definitions[
-            criterion_type
-        ]
-
-    # =====================================================
-    # Build criteria
-    # =====================================================
-
-    def _build_criteria(
-        self,
-        requirements,
-        rfp_text,
-    ):
-        grouped = (
-            self._group_requirements(
-                requirements
+        use_explicit = (
+            self._has_complete_explicit_weights(
+                discovered_criteria
             )
         )
 
-        explicit = (
-            self._extract_explicit_weights(
-                rfp_text=rfp_text,
-                grouped=grouped,
-            )
-        )
-
-        importance_totals = {}
-
-        if explicit:
-            weights = explicit[
-                "weights"
-            ]
-
-            weight_source = (
-                "explicit_rfp"
-            )
-
-            weight_sources = explicit[
-                "sources"
-            ]
+        if use_explicit:
+            importance_weights = None
 
             print(
-                "Using explicit RFP criterion weights."
+                "Using complete explicit RFP "
+                "evaluation weights."
             )
 
         else:
-            (
-                weights,
-                importance_totals,
-            ) = (
-                self._calculate_importance_weights(
-                    grouped
+            importance_weights = (
+                self._normalize_importance_weights(
+                    discovered_criteria
                 )
             )
 
-            weight_source = (
-                "importance_derived"
-            )
-
-            weight_sources = {}
-
             print(
-                "No complete explicit RFP weight scheme "
-                "found."
+                "No complete explicit RFP weight "
+                "scheme found."
             )
 
             print(
-                "Using importance-derived criterion weights."
+                "Using dynamic criterion-level "
+                "importance weights."
             )
 
-        criteria = []
+        final_criteria = []
 
-        order = [
-            "technical",
-            "project_plan",
-            "experience",
-            "team",
-            "financial",
-        ]
-
-        for criterion_type in order:
-            criterion_requirements = grouped[
-                criterion_type
-            ]
-
-            if not criterion_requirements:
-                continue
-
-            definition = (
-                self._criterion_definition(
-                    criterion_type
-                )
+        for criterion in (
+            discovered_criteria
+        ):
+            criterion_id = (
+                criterion[
+                    "criterion_id"
+                ]
             )
 
-            importance_total = sum(
-                float(
-                    item.get(
-                        "importance_score",
-                        1,
+            criterion_requirements = (
+                grouped[
+                    criterion_id
+                ]
+            )
+
+            average_requirement_importance = (
+                sum(
+                    float(
+                        item.get(
+                            "importance_score",
+                            1,
+                        )
                     )
+                    for item
+                    in criterion_requirements
                 )
-                for item
-                in criterion_requirements
-            )
-
-            average_importance = round(
-                importance_total
                 /
                 len(
                     criterion_requirements
-                ),
-                2,
+                )
             )
 
-            criteria.append(
+            if use_explicit:
+                weight = float(
+                    criterion[
+                        "explicit_weight"
+                    ]
+                )
+
+                weight_source = (
+                    "explicit_rfp"
+                )
+
+                weight_evidence = (
+                    criterion.get(
+                        "explicit_weight_evidence",
+                        "",
+                    )
+                )
+
+            else:
+                weight = (
+                    importance_weights[
+                        criterion_id
+                    ]
+                )
+
+                weight_source = (
+                    "dynamic_criterion_importance"
+                )
+
+                weight_evidence = ""
+
+            final_criteria.append(
                 {
+                    "criterion_id": (
+                        criterion_id
+                    ),
+
                     "name": (
-                        definition[
+                        criterion[
                             "name"
                         ]
                     ),
-                    "criterion_type": (
-                        criterion_type
-                    ),
+
                     "description": (
-                        definition[
-                            "description"
-                        ]
-                    ),
-                    "source": (
-                        "RFP numbered requirements"
-                    ),
-                    "weight": (
-                        weights.get(
-                            criterion_type,
-                            0,
-                        )
-                    ),
-                    "weight_source": (
-                        weight_source
-                    ),
-                    "weight_evidence": (
-                        weight_sources.get(
-                            criterion_type,
+                        criterion.get(
+                            "description",
                             "",
                         )
                     ),
-                    "importance_total": (
+
+                    "source": (
+                        criterion.get(
+                            "source",
+                            "RFP"
+                        )
+                    ),
+
+                    "weight": (
                         round(
-                            importance_total,
+                            weight,
                             2,
                         )
                     ),
-                    "average_importance": (
-                        average_importance
+
+                    "weight_source": (
+                        weight_source
                     ),
+
+                    "weight_evidence": (
+                        weight_evidence
+                    ),
+
+                    "criterion_importance_score": (
+                        criterion[
+                            "criterion_importance_score"
+                        ]
+                    ),
+
+                    "criterion_importance_reason": (
+                        criterion.get(
+                            "criterion_importance_reason",
+                            "",
+                        )
+                    ),
+
+                    "average_requirement_importance": (
+                        round(
+                            average_requirement_importance,
+                            3,
+                        )
+                    ),
+
+                    # Backward-compatible alias.
+                    "average_importance": (
+                        round(
+                            average_requirement_importance,
+                            3,
+                        )
+                    ),
+
                     "requirements": (
                         criterion_requirements
                     ),
                 }
             )
 
-        return criteria
+        return (
+            final_criteria
+        )
 
     # =====================================================
-    # Mandatory list
+    # Mandatory requirements
     # =====================================================
 
     def _build_mandatory_requirements(
@@ -1639,47 +2868,62 @@ return:
                                 "id"
                             ]
                         ),
+
                         "requirement_id": (
                             requirement[
                                 "id"
                             ]
                         ),
+
                         "requirement": (
                             requirement[
                                 "requirement"
                             ]
                         ),
+
                         "criterion": (
                             criterion[
                                 "name"
                             ]
                         ),
+
+                        "criterion_id": (
+                            criterion[
+                                "criterion_id"
+                            ]
+                        ),
+
                         "source": (
                             requirement[
                                 "source"
                             ]
                         ),
+
                         "page": (
                             requirement.get(
                                 "page"
                             )
                         ),
+
                         "mandatory_evidence": (
                             requirement.get(
                                 "mandatory_evidence",
                                 "إلزامي",
                             )
                         ),
+
                         "importance_score": (
                             requirement.get(
                                 "importance_score"
                             )
                         ),
+
                         "importance_level": (
                             requirement.get(
                                 "importance_level"
                             )
                         ),
+
                         "importance_reason": (
                             requirement.get(
                                 "importance_reason",
@@ -1692,31 +2936,36 @@ return:
         return mandatory
 
     # =====================================================
-    # Summary
+    # RFP summary
     # =====================================================
 
     def _build_summary_prompt(
         self,
         rfp_text,
+        document_language,
     ):
         return f"""
 You are analyzing an RFP.
 
-The numbered requirements, mandatory status, importance
-scores and criterion weights are handled separately.
+Dominant document language:
+
+{document_language}
+
+Return the summary in the SAME dominant language as the RFP.
+
+The numbered requirements, mandatory status, criteria,
+requirement assignment and criterion weights are handled
+separately.
 
 DO NOT extract requirements.
 DO NOT invent requirements.
 DO NOT calculate requirement counts.
 DO NOT calculate criterion weights.
 
-Your only task is to return a concise factual summary
-of the RFP.
-
 Return ONLY valid JSON:
 
 {{
-  "rfp_summary": "Concise factual summary"
+  "rfp_summary": "Concise factual summary in the RFP language"
 }}
 
 <RFP_DOCUMENT>
@@ -1727,10 +2976,12 @@ Return ONLY valid JSON:
     def _generate_summary(
         self,
         rfp_text,
+        document_language,
     ):
         prompt = (
             self._build_summary_prompt(
-                rfp_text
+                rfp_text,
+                document_language,
             )
         )
 
@@ -1741,39 +2992,51 @@ Return ONLY valid JSON:
             )
         )
 
-        cleaned = (
-            self._clean_json_response(
-                response_text
+        try:
+            data = (
+                self._parse_json(
+                    response_text,
+                    "RFP summary",
+                )
+            )
+
+        except Exception:
+            if document_language == "Arabic":
+                return (
+                    "تم استخراج إطار طلب تقديم العروض "
+                    "من وثيقة المنافسة المقدمة."
+                )
+
+            return (
+                "RFP framework extracted from "
+                "the submitted procurement document."
+            )
+
+        summary = (
+            self._normalize_text(
+                data.get(
+                    "rfp_summary",
+                    "",
+                )
             )
         )
 
-        try:
-            data = json.loads(
-                cleaned
-            )
-        except json.JSONDecodeError:
+        if summary:
+            return summary
+
+        if document_language == "Arabic":
             return (
-                "RFP framework extracted from "
-                "the submitted procurement document."
+                "تم استخراج إطار طلب تقديم العروض "
+                "من وثيقة المنافسة المقدمة."
             )
 
-        summary = str(
-            data.get(
-                "rfp_summary",
-                "",
-            )
-        ).strip()
-
-        if not summary:
-            return (
-                "RFP framework extracted from "
-                "the submitted procurement document."
-            )
-
-        return summary
+        return (
+            "RFP framework extracted from "
+            "the submitted procurement document."
+        )
 
     # =====================================================
-    # Validation
+    # Framework validation
     # =====================================================
 
     def _validate_framework(
@@ -1803,12 +3066,8 @@ Return ONLY valid JSON:
             in criteria
         )
 
-        if (
-            grouped_count
-            !=
-            len(
-                requirements
-            )
+        if grouped_count != len(
+            requirements
         ):
             raise ValueError(
                 "Requirement grouping lost data. "
@@ -1816,22 +3075,68 @@ Return ONLY valid JSON:
                 f"Grouped={grouped_count}"
             )
 
-        requirement_ids = [
-            item[
+        grouped_ids = []
+
+        for criterion in criteria:
+            grouped_ids.extend(
+                requirement[
+                    "id"
+                ]
+                for requirement
+                in criterion[
+                    "requirements"
+                ]
+            )
+
+        expected_ids = [
+            requirement[
                 "id"
             ]
-            for item
+            for requirement
             in requirements
         ]
 
-        if (
-            len(requirement_ids)
-            !=
-            len(set(requirement_ids))
+        if len(
+            grouped_ids
+        ) != len(
+            set(
+                grouped_ids
+            )
         ):
             raise ValueError(
-                "Duplicate RFP requirement IDs "
-                "were detected."
+                "A requirement was assigned to "
+                "more than one criterion."
+            )
+
+        if set(
+            grouped_ids
+        ) != set(
+            expected_ids
+        ):
+            missing = (
+                set(
+                    expected_ids
+                )
+                -
+                set(
+                    grouped_ids
+                )
+            )
+
+            extra = (
+                set(
+                    grouped_ids
+                )
+                -
+                set(
+                    expected_ids
+                )
+            )
+
+            raise ValueError(
+                "Requirement grouping mismatch. "
+                f"Missing={sorted(missing)}, "
+                f"Extra={sorted(extra)}"
             )
 
         total_weight = round(
@@ -1848,7 +3153,9 @@ Return ONLY valid JSON:
         )
 
         if abs(
-            total_weight - 100.0
+            total_weight
+            -
+            100.0
         ) > 0.05:
             raise ValueError(
                 "Criterion weights do not total 100. "
@@ -1856,7 +3163,7 @@ Return ONLY valid JSON:
             )
 
     # =====================================================
-    # Main
+    # Main analysis
     # =====================================================
 
     def analyze(
@@ -1871,19 +3178,28 @@ Return ONLY valid JSON:
                 "RFP text must be a string."
             )
 
-        rfp_text = rfp_text.strip()
+        rfp_text = (
+            rfp_text.strip()
+        )
 
         if not rfp_text:
             raise ValueError(
                 "RFP text cannot be empty."
             )
 
+        document_language = (
+            self._detect_document_language(
+                rfp_text
+            )
+        )
+
         print()
         print(
             "================================"
         )
         print(
-            "STEP A - EXTRACTING NUMBERED RFP REQUIREMENTS"
+            "STEP A - EXTRACTING NUMBERED "
+            "RFP REQUIREMENTS"
         )
         print(
             "================================"
@@ -1906,20 +3222,85 @@ Return ONLY valid JSON:
             "================================"
         )
         print(
-            "STEP B - BUILDING CRITERIA & WEIGHTS"
+            "STEP B - DISCOVERING DYNAMIC "
+            "RFP CRITERIA"
+        )
+        print(
+            "================================"
+        )
+
+        discovered_criteria = (
+            self._discover_dynamic_criteria(
+                rfp_text=rfp_text,
+                requirements=requirements,
+                document_language=document_language,
+            )
+        )
+
+        print(
+            "Dynamic criteria discovered: "
+            f"{len(discovered_criteria)}"
+        )
+
+        for criterion in (
+            discovered_criteria
+        ):
+            print(
+                "- "
+                f"{criterion['criterion_id']} | "
+                f"{criterion['name']} | "
+                "importance="
+                f"{criterion['criterion_importance_score']}"
+            )
+
+        print()
+        print(
+            "================================"
+        )
+        print(
+            "STEP C - ASSIGNING REQUIREMENTS "
+            "TO DISCOVERED CRITERIA"
+        )
+        print(
+            "================================"
+        )
+
+        assignment_map = (
+            self._assign_requirements_to_criteria(
+                requirements=requirements,
+                criteria=discovered_criteria,
+            )
+        )
+
+        (
+            active_discovered_criteria,
+            grouped,
+        ) = (
+            self._build_dynamic_criteria(
+                requirements=requirements,
+                discovered_criteria=discovered_criteria,
+                assignment_map=assignment_map,
+            )
+        )
+
+        print()
+        print(
+            "================================"
+        )
+        print(
+            "STEP D - CALCULATING CRITERION "
+            "WEIGHTS"
         )
         print(
             "================================"
         )
 
         criteria = (
-            self._build_criteria(
-                requirements=(
-                    requirements
+            self._finalize_criteria_weights(
+                discovered_criteria=(
+                    active_discovered_criteria
                 ),
-                rfp_text=(
-                    rfp_text
-                ),
+                grouped=grouped,
             )
         )
 
@@ -1939,7 +3320,7 @@ Return ONLY valid JSON:
             "================================"
         )
         print(
-            "STEP C - RFP SUMMARY"
+            "STEP E - RFP SUMMARY"
         )
         print(
             "================================"
@@ -1947,7 +3328,8 @@ Return ONLY valid JSON:
 
         rfp_summary = (
             self._generate_summary(
-                rfp_text
+                rfp_text=rfp_text,
+                document_language=document_language,
             )
         )
 
@@ -1974,9 +3356,18 @@ Return ONLY valid JSON:
         }
 
         overall_weight_source = (
-            next(iter(weight_sources))
-            if len(weight_sources) == 1
-            else "mixed"
+            next(
+                iter(
+                    weight_sources
+                )
+            )
+            if len(
+                weight_sources
+            )
+            ==
+            1
+            else
+            "mixed"
         )
 
         print()
@@ -1990,16 +3381,24 @@ Return ONLY valid JSON:
             "================================"
         )
         print(
-            f"Criteria: {len(criteria)}"
+            f"Document language: "
+            f"{document_language}"
         )
         print(
-            f"Requirements: {len(requirements)}"
+            f"Criteria: "
+            f"{len(criteria)}"
         )
         print(
-            f"Mandatory: {len(mandatory_requirements)}"
+            f"Requirements: "
+            f"{len(requirements)}"
         )
         print(
-            f"Total Weight: {total_weight}%"
+            f"Mandatory: "
+            f"{len(mandatory_requirements)}"
+        )
+        print(
+            f"Total Weight: "
+            f"{total_weight}%"
         )
         print(
             "Weight Source: "
@@ -2007,55 +3406,107 @@ Return ONLY valid JSON:
         )
 
         for criterion in criteria:
+            mandatory_count = sum(
+                1
+                for requirement
+                in criterion[
+                    "requirements"
+                ]
+                if requirement.get(
+                    "mandatory",
+                    False,
+                )
+            )
+
             print(
                 "- "
-                f"{criterion['name']}: "
+                f"{criterion['criterion_id']} | "
+                f"{criterion['name']} | "
                 f"{len(criterion['requirements'])} "
                 "requirements | "
+                f"{mandatory_count} mandatory | "
                 f"weight={criterion['weight']}% | "
-                f"avg_importance="
-                f"{criterion['average_importance']} | "
-                f"source="
-                f"{criterion['weight_source']}"
+                "criterion_importance="
+                f"{criterion['criterion_importance_score']} | "
+                f"source={criterion['weight_source']}"
             )
 
         return {
             "rfp_summary": (
                 rfp_summary
             ),
+
+            "document_language": (
+                document_language
+            ),
+
             "criteria": (
                 criteria
             ),
+
             "mandatory_requirements": (
                 mandatory_requirements
             ),
+
             "all_requirements": (
                 requirements
             ),
+
             "metadata": {
                 "criteria_count": (
-                    len(criteria)
+                    len(
+                        criteria
+                    )
                 ),
+
                 "requirement_count": (
-                    len(requirements)
+                    len(
+                        requirements
+                    )
                 ),
+
                 "mandatory_requirement_count": (
                     len(
                         mandatory_requirements
                     )
                 ),
+
                 "total_weight": (
                     total_weight
                 ),
+
                 "weight_source": (
                     overall_weight_source
                 ),
+
+                "document_language": (
+                    document_language
+                ),
+
                 "requirement_extraction_method": (
                     "deterministic_numbered_parser"
                 ),
+
+                "criteria_discovery_method": (
+                    "dynamic_llm_discovery"
+                ),
+
+                "requirement_assignment_method": (
+                    "batched_llm_assignment_with_"
+                    "deterministic_validation"
+                ),
+
                 "weighting_method": (
                     "explicit_rfp_if_complete_else_"
-                    "importance_derived"
+                    "dynamic_criterion_importance"
+                ),
+
+                "criterion_weight_count_independent": (
+                    True
+                ),
+
+                "dynamic_criteria": (
+                    True
                 ),
             },
         }

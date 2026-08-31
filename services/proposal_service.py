@@ -11,6 +11,7 @@ from agents.project_plan_agent import ProjectPlanAgent
 from agents.experience_agent import ExperienceAgent
 from agents.team_agent import TeamAgent
 from agents.financial_agent import FinancialAgent
+from agents.generic_criterion_agent import GenericCriterionAgent
 from agents.compliance_agent import ComplianceAgent
 from agents.ranking_agent import RankingAgent
 
@@ -22,56 +23,46 @@ class ProposalEvaluationService:
     """
     End-to-end proposal evaluation service.
 
-    Important:
+    Dynamic-criteria architecture:
 
-    - The RFP is analyzed once per evaluation.
-    - All vendors use the same frozen RFP framework.
+    - The RFP is analyzed once.
+    - RFPAgent may discover criterion names dynamically.
+    - The service does NOT require every criterion to match
+      a fixed hardcoded list.
+    - Known specialized criterion types may use their
+      specialized agents.
+    - Any other dynamically discovered criterion is evaluated
+      with GenericCriterionAgent.
+    - Every vendor uses the same frozen RFP framework.
     - Vendors are evaluated concurrently.
-    - Criteria inside each vendor are also evaluated concurrently.
+    - Criteria inside each vendor are evaluated concurrently.
     - Compliance can run alongside criterion evaluation.
     - Python performs deterministic scoring.
     - Python determines vendor order.
     - RankingAgent determines recommendation eligibility.
 
-    Criterion requirements:
-
-    - Technical / Project Plan criteria currently require
-      explicit RFP requirements.
-
-    - Experience / Team / Financial criteria may validly
-      contain an empty requirements list when the RFP
-      provides only an explicit weighted criterion without
-      detailed thresholds.
-
-      In that case their agents perform criterion-level
-      evaluation instead of requirement-level evaluation.
+    This allows the same evaluation service to process RFPs
+    from technology, construction, consulting, healthcare,
+    logistics, legal, operations and other domains.
     """
 
     # =====================================================
-    # Concurrency configuration
+    # Concurrency
     # =====================================================
 
     MAX_VENDOR_WORKERS = 3
 
-    # Maximum concurrent AI tasks inside ONE vendor.
-    #
-    # Example with 3 vendors:
-    # 3 vendors x 2 tasks = about 6 simultaneous tasks.
-    #
-    # Keep this conservative to reduce OCI rate-limit risk.
     MAX_VENDOR_TASK_WORKERS = 2
 
-    # Agents currently capable of evaluating a criterion
-    # even when the RFP does not provide detailed
-    # sub-requirements.
     CRITERION_LEVEL_AGENT_TYPES = {
         "experience",
         "team",
         "financial",
     }
 
-    def __init__(self):
-
+    def __init__(
+        self,
+    ):
         self.document_parser = (
             DocumentParser()
         )
@@ -80,6 +71,9 @@ class ProposalEvaluationService:
             RFPAgent()
         )
 
+        # These persistent specialized agents are kept for
+        # compatibility with the existing service lifecycle.
+        # Concurrent criterion tasks still create isolated agents.
         self.technical_agent = (
             TechnicalAgent()
         )
@@ -98,6 +92,10 @@ class ProposalEvaluationService:
 
         self.financial_agent = (
             FinancialAgent()
+        )
+
+        self.generic_criterion_agent = (
+            GenericCriterionAgent()
         )
 
         self.compliance_agent = (
@@ -131,6 +129,18 @@ class ProposalEvaluationService:
         self,
         criterion,
     ):
+        """
+        Safe routing for dynamically discovered criteria.
+
+        Criterion NAME has priority.
+
+        Description is used only for very specific hints.
+
+        If routing is ambiguous, use GenericCriterionAgent
+        instead of forcing the criterion into the wrong
+        specialized agent.
+        """
+
         if not isinstance(
             criterion,
             dict,
@@ -139,45 +149,82 @@ class ProposalEvaluationService:
                 "Criterion must be an object."
             )
 
-        name = self._normalize_text(
-            criterion.get(
-                "name",
-                "",
+        name = (
+            self._normalize_text(
+                criterion.get(
+                    "name",
+                    "",
+                )
             )
         )
 
-        description = self._normalize_text(
-            criterion.get(
-                "description",
-                "",
+        description = (
+            self._normalize_text(
+                criterion.get(
+                    "description",
+                    "",
+                )
             )
         )
 
-        combined = (
-            f"{name} {description}"
-        )
+        # -------------------------------------------------
+        # Project Plan FIRST
+        #
+        # Prevents:
+        # "إدارة المشروع والجدول الزمني"
+        # from being routed to TeamAgent because its
+        # description mentions project resources.
+        # -------------------------------------------------
+
+        project_name_keywords = [
+            "project plan",
+            "implementation plan",
+            "implementation methodology",
+            "delivery plan",
+            "project management",
+            "timeline",
+            "schedule",
+            "milestones",
+            "خطة المشروع",
+            "خطة التنفيذ",
+            "منهجية التنفيذ",
+            "منهجية العمل",
+            "إدارة المشروع",
+            "إدارة المشاريع",
+            "الجدول الزمني",
+            "البرنامج الزمني",
+            "المراحل والمخرجات",
+            "الحوكمة والتنفيذ",
+        ]
+
+        if any(
+            keyword in name
+            for keyword
+            in project_name_keywords
+        ):
+            return "project_plan"
 
         # -------------------------------------------------
         # Financial
         # -------------------------------------------------
 
-        financial_keywords = [
+        financial_name_keywords = [
             "financial",
-            "commercial",
-            "pricing",
-            "price",
-            "cost",
-            "budget",
             "commercial proposal",
             "financial proposal",
-            "cost proposal",
-            "tco",
-            "total cost",
+            "pricing",
+            "التقييم المالي",
+            "العرض المالي",
+            "الجانب المالي",
+            "الأسعار",
+            "التسعير",
+            "التكلفة التجارية",
         ]
 
         if any(
-            keyword in combined
-            for keyword in financial_keywords
+            keyword in name
+            for keyword
+            in financial_name_keywords
         ):
             return "financial"
 
@@ -185,27 +232,26 @@ class ProposalEvaluationService:
         # Team
         # -------------------------------------------------
 
-        team_keywords = [
+        team_name_keywords = [
             "team qualification",
             "team qualifications",
-            "team capability",
-            "key personnel",
-            "key staff",
             "project team",
-            "staff qualification",
-            "staff qualifications",
-            "personnel qualification",
-            "personnel qualifications",
-            "professional certification",
-            "professional certifications",
+            "key personnel",
             "key experts",
-            "resource qualification",
-            "resource qualifications",
+            "staff qualifications",
+            "مؤهلات الفريق",
+            "فريق العمل",
+            "فريق المشروع",
+            "الكوادر",
+            "الموارد البشرية",
+            "الخبراء",
+            "الكفاءات البشرية",
         ]
 
         if any(
-            keyword in combined
-            for keyword in team_keywords
+            keyword in name
+            for keyword
+            in team_name_keywords
         ):
             return "team"
 
@@ -213,79 +259,105 @@ class ProposalEvaluationService:
         # Experience
         # -------------------------------------------------
 
-        experience_keywords = [
-            "experience",
+        experience_name_keywords = [
+            "vendor experience",
+            "company experience",
+            "relevant experience",
             "past performance",
-            "previous project",
             "previous projects",
-            "similar project",
             "similar projects",
-            "track record",
-            "references",
-            "vendor qualification",
-            "vendor qualifications",
-            "company qualification",
-            "company qualifications",
+            "خبرة المورد",
+            "خبرات المورد",
+            "خبرة مقدم العرض",
+            "الخبرات السابقة",
+            "المشاريع السابقة",
+            "مشاريع مماثلة",
+            "الخبرة ذات الصلة",
         ]
 
         if any(
-            keyword in combined
-            for keyword in experience_keywords
+            keyword in name
+            for keyword
+            in experience_name_keywords
         ):
             return "experience"
 
         # -------------------------------------------------
-        # Project plan
+        # Clearly technical
         # -------------------------------------------------
 
-        project_keywords = [
-            "project plan",
-            "implementation plan",
-            "delivery plan",
-            "implementation methodology",
-            "delivery methodology",
-            "project methodology",
-            "timeline",
-            "schedule",
-            "milestones",
-            "project management",
-            "implementation approach",
-        ]
-
-        if any(
-            keyword in combined
-            for keyword in project_keywords
-        ):
-            return "project_plan"
-
-        # -------------------------------------------------
-        # Technical
-        # -------------------------------------------------
-
-        technical_keywords = [
-            "technical",
-            "solution",
-            "architecture",
-            "functional",
-            "functionality",
-            "technology",
-            "system",
-            "platform",
-            "integration",
-            "security",
-            "performance",
-            "infrastructure",
-            "technical approach",
+        technical_name_keywords = [
+            "technical requirements",
+            "technical solution",
+            "technical architecture",
             "technical proposal",
+            "integration",
+            "cybersecurity",
+            "infrastructure",
+            "security",
+            "المتطلبات التقنية",
+            "المتطلبات الفنية",
+            "الحل التقني",
+            "الحل الفني",
+            "البنية التقنية",
+            "البنية المعمارية",
+            "التكامل والتشغيل البيني",
+            "الأمن السيبراني",
+            "البنية التحتية",
         ]
 
         if any(
-            keyword in combined
-            for keyword in technical_keywords
+            keyword in name
+            for keyword
+            in technical_name_keywords
         ):
             return "technical"
 
-        return "unknown"
+        # -------------------------------------------------
+        # Very specific description fallback only
+        # -------------------------------------------------
+
+        if (
+            "منهجية التنفيذ والجدول الزمني"
+            in description
+            or
+            "implementation methodology and schedule"
+            in description
+        ):
+            return "project_plan"
+
+        if (
+            "مؤهلات أعضاء فريق العمل"
+            in description
+            or
+            "key personnel qualifications"
+            in description
+        ):
+            return "team"
+
+        if (
+            "خبرة المورد في مشاريع مماثلة"
+            in description
+            or
+            "similar project experience"
+            in description
+        ):
+            return "experience"
+
+        if (
+            "تفاصيل العرض المالي"
+            in description
+            or
+            "explicit financial proposal"
+            in description
+        ):
+            return "financial"
+
+        # -------------------------------------------------
+        # Safe dynamic fallback
+        # -------------------------------------------------
+
+        return "generic"
 
     # =====================================================
     # Mandatory requirements
@@ -297,11 +369,19 @@ class ProposalEvaluationService:
     ):
         mandatory_requirements = []
 
-        for criterion in criteria:
-
+        for criterion in (
+            criteria
+        ):
             criterion_name = str(
                 criterion.get(
                     "name",
+                    "",
+                )
+            ).strip()
+
+            criterion_id = str(
+                criterion.get(
+                    "criterion_id",
                     "",
                 )
             ).strip()
@@ -319,8 +399,9 @@ class ProposalEvaluationService:
             ):
                 continue
 
-            for requirement in requirements:
-
+            for requirement in (
+                requirements
+            ):
                 if not isinstance(
                     requirement,
                     dict,
@@ -338,7 +419,6 @@ class ProposalEvaluationService:
                     mandatory,
                     str,
                 ):
-
                     mandatory = (
                         mandatory
                         .strip()
@@ -351,7 +431,6 @@ class ProposalEvaluationService:
                     )
 
                 else:
-
                     mandatory = bool(
                         mandatory
                     )
@@ -362,13 +441,20 @@ class ProposalEvaluationService:
                 mandatory_requirements.append(
                     {
                         **requirement,
+
                         "criterion": (
                             criterion_name
+                        ),
+
+                        "criterion_id": (
+                            criterion_id
                         ),
                     }
                 )
 
-        return mandatory_requirements
+        return (
+            mandatory_requirements
+        )
 
     # =====================================================
     # Criterion validation
@@ -379,16 +465,21 @@ class ProposalEvaluationService:
         criterion,
     ):
         """
-        Validate one frozen RFP criterion.
+        Validate one frozen dynamic RFP criterion.
 
-        Empty requirements are allowed ONLY for criterion
-        types whose evaluation agents explicitly support
-        criterion-level evaluation.
+        Unknown/dynamic criterion names are valid and are
+        routed to GenericCriterionAgent.
 
-        Current supported types:
+        Empty requirements remain allowed only for the
+        specialized criterion-level agents that already
+        support them:
         - experience
         - team
         - financial
+
+        Dynamically discovered generic criteria are expected
+        to contain requirements because RFPAgent removes
+        empty criteria after assignment.
         """
 
         if not isinstance(
@@ -398,10 +489,6 @@ class ProposalEvaluationService:
             raise ValueError(
                 "Each RFP criterion must be an object."
             )
-
-        # -------------------------------------------------
-        # Name
-        # -------------------------------------------------
 
         name = str(
             criterion.get(
@@ -414,10 +501,6 @@ class ProposalEvaluationService:
             raise ValueError(
                 "RFP criterion is missing a name."
             )
-
-        # -------------------------------------------------
-        # Requirements
-        # -------------------------------------------------
 
         requirements = (
             criterion.get(
@@ -435,31 +518,17 @@ class ProposalEvaluationService:
                 f"'{name}' must be a list."
             )
 
-        # -------------------------------------------------
-        # Agent type
-        # -------------------------------------------------
-
         agent_type = (
             self._classify_criterion(
                 criterion
             )
         )
 
-        if agent_type == "unknown":
-            raise ValueError(
-                "No evaluation agent is currently "
-                f"configured for criterion '{name}'."
-            )
-
-        # -------------------------------------------------
-        # Empty requirement handling
-        # -------------------------------------------------
-
         if not requirements:
-
             if (
                 agent_type
-                in self.CRITERION_LEVEL_AGENT_TYPES
+                in
+                self.CRITERION_LEVEL_AGENT_TYPES
             ):
                 print(
                     f"Criterion '{name}' has no "
@@ -474,15 +543,10 @@ class ProposalEvaluationService:
             else:
                 raise ValueError(
                     f"Criterion '{name}' has no "
-                    "evaluation requirements, and "
-                    f"agent type '{agent_type}' does not "
-                    "currently support criterion-level "
-                    "evaluation."
+                    "evaluation requirements. "
+                    "Dynamic generic criteria require "
+                    "at least one RFP requirement."
                 )
-
-        # -------------------------------------------------
-        # Weight
-        # -------------------------------------------------
 
         try:
             weight = float(
@@ -496,7 +560,6 @@ class ProposalEvaluationService:
             TypeError,
             ValueError,
         ) as error:
-
             raise ValueError(
                 f"Invalid weight for criterion: "
                 f"{name}"
@@ -514,7 +577,9 @@ class ProposalEvaluationService:
                 f"100: {name}"
             )
 
-        return criterion
+        return (
+            criterion
+        )
 
     # =====================================================
     # Evaluate one criterion
@@ -571,7 +636,8 @@ class ProposalEvaluationService:
         if requirements:
             print(
                 f"[{vendor_name}] "
-                f"Evaluation mode: requirement-level "
+                "Evaluation mode: "
+                "requirement-level "
                 f"({len(requirements)} requirement(s))"
             )
 
@@ -581,25 +647,14 @@ class ProposalEvaluationService:
                 "Evaluation mode: criterion-level"
             )
 
-        # =================================================
-        # IMPORTANT:
-        #
-        # Create an isolated agent for this task.
-        #
-        # This avoids sharing one HTTP/OpenAI client between
-        # multiple concurrent criterion threads.
-        # =================================================
-
         agent = None
 
         try:
-
             # =================================================
             # Technical
             # =================================================
 
             if agent_type == "technical":
-
                 print(
                     f"[{vendor_name}] "
                     "Running Technical Agent..."
@@ -622,7 +677,6 @@ class ProposalEvaluationService:
             # =================================================
 
             elif agent_type == "experience":
-
                 print(
                     f"[{vendor_name}] "
                     "Running Experience Agent..."
@@ -638,7 +692,9 @@ class ProposalEvaluationService:
                         proposal_text=proposal_text,
                         vendor_name=vendor_name,
                         criterion=name,
-                        criterion_description=description,
+                        criterion_description=(
+                            description
+                        ),
                     )
                 )
 
@@ -647,7 +703,6 @@ class ProposalEvaluationService:
             # =================================================
 
             elif agent_type == "team":
-
                 print(
                     f"[{vendor_name}] "
                     "Running Team Agent..."
@@ -663,7 +718,9 @@ class ProposalEvaluationService:
                         proposal_text=proposal_text,
                         vendor_name=vendor_name,
                         criterion=name,
-                        criterion_description=description,
+                        criterion_description=(
+                            description
+                        ),
                     )
                 )
 
@@ -672,7 +729,6 @@ class ProposalEvaluationService:
             # =================================================
 
             elif agent_type == "financial":
-
                 print(
                     f"[{vendor_name}] "
                     "Running Financial Agent..."
@@ -688,16 +744,17 @@ class ProposalEvaluationService:
                         proposal_text=proposal_text,
                         vendor_name=vendor_name,
                         criterion=name,
-                        criterion_description=description,
+                        criterion_description=(
+                            description
+                        ),
                     )
                 )
 
             # =================================================
-            # Project plan
+            # Project Plan
             # =================================================
 
             elif agent_type == "project_plan":
-
                 print(
                     f"[{vendor_name}] "
                     "Running Project Plan Agent..."
@@ -725,23 +782,48 @@ class ProposalEvaluationService:
 
                 result[
                     "criterion"
-                ] = name
-
-            # =================================================
-            # Unknown
-            # =================================================
-
-            else:
-
-                raise ValueError(
-                    "No evaluation agent is currently "
-                    f"configured for criterion '{name}'. "
-                    "A generic criterion evaluator is "
-                    "required for this criterion type."
+                ] = (
+                    name
                 )
 
             # =================================================
-            # Validate agent result
+            # Generic dynamic criterion
+            # =================================================
+
+            else:
+                print(
+                    f"[{vendor_name}] "
+                    "Running Generic Criterion Agent..."
+                )
+
+                agent = (
+                    GenericCriterionAgent()
+                )
+
+                result = (
+                    agent.evaluate(
+                        criterion=name,
+
+                        criterion_description=(
+                            description
+                        ),
+
+                        requirements=(
+                            requirements
+                        ),
+
+                        proposal_text=(
+                            proposal_text
+                        ),
+
+                        vendor_name=(
+                            vendor_name
+                        ),
+                    )
+                )
+
+            # =================================================
+            # Validate result
             # =================================================
 
             if not isinstance(
@@ -753,6 +835,13 @@ class ProposalEvaluationService:
                     f"for criterion: {name}"
                 )
 
+            # Guarantee exact frozen criterion name for scoring.
+            result[
+                "criterion"
+            ] = (
+                name
+            )
+
             print(
                 f"[{vendor_name}] "
                 f"Completed criterion: {name}"
@@ -760,16 +849,16 @@ class ProposalEvaluationService:
 
             print(
                 f"[{vendor_name}] "
-                f"Criterion score: "
+                "Criterion score: "
                 f"{result.get('score', 'Unknown')}"
             )
 
-            return result
+            return (
+                result
+            )
 
         finally:
-
             if agent is not None:
-
                 close_method = getattr(
                     agent,
                     "close",
@@ -782,7 +871,7 @@ class ProposalEvaluationService:
                     close_method()
 
     # =====================================================
-    # Compliance task
+    # Compliance
     # =====================================================
 
     def _evaluate_compliance(
@@ -791,17 +880,7 @@ class ProposalEvaluationService:
         proposal_text,
         vendor_name,
     ):
-        """
-        Run compliance independently so it can execute
-        concurrently with criterion evaluation.
-
-        If the RFP contains no true mandatory eligibility
-        gates, compliance must not automatically reject the
-        vendor.
-        """
-
         if not mandatory_requirements:
-
             print(
                 f"[{vendor_name}] "
                 "No mandatory RFP eligibility "
@@ -810,8 +889,11 @@ class ProposalEvaluationService:
 
             return {
                 "riskLevel": "Low",
+
                 "compliant": True,
+
                 "missingRequirements": [],
+
                 "rationale": (
                     "The RFP framework contains no "
                     "explicit mandatory eligibility gates."
@@ -820,7 +902,7 @@ class ProposalEvaluationService:
 
         print(
             f"[{vendor_name}] "
-            f"Running Compliance Agent against "
+            "Running Compliance Agent against "
             f"{len(mandatory_requirements)} "
             "mandatory requirement(s)..."
         )
@@ -830,13 +912,15 @@ class ProposalEvaluationService:
         )
 
         try:
-
             result = (
                 agent.evaluate(
                     mandatory_requirements=(
                         mandatory_requirements
                     ),
-                    proposal_text=proposal_text,
+
+                    proposal_text=(
+                        proposal_text
+                    ),
                 )
             )
 
@@ -851,10 +935,11 @@ class ProposalEvaluationService:
                 "Compliance completed."
             )
 
-            return result
+            return (
+                result
+            )
 
         finally:
-
             close_method = getattr(
                 agent,
                 "close",
@@ -894,8 +979,7 @@ class ProposalEvaluationService:
             )
 
         proposal_text = (
-            proposal_text
-            .strip()
+            proposal_text.strip()
         )
 
         if not proposal_text:
@@ -907,19 +991,13 @@ class ProposalEvaluationService:
         print(
             "\n================================"
         )
-
         print(
             f"EVALUATING VENDOR: "
             f"{vendor_name}"
         )
-
         print(
             "================================"
         )
-
-        # =================================================
-        # Mandatory requirements
-        # =================================================
 
         mandatory_requirements = (
             self._get_mandatory_requirements(
@@ -929,24 +1007,17 @@ class ProposalEvaluationService:
 
         print(
             f"[{vendor_name}] "
-            f"Mandatory eligibility gates: "
+            "Mandatory eligibility gates: "
             f"{len(mandatory_requirements)}"
         )
 
-        # =================================================
-        # Concurrent vendor tasks
-        #
-        # Tasks:
-        # - each criterion
-        # - compliance
-        # =================================================
-
         evaluations_by_index = {}
-
         compliance_result = {}
 
         total_tasks = (
-            len(criteria) + 1
+            len(criteria)
+            +
+            1
         )
 
         worker_count = min(
@@ -957,19 +1028,14 @@ class ProposalEvaluationService:
         print(
             f"[{vendor_name}] "
             f"Running {len(criteria)} criteria "
-            f"+ compliance with "
+            "+ compliance with "
             f"{worker_count} concurrent worker(s)."
         )
 
         with ThreadPoolExecutor(
             max_workers=worker_count
         ) as executor:
-
             future_map = {}
-
-            # =============================================
-            # Criterion tasks
-            # =============================================
 
             for (
                 index,
@@ -977,7 +1043,6 @@ class ProposalEvaluationService:
             ) in enumerate(
                 criteria
             ):
-
                 future = (
                     executor.submit(
                         self._evaluate_criterion,
@@ -991,7 +1056,9 @@ class ProposalEvaluationService:
                     future
                 ] = {
                     "type": "criterion",
+
                     "index": index,
+
                     "name": str(
                         criterion.get(
                             "name",
@@ -999,10 +1066,6 @@ class ProposalEvaluationService:
                         )
                     ),
                 }
-
-            # =============================================
-            # Compliance task
-            # =============================================
 
             compliance_future = (
                 executor.submit(
@@ -1017,18 +1080,17 @@ class ProposalEvaluationService:
                 compliance_future
             ] = {
                 "type": "compliance",
+
                 "index": None,
+
                 "name": "Compliance",
             }
 
-            # =============================================
-            # Collect results as tasks finish
-            # =============================================
-
-            for future in as_completed(
-                future_map
+            for future in (
+                as_completed(
+                    future_map
+                )
             ):
-
                 task_info = (
                     future_map[
                         future
@@ -1042,13 +1104,11 @@ class ProposalEvaluationService:
                 )
 
                 try:
-
                     result = (
                         future.result()
                     )
 
                 except Exception as error:
-
                     task_name = (
                         task_info.get(
                             "name",
@@ -1064,10 +1124,10 @@ class ProposalEvaluationService:
                     ) from error
 
                 if (
-                    task_type ==
+                    task_type
+                    ==
                     "criterion"
                 ):
-
                     index = (
                         task_info[
                             "index"
@@ -1085,13 +1145,15 @@ class ProposalEvaluationService:
 
                     evaluations_by_index[
                         index
-                    ] = result
+                    ] = (
+                        result
+                    )
 
                 elif (
-                    task_type ==
+                    task_type
+                    ==
                     "compliance"
                 ):
-
                     if isinstance(
                         result,
                         dict,
@@ -1100,21 +1162,16 @@ class ProposalEvaluationService:
                             result
                         )
 
-        # =================================================
-        # Restore exact RFP criterion order
-        # =================================================
-
         evaluations = []
 
         for index in range(
-            len(criteria)
+            len(
+                criteria
+            )
         ):
-
-            if (
-                index
-                not in evaluations_by_index
+            if index not in (
+                evaluations_by_index
             ):
-
                 criterion_name = str(
                     criteria[
                         index
@@ -1136,10 +1193,6 @@ class ProposalEvaluationService:
                 ]
             )
 
-        # =================================================
-        # Deterministic weighted scoring
-        # =================================================
-
         print(
             f"\n[{vendor_name}] "
             "Calculating deterministic "
@@ -1148,8 +1201,13 @@ class ProposalEvaluationService:
 
         scoring_result = (
             calculate_weighted_score(
-                evaluations=evaluations,
-                criteria=criteria,
+                evaluations=(
+                    evaluations
+                ),
+
+                criteria=(
+                    criteria
+                ),
             )
         )
 
@@ -1161,13 +1219,9 @@ class ProposalEvaluationService:
 
         print(
             f"[{vendor_name}] "
-            f"Final weighted score: "
+            "Final weighted score: "
             f"{final_score}"
         )
-
-        # =================================================
-        # Vendor result
-        # =================================================
 
         return {
             "vendor": (
@@ -1243,30 +1297,26 @@ class ProposalEvaluationService:
         print(
             "\n================================"
         )
-
         print(
             f"PARSING PROPOSAL: "
             f"{proposal_path.name}"
         )
-
         print(
             "================================"
         )
 
-        # Use only a dedicated DocumentParser per vendor.
-        #
-        # The previous implementation created a complete
-        # ProposalEvaluationService for every proposal, which
-        # initialized many unused agents and clients.
         parser = (
             DocumentParser()
         )
 
-        proposal_started = time.perf_counter()
+        proposal_started = (
+            time.perf_counter()
+        )
 
         try:
-
-            parse_started = time.perf_counter()
+            parse_started = (
+                time.perf_counter()
+            )
 
             proposal_document = (
                 parser.parse_document(
@@ -1289,8 +1339,8 @@ class ProposalEvaluationService:
 
             if not proposal_text:
                 raise RuntimeError(
-                    "OCI Document Understanding "
-                    f"returned empty text for "
+                    "Document parser returned "
+                    "empty text for "
                     f"{proposal_path.name}."
                 )
 
@@ -1310,9 +1360,17 @@ class ProposalEvaluationService:
 
             vendor_result = (
                 self._evaluate_vendor(
-                    vendor_name=vendor_name,
-                    proposal_text=proposal_text,
-                    criteria=criteria,
+                    vendor_name=(
+                        vendor_name
+                    ),
+
+                    proposal_text=(
+                        proposal_text
+                    ),
+
+                    criteria=(
+                        criteria
+                    ),
                 )
             )
 
@@ -1328,17 +1386,20 @@ class ProposalEvaluationService:
                 f"{time.perf_counter() - proposal_started:.2f}s"
             )
 
-            return vendor_result
+            return (
+                vendor_result
+            )
 
         finally:
-
             close_method = getattr(
                 parser,
                 "close",
                 None,
             )
 
-            if callable(close_method):
+            if callable(
+                close_method
+            ):
                 close_method()
 
     # =====================================================
@@ -1351,46 +1412,43 @@ class ProposalEvaluationService:
         proposal_paths=None,
         **kwargs,
     ):
-        evaluation_started = time.perf_counter()
-
-        # =================================================
-        # Alternate parameter names
-        # =================================================
+        evaluation_started = (
+            time.perf_counter()
+        )
 
         if rfp_path is None:
-
             rfp_path = (
                 kwargs.get(
                     "rfp_file"
                 )
-                or kwargs.get(
+                or
+                kwargs.get(
                     "rfp"
                 )
-                or kwargs.get(
+                or
+                kwargs.get(
                     "rfp_file_path"
                 )
             )
 
         if proposal_paths is None:
-
             proposal_paths = (
                 kwargs.get(
                     "proposal_files"
                 )
-                or kwargs.get(
+                or
+                kwargs.get(
                     "proposals"
                 )
-                or kwargs.get(
+                or
+                kwargs.get(
                     "vendor_proposals"
                 )
-                or kwargs.get(
+                or
+                kwargs.get(
                     "proposal_file_paths"
                 )
             )
-
-        # =================================================
-        # Validate input
-        # =================================================
 
         if rfp_path is None:
             raise ValueError(
@@ -1425,23 +1483,22 @@ class ProposalEvaluationService:
             )
 
         # =================================================
-        # STEP 1
-        # Parse RFP
+        # STEP 1 - Parse RFP
         # =================================================
 
         print(
             "\n================================"
         )
-
         print(
             "STEP 1 - PARSING RFP"
         )
-
         print(
             "================================"
         )
 
-        rfp_parse_started = time.perf_counter()
+        rfp_parse_started = (
+            time.perf_counter()
+        )
 
         rfp_document = (
             self.document_parser.parse_document(
@@ -1463,33 +1520,32 @@ class ProposalEvaluationService:
 
         if not rfp_text:
             raise RuntimeError(
-                "OCI Document Understanding "
-                "returned empty RFP text."
+                "Document parser returned "
+                "empty RFP text."
             )
 
         print(
-            f"RFP extracted successfully "
+            "RFP extracted successfully "
             f"({len(rfp_text)} characters)"
         )
 
         # =================================================
-        # STEP 2
-        # Analyze RFP once
+        # STEP 2 - Analyze RFP once
         # =================================================
 
         print(
             "\n================================"
         )
-
         print(
             "STEP 2 - ANALYZING RFP"
         )
-
         print(
             "================================"
         )
 
-        rfp_analysis_started = time.perf_counter()
+        rfp_analysis_started = (
+            time.perf_counter()
+        )
 
         rfp_analysis = (
             self.rfp_agent.analyze(
@@ -1523,7 +1579,8 @@ class ProposalEvaluationService:
                 criteria,
                 list,
             )
-            or not criteria
+            or
+            not criteria
         ):
             raise RuntimeError(
                 "RFP Agent did not return "
@@ -1537,17 +1594,16 @@ class ProposalEvaluationService:
         print(
             "\n================================"
         )
-
         print(
             "VALIDATING RFP FRAMEWORK"
         )
-
         print(
             "================================"
         )
 
-        for criterion in criteria:
-
+        for criterion in (
+            criteria
+        ):
             self._validate_criterion(
                 criterion
             )
@@ -1564,12 +1620,13 @@ class ProposalEvaluationService:
         )
 
         if abs(
-            total_weight -
+            total_weight
+            -
             100.0
         ) > 0.01:
             raise RuntimeError(
                 "RFP criteria weights must total 100. "
-                f"Current total: "
+                "Current total: "
                 f"{round(total_weight, 2)}"
             )
 
@@ -1591,38 +1648,49 @@ class ProposalEvaluationService:
         )
 
         print(
-            f"RFP framework frozen with "
+            "RFP framework frozen with "
             f"{len(criteria)} criteria."
         )
 
         print(
-            f"Total requirements: "
+            "Total requirements: "
             f"{total_requirements}"
         )
 
         print(
-            f"Mandatory eligibility gates: "
+            "Mandatory eligibility gates: "
             f"{len(mandatory_requirements)}"
         )
 
         print(
-            f"Total weight: "
+            "Total weight: "
             f"{round(total_weight, 2)}%"
         )
 
+        for criterion in (
+            criteria
+        ):
+            print(
+                "- "
+                f"{criterion.get('name', '')} "
+                "| agent="
+                f"{self._classify_criterion(criterion)} "
+                "| requirements="
+                f"{len(criterion.get('requirements', []))} "
+                "| weight="
+                f"{criterion.get('weight', 0)}%"
+            )
+
         # =================================================
-        # STEP 3
-        # Evaluate vendors concurrently
+        # STEP 3 - Evaluate proposals
         # =================================================
 
         print(
             "\n================================"
         )
-
         print(
             "STEP 3 - EVALUATING PROPOSALS"
         )
-
         print(
             "================================"
         )
@@ -1631,14 +1699,16 @@ class ProposalEvaluationService:
 
         worker_count = min(
             self.MAX_VENDOR_WORKERS,
-            len(proposal_paths),
+            len(
+                proposal_paths
+            ),
         )
 
         print(
             f"Evaluating {len(proposal_paths)} "
-            f"proposal(s) with "
+            "proposal(s) with "
             f"{worker_count} concurrent "
-            f"vendor worker(s)."
+            "vendor worker(s)."
         )
 
         errors = []
@@ -1646,7 +1716,6 @@ class ProposalEvaluationService:
         with ThreadPoolExecutor(
             max_workers=worker_count
         ) as executor:
-
             future_map = {
                 executor.submit(
                     self._process_proposal,
@@ -1655,15 +1724,15 @@ class ProposalEvaluationService:
                 ): Path(
                     proposal_path
                 ).name
-
                 for proposal_path
                 in proposal_paths
             }
 
-            for future in as_completed(
-                future_map
+            for future in (
+                as_completed(
+                    future_map
+                )
             ):
-
                 proposal_name = (
                     future_map[
                         future
@@ -1671,7 +1740,6 @@ class ProposalEvaluationService:
                 )
 
                 try:
-
                     vendor_result = (
                         future.result()
                     )
@@ -1683,31 +1751,25 @@ class ProposalEvaluationService:
                     print(
                         "\n================================"
                     )
-
                     print(
-                        f"COMPLETED VENDOR: "
+                        "COMPLETED VENDOR: "
                         f"{proposal_name}"
                     )
-
                     print(
                         "================================"
                     )
 
                 except Exception as error:
-
                     print(
                         "\n================================"
                     )
-
                     print(
-                        f"FAILED VENDOR: "
+                        "FAILED VENDOR: "
                         f"{proposal_name}"
                     )
-
                     print(
                         "================================"
                     )
-
                     print(
                         f"Error: {error}"
                     )
@@ -1719,23 +1781,21 @@ class ProposalEvaluationService:
                             ),
 
                             "error": (
-                                str(error)
+                                str(
+                                    error
+                                )
                             ),
                         }
                     )
 
-        # =================================================
-        # Failure handling
-        # =================================================
-
         if errors:
-
             error_summary = "; ".join(
                 (
                     f"{item['proposal']}: "
                     f"{item['error']}"
                 )
-                for item in errors
+                for item
+                in errors
             )
 
             raise RuntimeError(
@@ -1751,18 +1811,15 @@ class ProposalEvaluationService:
             )
 
         # =================================================
-        # STEP 4
-        # Deterministic sorting
+        # STEP 4 - Sort vendors
         # =================================================
 
         print(
             "\n================================"
         )
-
         print(
             "STEP 4 - SORTING VENDORS"
         )
-
         print(
             "================================"
         )
@@ -1784,29 +1841,29 @@ class ProposalEvaluationService:
             vendor_results,
             start=1,
         ):
-
             vendor[
                 "rank"
-            ] = index
+            ] = (
+                index
+            )
 
         # =================================================
-        # STEP 5
-        # Ranking / eligibility
+        # STEP 5 - Ranking / eligibility
         # =================================================
 
         print(
             "\n================================"
         )
-
         print(
             "STEP 5 - RUNNING RANKING AGENT"
         )
-
         print(
             "================================"
         )
 
-        ranking_started = time.perf_counter()
+        ranking_started = (
+            time.perf_counter()
+        )
 
         ranking = (
             self.ranking_agent.rank(
@@ -1860,8 +1917,7 @@ class ProposalEvaluationService:
         )
 
         # =================================================
-        # STEP 6
-        # Final result
+        # STEP 6 - Final result
         # =================================================
 
         final_result = {
@@ -1939,27 +1995,25 @@ class ProposalEvaluationService:
         print(
             "\n================================"
         )
-
         print(
             "EVALUATION COMPLETE"
         )
-
         print(
             "================================"
         )
 
         print(
-            f"Top Ranked Vendor: "
+            "Top Ranked Vendor: "
             f"{top_ranked_vendor}"
         )
 
         print(
-            f"Recommended Vendor: "
+            "Recommended Vendor: "
             f"{recommended_vendor}"
         )
 
         print(
-            f"Recommendation Status: "
+            "Recommendation Status: "
             f"{recommendation_status}"
         )
 
@@ -1968,7 +2022,9 @@ class ProposalEvaluationService:
             f"{time.perf_counter() - evaluation_started:.2f}s"
         )
 
-        return final_result
+        return (
+            final_result
+        )
 
     # =====================================================
     # Cleanup
@@ -1984,12 +2040,14 @@ class ProposalEvaluationService:
             self.experience_agent,
             self.team_agent,
             self.financial_agent,
+            self.generic_criterion_agent,
             self.compliance_agent,
             self.ranking_agent,
         ]
 
-        for agent in agents:
-
+        for agent in (
+            agents
+        ):
             close_method = getattr(
                 agent,
                 "close",
@@ -2000,3 +2058,14 @@ class ProposalEvaluationService:
                 close_method
             ):
                 close_method()
+
+        parser_close = getattr(
+            self.document_parser,
+            "close",
+            None,
+        )
+
+        if callable(
+            parser_close
+        ):
+            parser_close()
