@@ -1,20 +1,44 @@
 {
-  "_comment": "Optional reviewer-defined criterion weights. Copy to evaluation_weights.json to activate. Keys may be criterion names (as discovered from the RFP) or criterion IDs (C01, C02...). Weights must total 100 across ALL discovered criteria, otherwise the file is ignored and the system-defined importance weights are used. These are OUR evaluation model, not official RFP weights.",
+  "_comment_1": "Optional reviewer-defined criterion weights. Copy this file to config/evaluation_weights.json to activate it (or point EVALUATION_WEIGHTS_FILE elsewhere).",
+
+  "_comment_2": "These are OUR evaluation model, not official RFP weights. The King Salman Library RFP lists what is evaluated (compliance with requirements, methodology and work plan quality, project planning and deliverables, schedule alignment, prior vendor experience, and a detailed/complete financial proposal) but publishes no numeric weights. Anything not sourced from an explicit RFP scheme is labeled weight_source = system_defined.",
+
+  "_comment_3": "Keys may be criterion IDs (C01, C02, ...) or the criterion names discovered from the RFP. Matching is case-insensitive and whitespace-normalized. Overrides apply ONLY if every discovered criterion is matched AND the total is 100; otherwise the file is ignored with a warning and the system-defined importance weights are used. Because criterion names are discovered from the RFP at runtime, run an evaluation once, read the discovered names/IDs from artifacts/rfp_analysis.json, then fill them in here.",
+
+  "_proposed_default_distribution": {
+    "_note": "Suggested starting point for this RFP, totaling 100. Rationale: the technical specification is the bulk of the document, so solution and capability dimensions carry the most weight; methodology, deliverables and schedule are weighted because the RFP names them as explicit evaluation factors; experience is weighted because the RFP names it explicitly; finance is weighted meaningfully but not dominantly because the RFP publishes no budget, so price competitiveness cannot be scored objectively.",
+    "Technical Solution & Requirements Compliance": 12,
+    "Library Management / ILS Capabilities": 9,
+    "Digital Repository & Content Management": 8,
+    "Integration & Interoperability": 8,
+    "Architecture & Infrastructure": 7,
+    "Security & Data Protection": 7,
+    "Implementation Methodology & Project Plan": 9,
+    "User Experience, Arabic & Accessibility": 6,
+    "Training, Knowledge Transfer & Support": 6,
+    "Financial Proposal & TCO": 8,
+    "Vendor Experience": 6,
+    "Project Team & Project Management": 5,
+    "Data Migration": 4,
+    "Advanced Technologies / AI / Innovation": 3,
+    "Deliverables & IP / Source Code Compliance": 2
+  },
+
   "weight_overrides": {
     "C01": 12,
-    "C02": 10,
+    "C02": 9,
     "C03": 8,
     "C04": 8,
-    "C05": 8,
-    "C06": 8,
-    "C07": 7,
-    "C08": 5,
+    "C05": 7,
+    "C06": 7,
+    "C07": 9,
+    "C08": 6,
     "C09": 6,
-    "C10": 4,
+    "C10": 8,
     "C11": 6,
-    "C12": 6,
-    "C13": 6,
+    "C12": 5,
+    "C13": 4,
     "C14": 3,
-    "C15": 3
+    "C15": 2
   }
 }
