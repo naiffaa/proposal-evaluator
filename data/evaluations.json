@@ -224508,5 +224508,3652 @@
       "recommendationStatus": "NO_ELIGIBLE_VENDOR",
       "humanReviewRequired": true
     }
+  },
+  "EVAL-3457BC61": {
+    "status": "PROCESSING",
+    "createdDate": "2026-09-01T11:06:26.474037+00:00",
+    "completedDate": null,
+    "error": null,
+    "request": {
+      "rfpName": "RFP 05 - Smart City Analytics Platform.pdf",
+      "vendorCount": 4,
+      "proposalNames": [
+        "Smart_City_Proposal.pdf",
+        "Technical_Proposal_03.pdf",
+        "Technical_Proposal_02.pdf",
+        "Technical Proposal 01.pdf"
+      ],
+      "rfpDocument": {
+        "fileName": "RFP 05 - Smart City Analytics Platform.pdf"
+      },
+      "proposalDocuments": [
+        {
+          "index": 1,
+          "fileName": "Smart_City_Proposal.pdf"
+        },
+        {
+          "index": 2,
+          "fileName": "Technical_Proposal_03.pdf"
+        },
+        {
+          "index": 3,
+          "fileName": "Technical_Proposal_02.pdf"
+        },
+        {
+          "index": 4,
+          "fileName": "Technical Proposal 01.pdf"
+        }
+      ]
+    },
+    "result": {}
+  },
+  "EVAL-B179383C": {
+    "status": "PROCESSING",
+    "createdDate": "2026-09-01T11:14:16.312074+00:00",
+    "completedDate": null,
+    "error": null,
+    "request": {
+      "rfpName": "RFP 05 - Smart City Analytics Platform.pdf",
+      "vendorCount": 1,
+      "proposalNames": [
+        "Smart_City_Proposal.pdf"
+      ],
+      "rfpDocument": {
+        "fileName": "RFP 05 - Smart City Analytics Platform.pdf"
+      },
+      "proposalDocuments": [
+        {
+          "index": 1,
+          "fileName": "Smart_City_Proposal.pdf"
+        }
+      ]
+    },
+    "result": {}
+  },
+  "EVAL-1B63E8BE": {
+    "status": "PROCESSING",
+    "createdDate": "2026-09-01T11:19:04.236986+00:00",
+    "completedDate": null,
+    "error": null,
+    "request": {
+      "rfpName": "RFP_منصة_إدارة_المستشفيات_الذكية_100_صفحة.pdf",
+      "vendorCount": 1,
+      "proposalNames": [
+        "Proposal_nexus_RFP_Hospital_AR.pdf"
+      ],
+      "rfpDocument": {
+        "fileName": "RFP_منصة_إدارة_المستشفيات_الذكية_100_صفحة.pdf"
+      },
+      "proposalDocuments": [
+        {
+          "index": 1,
+          "fileName": "Proposal_nexus_RFP_Hospital_AR.pdf"
+        }
+      ]
+    },
+    "result": {}
+  },
+  "EVAL-09AA7B1D": {
+    "status": "FAILED",
+    "createdDate": "2026-09-01T11:27:48.286177+00:00",
+    "completedDate": "2026-09-01T11:27:50.831374+00:00",
+    "error": "No GEN / REQ numbered requirements were found in the RFP.",
+    "request": {
+      "rfpName": "_كراسة مشروع تطوير وتنصيب نظام إدارة المكتبة- RFP (1).pdf",
+      "vendorCount": 2,
+      "proposalNames": [
+        "KSF - King Salman Library Management System - Tech Proposal - v1.0.pdf",
+        "Naseej-Technical Proposal-KSF-Library Turnkey Solutions V1.0.pdf"
+      ],
+      "rfpDocument": {
+        "fileName": "_كراسة مشروع تطوير وتنصيب نظام إدارة المكتبة- RFP (1).pdf"
+      },
+      "proposalDocuments": [
+        {
+          "index": 1,
+          "fileName": "KSF - King Salman Library Management System - Tech Proposal - v1.0.pdf"
+        },
+        {
+          "index": 2,
+          "fileName": "Naseej-Technical Proposal-KSF-Library Turnkey Solutions V1.0.pdf"
+        }
+      ]
+    },
+    "result": {}
+  },
+  "EVAL-2156F386": {
+    "status": "COMPLETED",
+    "createdDate": "2026-09-01T11:35:19.283082+00:00",
+    "completedDate": "2026-09-01T11:35:52.645486+00:00",
+    "error": null,
+    "request": {
+      "rfpName": "_كراسة مشروع تطوير وتنصيب نظام إدارة المكتبة- RFP (1).pdf",
+      "vendorCount": 1,
+      "proposalNames": [
+        "Naseej-Technical Proposal-KSF-Library Turnkey Solutions V1.0.pdf"
+      ],
+      "rfpDocument": {
+        "fileName": "_كراسة مشروع تطوير وتنصيب نظام إدارة المكتبة- RFP (1).pdf"
+      },
+      "proposalDocuments": [
+        {
+          "index": 1,
+          "fileName": "Naseej-Technical Proposal-KSF-Library Turnkey Solutions V1.0.pdf"
+        }
+      ]
+    },
+    "result": {
+      "rfp": {
+        "fileName": "_كراسة مشروع تطوير وتنصيب نظام إدارة المكتبة- RFP (1).pdf",
+        "analysis": {
+          "rfp_summary": "تدعو مؤسسة الملك سلمان غير الربحية (مؤسسة الملك سلمان خيري) إلى تقديم عروض لتطوير وتشغيل نظام إدارة مكتبة الملك سلمان في إطار مشروع شامل يهدف إلى حفظ إرث خادم الحرمين الشريفين وتفعيل تأثيره الاجتماعي والثقافي. تشمل المتطلبات: تقديم عروض فنية ومالية مفصلة وفق الجداول الموضحة، الالتزام بالمواعيد النهائية لتسليم الاستفسارات (22/07/2026)، الرد على الاستفسارات (28/07/2026) وتسليم العروض (05/08/2026). يجب على مقدمي العروض توفير جميع الوثائق المطلوبة مثل القوائم المالية، السجلات التجارية، شهادات التأسيس، وشهادات الملكية. العروض المالية يجب أن تشمل تفاصيل الأسعار، جدول الدفعات، الضمانات البنكية، ونماذج الفواتير. سيتم تقييم العروض وفق معايير تشمل مدى استيفاء المتطلبات الفنية والمالية والقانونية، القدرة على تنفيذ المشروع ضمن الجدول الزمني المحدد (سنة واحدة من 2026)، وضمان الاستدامة والدعم التقني بعد التنفيذ. يتم تقديم العروض عبر البريد الإلكتروني f.alshaban@ksf.org.sa أو بوابة المؤسسة، مع إرفاق جميع المستندات المطلوبة باللغتين العربية والإنجليزية. الشروط العامة تحكم حقوق الملكية الفكرية، السرية، والتزام المستفيدين بالتعاون الكامل مع المؤسسة طوال فترة التنفيذ وما بعده.",
+          "document_language": "Arabic",
+          "criteria": [
+            {
+              "criterion_id": "C02",
+              "name": "ملاءمة الحل التقني مع متطلبات النظام",
+              "description": "توافق الهندسة المعمارية، البنية التحتية، التكامل مع الأنظمة (RFID, OCR, DRM, APIs) وخدمات البحث الرقمية مع أهداف المشروع.",
+              "source": "صفحات 8‑12 – وصف المتطلبات التقنية (نموذج التشغيل، التكامل، الأمان)",
+              "weight": 50.0,
+              "weight_source": "dynamic_criterion_importance",
+              "weight_evidence": "",
+              "criterion_importance_score": 5.0,
+              "criterion_importance_reason": "نجاح تنفيذ المشروع يعتمد على توافق الحل التقني مع المتطلبات الوظيفية وغير الوظيفية.",
+              "average_requirement_importance": 2.0,
+              "average_importance": 2.0,
+              "requirements": [
+                {
+                  "id": "REQ-0001",
+                  "requirement": "One Copy / One User",
+                  "source": "Page 14 - اﻟﻤﺨﺘﻠﻔﺔ",
+                  "page": 14,
+                  "section": "اﻟﻤﺨﺘﻠﻔﺔ",
+                  "mandatory": false,
+                  "requirement_type": "",
+                  "mandatory_evidence": "",
+                  "response_evidence_required": "",
+                  "importance_score": 2,
+                  "importance_level": "Moderate",
+                  "importance_reason": "General RFP requirement"
+                }
+              ]
+            },
+            {
+              "criterion_id": "C08",
+              "name": "أمان البيانات وحماية الخصوصية",
+              "description": "تطبيق سياسات الأمان (Least Privilege, Audit Logs, تشفير البيانات، توافق مع الأنظمة الوطنية للخصوصية).",
+              "source": "صفحات 9‑11 – إدارة الأمن وحماية البيانات",
+              "weight": 50.0,
+              "weight_source": "dynamic_criterion_importance",
+              "weight_evidence": "",
+              "criterion_importance_score": 5.0,
+              "criterion_importance_reason": "البيانات الثقافية حساسة؛ أمانها أولوية قصوى.",
+              "average_requirement_importance": 2.0,
+              "average_importance": 2.0,
+              "requirements": [
+                {
+                  "id": "REQ-0002",
+                  "requirement": "اﻟﺨﺪﻣﺔ أﻳﻀﺎً ﺑﺄﺧﺬ ﻣﻮاﻓﻘﺔ",
+                  "source": "Page 17 - اﻟﺼﻼﺣﯿﺎت ﺧﻼل إﺟﺎزة اﻟﻤﺪﻳﺮ اﻷﺳﺎﺳﻲ ﻟﻠﻤﺸﺮوع، وﻳﻠﺘﺰم ﻣﻘﺪ",
+                  "page": 17,
+                  "section": "اﻟﺼﻼﺣﯿﺎت ﺧﻼل إﺟﺎزة اﻟﻤﺪﻳﺮ اﻷﺳﺎﺳﻲ ﻟﻠﻤﺸﺮوع، وﻳﻠﺘﺰم ﻣﻘﺪ",
+                  "mandatory": false,
+                  "requirement_type": "",
+                  "mandatory_evidence": "",
+                  "response_evidence_required": "",
+                  "importance_score": 2,
+                  "importance_level": "Moderate",
+                  "importance_reason": "General RFP requirement"
+                }
+              ]
+            }
+          ],
+          "mandatory_requirements": [],
+          "all_requirements": [
+            {
+              "id": "REQ-0001",
+              "requirement": "One Copy / One User",
+              "source": "Page 14 - اﻟﻤﺨﺘﻠﻔﺔ",
+              "page": 14,
+              "section": "اﻟﻤﺨﺘﻠﻔﺔ",
+              "mandatory": false,
+              "requirement_type": "",
+              "mandatory_evidence": "",
+              "response_evidence_required": "",
+              "importance_score": 2,
+              "importance_level": "Moderate",
+              "importance_reason": "General RFP requirement"
+            },
+            {
+              "id": "REQ-0002",
+              "requirement": "اﻟﺨﺪﻣﺔ أﻳﻀﺎً ﺑﺄﺧﺬ ﻣﻮاﻓﻘﺔ",
+              "source": "Page 17 - اﻟﺼﻼﺣﯿﺎت ﺧﻼل إﺟﺎزة اﻟﻤﺪﻳﺮ اﻷﺳﺎﺳﻲ ﻟﻠﻤﺸﺮوع، وﻳﻠﺘﺰم ﻣﻘﺪ",
+              "page": 17,
+              "section": "اﻟﺼﻼﺣﯿﺎت ﺧﻼل إﺟﺎزة اﻟﻤﺪﻳﺮ اﻷﺳﺎﺳﻲ ﻟﻠﻤﺸﺮوع، وﻳﻠﺘﺰم ﻣﻘﺪ",
+              "mandatory": false,
+              "requirement_type": "",
+              "mandatory_evidence": "",
+              "response_evidence_required": "",
+              "importance_score": 2,
+              "importance_level": "Moderate",
+              "importance_reason": "General RFP requirement"
+            }
+          ],
+          "metadata": {
+            "criteria_count": 2,
+            "requirement_count": 2,
+            "mandatory_requirement_count": 0,
+            "total_weight": 100.0,
+            "weight_source": "dynamic_criterion_importance",
+            "document_language": "Arabic",
+            "requirement_extraction_method": "deterministic_structured_fallback",
+            "criteria_discovery_method": "dynamic_llm_discovery",
+            "requirement_assignment_method": "batched_llm_assignment_with_deterministic_validation",
+            "weighting_method": "explicit_rfp_if_complete_else_dynamic_criterion_importance",
+            "criterion_weight_count_independent": true,
+            "dynamic_criteria": true
+          }
+        },
+        "criteria": [
+          {
+            "criterion_id": "C02",
+            "name": "ملاءمة الحل التقني مع متطلبات النظام",
+            "description": "توافق الهندسة المعمارية، البنية التحتية، التكامل مع الأنظمة (RFID, OCR, DRM, APIs) وخدمات البحث الرقمية مع أهداف المشروع.",
+            "source": "صفحات 8‑12 – وصف المتطلبات التقنية (نموذج التشغيل، التكامل، الأمان)",
+            "weight": 50.0,
+            "weight_source": "dynamic_criterion_importance",
+            "weight_evidence": "",
+            "criterion_importance_score": 5.0,
+            "criterion_importance_reason": "نجاح تنفيذ المشروع يعتمد على توافق الحل التقني مع المتطلبات الوظيفية وغير الوظيفية.",
+            "average_requirement_importance": 2.0,
+            "average_importance": 2.0,
+            "requirements": [
+              {
+                "id": "REQ-0001",
+                "requirement": "One Copy / One User",
+                "source": "Page 14 - اﻟﻤﺨﺘﻠﻔﺔ",
+                "page": 14,
+                "section": "اﻟﻤﺨﺘﻠﻔﺔ",
+                "mandatory": false,
+                "requirement_type": "",
+                "mandatory_evidence": "",
+                "response_evidence_required": "",
+                "importance_score": 2,
+                "importance_level": "Moderate",
+                "importance_reason": "General RFP requirement"
+              }
+            ]
+          },
+          {
+            "criterion_id": "C08",
+            "name": "أمان البيانات وحماية الخصوصية",
+            "description": "تطبيق سياسات الأمان (Least Privilege, Audit Logs, تشفير البيانات، توافق مع الأنظمة الوطنية للخصوصية).",
+            "source": "صفحات 9‑11 – إدارة الأمن وحماية البيانات",
+            "weight": 50.0,
+            "weight_source": "dynamic_criterion_importance",
+            "weight_evidence": "",
+            "criterion_importance_score": 5.0,
+            "criterion_importance_reason": "البيانات الثقافية حساسة؛ أمانها أولوية قصوى.",
+            "average_requirement_importance": 2.0,
+            "average_importance": 2.0,
+            "requirements": [
+              {
+                "id": "REQ-0002",
+                "requirement": "اﻟﺨﺪﻣﺔ أﻳﻀﺎً ﺑﺄﺧﺬ ﻣﻮاﻓﻘﺔ",
+                "source": "Page 17 - اﻟﺼﻼﺣﯿﺎت ﺧﻼل إﺟﺎزة اﻟﻤﺪﻳﺮ اﻷﺳﺎﺳﻲ ﻟﻠﻤﺸﺮوع، وﻳﻠﺘﺰم ﻣﻘﺪ",
+                "page": 17,
+                "section": "اﻟﺼﻼﺣﯿﺎت ﺧﻼل إﺟﺎزة اﻟﻤﺪﻳﺮ اﻷﺳﺎﺳﻲ ﻟﻠﻤﺸﺮوع، وﻳﻠﺘﺰم ﻣﻘﺪ",
+                "mandatory": false,
+                "requirement_type": "",
+                "mandatory_evidence": "",
+                "response_evidence_required": "",
+                "importance_score": 2,
+                "importance_level": "Moderate",
+                "importance_reason": "General RFP requirement"
+              }
+            ]
+          }
+        ],
+        "totalCriteria": 2,
+        "totalWeight": 100.0
+      },
+      "totalVendors": 1,
+      "vendors": [
+        {
+          "vendor": "Naseej-Technical Proposal-KSF-Library Turnkey Solutions V1.0",
+          "overallScore": 27.5,
+          "scoring": {
+            "criterion_scores": [
+              {
+                "criterion": "ملاءمة الحل التقني مع متطلبات النظام",
+                "score": 55.0,
+                "weight": 50.0,
+                "weight_source": "dynamic_criterion_importance",
+                "weight_evidence": "",
+                "importance_total": null,
+                "average_importance": 2.0,
+                "weighted_score": 27.5,
+                "mandatory_requirements": 0,
+                "mandatory_full_matches": 0,
+                "mandatory_partial_matches": 0,
+                "mandatory_no_matches": 0,
+                "mandatory_not_provided": 0,
+                "mandatory_compliance_percentage": null
+              },
+              {
+                "criterion": "أمان البيانات وحماية الخصوصية",
+                "score": 0.0,
+                "weight": 50.0,
+                "weight_source": "dynamic_criterion_importance",
+                "weight_evidence": "",
+                "importance_total": null,
+                "average_importance": 2.0,
+                "weighted_score": 0.0,
+                "mandatory_requirements": 0,
+                "mandatory_full_matches": 0,
+                "mandatory_partial_matches": 0,
+                "mandatory_no_matches": 0,
+                "mandatory_not_provided": 0,
+                "mandatory_compliance_percentage": null
+              }
+            ],
+            "final_score": 27.5,
+            "overall_mandatory_compliance": null,
+            "mandatory_summary": {
+              "total_mandatory_requirements": 0,
+              "fully_met": 0,
+              "partially_met": 0,
+              "no_match": 0,
+              "not_provided": 0
+            },
+            "mandatory_results": [],
+            "weighting": {
+              "total_weight": 100.0,
+              "sources": [
+                "dynamic_criterion_importance"
+              ]
+            }
+          },
+          "overallMandatoryCompliance": null,
+          "mandatorySummary": {
+            "total_mandatory_requirements": 0,
+            "fully_met": 0,
+            "partially_met": 0,
+            "no_match": 0,
+            "not_provided": 0
+          },
+          "riskLevel": "Low",
+          "compliant": true,
+          "missingRequirements": [],
+          "complianceRationale": "The RFP framework contains no explicit mandatory eligibility gates.",
+          "evaluations": [
+            {
+              "criterion": "ملاءمة الحل التقني مع متطلبات النظام",
+              "score": 55.0,
+              "mandatory_compliance_percentage": 100.0,
+              "requirement_results": [
+                {
+                  "requirement_id": "REQ-0001",
+                  "requirement": "One Copy / One User",
+                  "rfp_source": "Page 14 - اﻟﻤﺨﺘﻠﻔﺔ",
+                  "mandatory": false,
+                  "importance_score": 2,
+                  "importance_level": "Moderate",
+                  "importance_reason": "General RFP requirement",
+                  "status": "PARTIAL_MATCH",
+                  "match_score": 55.0,
+                  "proposal_evidence": "The proposal repeatedly states \"عدد غير محدود من املستخدمين\" (unlimited number of users) for various modules and services.",
+                  "rationale": "The requirement \"One Copy / One User\" implies a licensing model where each user is entitled to a single copy of the software. The vendor’s documentation does not explicitly describe such a licensing restriction; instead it mentions unlimited users, which neither confirms nor directly conflicts with the one‑copy‑per‑user model. Hence the evidence is relevant but insufficient to establish full compliance."
+                }
+              ],
+              "summary": {
+                "requirements_evaluated": 1,
+                "full_matches": 0,
+                "partial_matches": 1,
+                "no_matches": 0,
+                "not_provided": 0,
+                "batch_size": 16,
+                "batches_processed": 1,
+                "batch_workers": 2
+              },
+              "strengths": [
+                "One Copy / One User: PARTIAL_MATCH (55.0)"
+              ],
+              "gaps": [
+                "One Copy / One User: PARTIAL_MATCH"
+              ],
+              "rationale": "Technical evaluation completed across 1 requirements. 0 full matches, 1 partial matches, 0 explicit no-matches, and 0 not provided."
+            },
+            {
+              "criterion": "أمان البيانات وحماية الخصوصية",
+              "score": 0.0,
+              "mandatory_compliance_percentage": 100.0,
+              "requirement_results": [
+                {
+                  "requirement_id": "REQ-0002",
+                  "requirement": "اﻟﺨﺪﻣﺔ أﻳﻀﺎً ﺑﺄﺧﺬ ﻣﻮاﻓﻘﺔ",
+                  "rfp_source": "Page 17 - اﻟﺼﻼﺣﯿﺎت ﺧﻼل إﺟﺎزة اﻟﻤﺪﻳﺮ اﻷﺳﺎﺳﻲ ﻟﻠﻤﺸﺮوع، وﻳﻠﺘﺰم ﻣﻘﺪ",
+                  "mandatory": false,
+                  "importance_score": 2,
+                  "importance_level": "Moderate",
+                  "importance_reason": "General RFP requirement",
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "The proposal does not contain any statement that the service is provided only after obtaining the required approvals."
+                }
+              ],
+              "summary": {
+                "requirements_evaluated": 1,
+                "full_matches": 0,
+                "partial_matches": 0,
+                "no_matches": 0,
+                "not_provided": 1,
+                "batch_size": 16,
+                "batches_processed": 1,
+                "batch_workers": 2
+              },
+              "strengths": [],
+              "gaps": [
+                "اﻟﺨﺪﻣﺔ أﻳﻀﺎً ﺑﺄﺧﺬ ﻣﻮاﻓﻘﺔ: NOT_PROVIDED"
+              ],
+              "rationale": "Criterion 'أمان البيانات وحماية الخصوصية' evaluated across 1 RFP requirements. 0 full matches, 0 partial matches, 0 no-matches, and 1 not provided."
+            }
+          ],
+          "rank": 1
+        }
+      ],
+      "ranking": {
+        "recommendationStatus": "RECOMMENDED_FOR_REVIEW",
+        "topRankedVendor": "Naseej-Technical Proposal-KSF-Library Turnkey Solutions V1.0",
+        "topRankedVendorScore": 27.5,
+        "recommendedVendor": "Naseej-Technical Proposal-KSF-Library Turnkey Solutions V1.0",
+        "recommendedVendorScore": 27.5,
+        "ranking": [
+          {
+            "rank": 1,
+            "vendor": "Naseej-Technical Proposal-KSF-Library Turnkey Solutions V1.0",
+            "score": 27.5,
+            "riskLevel": "Low",
+            "compliant": true,
+            "eligible": true,
+            "mandatoryCompliance": null
+          }
+        ],
+        "comparisonSummary": "With a single compliant vendor, the evaluation shows the proposal meets the technical suitability criterion with a partial match (55 points) but provides no evidence for data security and privacy requirements, resulting in a final score of 27.5.",
+        "tradeOffs": [
+          "Strong technical fit versus lack of documented data security compliance",
+          "Low overall risk despite missing evidence, requiring additional verification before award"
+        ],
+        "finalRecommendation": "Based on the official Python decision, the vendor is top‑ranked and compliant, so it is recommended for further review, noting the partial compliance on the licensing requirement and the missing data‑security evidence that should be addressed prior to contract award.",
+        "rankingInsights": [
+          {
+            "vendor": "Naseej-Technical Proposal-KSF-Library Turnkey Solutions V1.0",
+            "summary": "Compliant, low‑risk vendor ranked 1st with a final score of 27.5; meets technical suitability partially and lacks data‑security documentation.",
+            "keyStrengths": [
+              "Partial match on the 'One Copy / One User' requirement (55.0 score)",
+              "Low risk level as assessed by the evaluation"
+            ],
+            "keyRisks": [
+              "No evidence provided for the data security and privacy requirement (NOT_PROVIDED)",
+              "Partial rather than full compliance on the licensing implication"
+            ]
+          }
+        ],
+        "humanReviewRequired": true
+      },
+      "topRankedVendor": "Naseej-Technical Proposal-KSF-Library Turnkey Solutions V1.0",
+      "topRankedVendorScore": 27.5,
+      "recommendedVendor": "Naseej-Technical Proposal-KSF-Library Turnkey Solutions V1.0",
+      "recommendedVendorScore": 27.5,
+      "recommendationStatus": "RECOMMENDED_FOR_REVIEW",
+      "humanReviewRequired": true
+    }
+  },
+  "EVAL-C6E1FC9D": {
+    "status": "FAILED",
+    "createdDate": "2026-09-01T11:44:29.263321+00:00",
+    "completedDate": "2026-09-01T11:44:31.046737+00:00",
+    "error": "No usable requirements were found in the RFP. The document does not contain GEN/REQ IDs, numbered clauses, bullet requirements, or recognizable requirement statements.",
+    "request": {
+      "rfpName": "_كراسة مشروع تطوير وتنصيب نظام إدارة المكتبة- RFP (1).pdf",
+      "vendorCount": 1,
+      "proposalNames": [
+        "Naseej-Technical Proposal-KSF-Library Turnkey Solutions V1.0.pdf"
+      ],
+      "rfpDocument": {
+        "fileName": "_كراسة مشروع تطوير وتنصيب نظام إدارة المكتبة- RFP (1).pdf"
+      },
+      "proposalDocuments": [
+        {
+          "index": 1,
+          "fileName": "Naseej-Technical Proposal-KSF-Library Turnkey Solutions V1.0.pdf"
+        }
+      ]
+    },
+    "result": {}
+  },
+  "EVAL-20FF9F4B": {
+    "status": "FAILED",
+    "createdDate": "2026-09-01T11:49:17.867938+00:00",
+    "completedDate": "2026-09-01T11:49:55.096126+00:00",
+    "error": "No grounded RFP requirements could be extracted. GEN/REQ parsing, structured extraction, and source-validated LLM fallback all returned no usable items.",
+    "request": {
+      "rfpName": "_كراسة مشروع تطوير وتنصيب نظام إدارة المكتبة- RFP (1).pdf",
+      "vendorCount": 1,
+      "proposalNames": [
+        "Naseej-Technical Proposal-KSF-Library Turnkey Solutions V1.0.pdf"
+      ],
+      "rfpDocument": {
+        "fileName": "_كراسة مشروع تطوير وتنصيب نظام إدارة المكتبة- RFP (1).pdf"
+      },
+      "proposalDocuments": [
+        {
+          "index": 1,
+          "fileName": "Naseej-Technical Proposal-KSF-Library Turnkey Solutions V1.0.pdf"
+        }
+      ]
+    },
+    "result": {}
+  },
+  "EVAL-A1CC2E13": {
+    "status": "FAILED",
+    "createdDate": "2026-09-01T11:53:45.701398+00:00",
+    "completedDate": "2026-09-01T11:54:54.435028+00:00",
+    "error": "One or more vendor proposals failed during evaluation. Naseej-Technical Proposal-KSF-Library Turnkey Solutions V1.0.pdf: إدارة المشروع وخطة التنفيذ task failed for vendor 'Naseej-Technical Proposal-KSF-Library Turnkey Solutions V1.0': ProjectPlanAgent received invalid JSON from the LLM.",
+    "request": {
+      "rfpName": "_كراسة مشروع تطوير وتنصيب نظام إدارة المكتبة- RFP (1).pdf",
+      "vendorCount": 1,
+      "proposalNames": [
+        "Naseej-Technical Proposal-KSF-Library Turnkey Solutions V1.0.pdf"
+      ],
+      "rfpDocument": {
+        "fileName": "_كراسة مشروع تطوير وتنصيب نظام إدارة المكتبة- RFP (1).pdf"
+      },
+      "proposalDocuments": [
+        {
+          "index": 1,
+          "fileName": "Naseej-Technical Proposal-KSF-Library Turnkey Solutions V1.0.pdf"
+        }
+      ]
+    },
+    "result": {}
+  },
+  "EVAL-78315C9A": {
+    "status": "FAILED",
+    "createdDate": "2026-09-01T11:59:12.244459+00:00",
+    "completedDate": "2026-09-01T12:00:18.749288+00:00",
+    "error": "One or more vendor proposals failed during evaluation. Naseej-Technical Proposal-KSF-Library Turnkey Solutions V1.0.pdf: كفاءة فريق العمل وإدارة المشروع task failed for vendor 'Naseej-Technical Proposal-KSF-Library Turnkey Solutions V1.0': ProjectPlanAgent batch 1 failed. ProjectPlanAgent batch 1 returned invalid JSON.",
+    "request": {
+      "rfpName": "_كراسة مشروع تطوير وتنصيب نظام إدارة المكتبة- RFP (1).pdf",
+      "vendorCount": 1,
+      "proposalNames": [
+        "Naseej-Technical Proposal-KSF-Library Turnkey Solutions V1.0.pdf"
+      ],
+      "rfpDocument": {
+        "fileName": "_كراسة مشروع تطوير وتنصيب نظام إدارة المكتبة- RFP (1).pdf"
+      },
+      "proposalDocuments": [
+        {
+          "index": 1,
+          "fileName": "Naseej-Technical Proposal-KSF-Library Turnkey Solutions V1.0.pdf"
+        }
+      ]
+    },
+    "result": {}
+  },
+  "EVAL-A3F9C354": {
+    "status": "COMPLETED",
+    "createdDate": "2026-09-01T12:03:00.302570+00:00",
+    "completedDate": "2026-09-01T12:05:10.719027+00:00",
+    "error": null,
+    "request": {
+      "rfpName": "_كراسة مشروع تطوير وتنصيب نظام إدارة المكتبة- RFP (1).pdf",
+      "vendorCount": 1,
+      "proposalNames": [
+        "Technical_Proposal_02.pdf"
+      ],
+      "rfpDocument": {
+        "fileName": "_كراسة مشروع تطوير وتنصيب نظام إدارة المكتبة- RFP (1).pdf"
+      },
+      "proposalDocuments": [
+        {
+          "index": 1,
+          "fileName": "Technical_Proposal_02.pdf"
+        }
+      ]
+    },
+    "result": {
+      "rfp": {
+        "fileName": "_كراسة مشروع تطوير وتنصيب نظام إدارة المكتبة- RFP (1).pdf",
+        "analysis": {
+          "rfp_summary": "توضح الوثيقة مراجعة الشروط والمواصفات لمشروع تطوير وإدارة نظام مكتبة الملك سلمان (KSCC) بالتعاون مع مؤسسة الملك سلمان غير الربحية. يحدد المستند جدولاً زمنياً يبدأ في يوليو 2026 مع مواعيد نهائية لتسليم الاستفسارات (22/07/2026)، الرد علي الاستفسارات (28/07/2026)، وتقديم العروض (05/08/2026). تشمل مكونات المشروع إنشاء بنية تقنية سحابية متعددة المستأجرين تدعم RFID، OCR، البحث المتكامل، إدارة المحتوي الرقمي، وخدمات التعلم المتقدمة. يوضح المستند قائمة بمستندات العطاء المطلوبة (قائمة التحقق، الجداول المالية، العقود، شهادات الضمان البنكي، إلخ) وشروط التقييم التي تشمل الجوانب الفنية، المالية، والامتثال. كما يوضح أدوار ومسؤوليات الطرفين، شروط الدفع وفق جدول المدفوعات، وآلية المتابعة والإدارة خلال تنفيذ المشروع.",
+          "document_language": "Arabic",
+          "criteria": [
+            {
+              "criterion_id": "C01",
+              "name": "الامتثال للمتطلبات الإلزامية والوثائق المطلوبة",
+              "description": "تقديم جميع المستندات المطلوبة (ضمان بنكي، توقيع وختم جميع صفحات الكراسة، إقرار عدم تعارض المصالح، بريد رسمي، ملف PDF للعرض الفني وملف Excel للعرض المالي) وفقًا لقائمة تدقيق المنافسين المذكورة في الصفحات 2‐4.",
+              "source": "قائمة تدقيق المنافسين (صفحات 2‐4) – المتطلبات الإلزامية",
+              "weight": 15.15,
+              "weight_source": "dynamic_criterion_importance",
+              "weight_evidence": "",
+              "criterion_importance_score": 5.0,
+              "criterion_importance_reason": "غياب أي من هذه الوثائق يؤدي إلي استبعاد العارض من المنافسة.",
+              "average_requirement_importance": 3.0,
+              "average_importance": 3.0,
+              "requirements": [
+                {
+                  "id": "REQ-0001",
+                  "requirement": "( يجب علي مقدم العطاء تعبئة الجدول الموجود ويعد ذلك اقرار منه بتوفرھا وسيتم استثناء مقدم العطاء في حال عدم تقديم البنود الإلزامية",
+                  "source": "Page 4 - ضمان بنكي",
+                  "page": 4,
+                  "section": "ضمان بنكي",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                },
+                {
+                  "id": "REQ-0002",
+                  "requirement": "بجميع ما ورد في ھذه الكراسة التزاماً مطلقاً وتأكيداً لذلك فإنه يجب التوقيع علي جميع صفحات الكراسة والنماذج المرفقة من قِبَل صاحب المؤسسة / الشركة )المورد( أو المفوض بالتوقيع مع ختم",
+                  "source": "Page 5 - أو تأمين مشترياته الالتزام",
+                  "page": 5,
+                  "section": "أو تأمين مشترياته الالتزام",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                },
+                {
+                  "id": "REQ-0004",
+                  "requirement": "ويجب ان يحتوي التقديم علي كافة",
+                  "source": "Page 14 - الملك سلمان غير الربحية",
+                  "page": 14,
+                  "section": "الملك سلمان غير الربحية",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                },
+                {
+                  "id": "REQ-0005",
+                  "requirement": "يجب التقيد بالآلية التالية:",
+                  "source": "Page 14 - المتطلبات الإلزامية في قائمة تدقيق المنافسين الموضحة في الصفحة الثانية من ھذه الكراسة. كما",
+                  "page": 14,
+                  "section": "المتطلبات الإلزامية في قائمة تدقيق المنافسين الموضحة في الصفحة الثانية من ھذه الكراسة. كما",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                },
+                {
+                  "id": "REQ-0006",
+                  "requirement": "يجب ان يكون البريد الذي ترد منه العروض مسجلاً تحت العنوان الرسمي للشركة المقدمة للعرض.",
+                  "source": "Page 14 - المتطلبات الإلزامية في قائمة تدقيق المنافسين الموضحة في الصفحة الثانية من ھذه الكراسة. كما",
+                  "page": 14,
+                  "section": "المتطلبات الإلزامية في قائمة تدقيق المنافسين الموضحة في الصفحة الثانية من ھذه الكراسة. كما",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                },
+                {
+                  "id": "REQ-0007",
+                  "requirement": ":ويجب علي الاقل أن يحتوي علي",
+                  "source": "Page 14 - يقدم العرض الفني في ملف منفصل بصيغةPDF",
+                  "page": 14,
+                  "section": "يقدم العرض الفني في ملف منفصل بصيغةPDF",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                },
+                {
+                  "id": "REQ-0008",
+                  "requirement": "ويجب علي الأقل ان يحتوي",
+                  "source": "Page 15 - وملفEXCEL",
+                  "page": 15,
+                  "section": "وملفEXCEL",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                },
+                {
+                  "id": "REQ-0014",
+                  "requirement": ") يجب أن لا تقل صلاحية العروض عن90",
+                  "source": "Page 16 - صفحة 16",
+                  "page": 16,
+                  "section": "صفحة 16",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                },
+                {
+                  "id": "REQ-0015",
+                  "requirement": "يجب علي مقدم العرض ختم جميع صفحات كراسة شروط المواصفات وجداول الكميات",
+                  "source": "Page 16 - .( تسعين يوماً من تاريخ تقديم العرض",
+                  "page": 16,
+                  "section": ".( تسعين يوماً من تاريخ تقديم العرض",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                },
+                {
+                  "id": "REQ-0016",
+                  "requirement": "يجب علي مقدم العرض التصريح بتعارض المصالح إن وجد ويكون ذلك بشكل مكتوب يقدم ضمن العرض ويشمل ذلك الأقارب حتي الدرجة الرابعة.",
+                  "source": "Page 16 - مؤسسة",
+                  "page": 16,
+                  "section": "مؤسسة",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                }
+              ]
+            },
+            {
+              "criterion_id": "C02",
+              "name": "جودة الحل الفني وتوافقه مع المتطلبات الوظيفية",
+              "description": "تقييم مدي توافق الحل المقترح مع المتطلبات الوظيفية مثل بنية النظام، التكامل مع أنظمة RFID، OCR، البحث المتكامل، الأمان، والقدرة علي توفير الخدمات الرقمية المطلوبة.",
+              "source": "صفحات 8‐12 – مواصفات النظام والتقنيات المتقدمة",
+              "weight": 15.15,
+              "weight_source": "dynamic_criterion_importance",
+              "weight_evidence": "",
+              "criterion_importance_score": 5.0,
+              "criterion_importance_reason": "الملاءمة التقنية هي أساس نجاح المشروع وتحديد قدرته علي تحقيق أهداف المؤسسة.",
+              "average_requirement_importance": 2.6,
+              "average_importance": 2.6,
+              "requirements": [
+                {
+                  "id": "REQ-0009",
+                  "requirement": "مطلوبة لتوضيح الدعوة إلي تقديم العطاءات، بما في ذلك المواصفات التي يجب تقديمھا إلي",
+                  "source": "Page 15 - أو أي معلومات إضافية",
+                  "page": 15,
+                  "section": "أو أي معلومات إضافية",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                },
+                {
+                  "id": "REQ-0010",
+                  "requirement": "صفات الفنية المطلوبة لتحديد",
+                  "source": "Page 15 - العروض المطابقة لجميع الشروط والموا",
+                  "page": 15,
+                  "section": "العروض المطابقة لجميع الشروط والموا",
+                  "mandatory": false,
+                  "requirement_type": "",
+                  "mandatory_evidence": "",
+                  "response_evidence_required": "",
+                  "importance_score": 2,
+                  "importance_level": "Moderate",
+                  "importance_reason": "General RFP requirement"
+                },
+                {
+                  "id": "REQ-0011",
+                  "requirement": "ات المطلوبة",
+                  "source": "Page 15 - أو الخدم",
+                  "page": 15,
+                  "section": "أو الخدم",
+                  "mandatory": false,
+                  "requirement_type": "",
+                  "mandatory_evidence": "",
+                  "response_evidence_required": "",
+                  "importance_score": 2,
+                  "importance_level": "Moderate",
+                  "importance_reason": "General RFP requirement"
+                },
+                {
+                  "id": "REQ-0017",
+                  "requirement": "يجب علي مقدم العرض إيضاح الأجزاء التي سيتم تنفيذھا من قبل مقاولي الباطن ضمن نطاق",
+                  "source": "Page 16 - مؤسسة",
+                  "page": 16,
+                  "section": "مؤسسة",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                },
+                {
+                  "id": "REQ-0024",
+                  "requirement": "وتوضح مدي التزام مقدم الخدمة بالأداء التشغيلي للمشروع. لذا يجب علي مقدم الخدمة",
+                  "source": "Page 17 - والأھداف المرجو",
+                  "page": 17,
+                  "section": "والأھداف المرجو",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                }
+              ]
+            },
+            {
+              "criterion_id": "C03",
+              "name": "خطة التنفيذ والجدول الزمني",
+              "description": "تقديم خطة عمل مفصلة تشمل مراحل التنفيذ، مخرجات كل مرحلة، تواريخ التسليم، ومؤشرات نجاح المشروع وفقًا للجدول الزمني المطلوب (90 يومًا علي الأقل لصلاحية العرض).",
+              "source": "صفحات 5‐7 – جدول التنفيذ وتواريخ الاستجابة والاعتماد",
+              "weight": 15.15,
+              "weight_source": "dynamic_criterion_importance",
+              "weight_evidence": "",
+              "criterion_importance_score": 5.0,
+              "criterion_importance_reason": "ضمان إكمال المشروع ضمن الإطار الزمني المتفق عليه وتجنب التأخير.",
+              "average_requirement_importance": 2.5,
+              "average_importance": 2.5,
+              "requirements": [
+                {
+                  "id": "REQ-0012",
+                  "requirement": ".التخطيط لتنفيذ المشروع وتقديم مخرجات حسب المطلوب",
+                  "source": "Page 15 - جودة منھجية وخطة العمل المقدمة",
+                  "page": 15,
+                  "section": "جودة منھجية وخطة العمل المقدمة",
+                  "mandatory": false,
+                  "requirement_type": "",
+                  "mandatory_evidence": "",
+                  "response_evidence_required": "",
+                  "importance_score": 2,
+                  "importance_level": "Moderate",
+                  "importance_reason": "General RFP requirement"
+                },
+                {
+                  "id": "REQ-0013",
+                  "requirement": ".جدول زمني متوافق مع التواريخ المطلوبة لتنفيذ المشروع",
+                  "source": "Page 15 - جودة منھجية وخطة العمل المقدمة",
+                  "page": 15,
+                  "section": "جودة منھجية وخطة العمل المقدمة",
+                  "mandatory": false,
+                  "requirement_type": "",
+                  "mandatory_evidence": "",
+                  "response_evidence_required": "",
+                  "importance_score": 2,
+                  "importance_level": "Moderate",
+                  "importance_reason": "General RFP requirement"
+                },
+                {
+                  "id": "REQ-0018",
+                  "requirement": "يجب علي مقدم الخدمة الفائز بالمشروع إعداد خطة عمل تفصيلية لتنفيذ المشروع وإعداد خطة تدريب وخطة دعم تفصيلية \"عند الحاجة\".",
+                  "source": "Page 16 - المطلوبة وجميع الشروط التي تتضمنھا الكراسة وكذلك الالتزامات والبنود التي يُتفق عليھا",
+                  "page": 16,
+                  "section": "المطلوبة وجميع الشروط التي تتضمنھا الكراسة وكذلك الالتزامات والبنود التي يُتفق عليھا",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                },
+                {
+                  "id": "REQ-0025",
+                  "requirement": "، مع مراعاة أن القائمة التفصيلية النھائية يجب تنسيقھا والاتفاق عليھا مع مالك",
+                  "source": "Page 17 - المشروع",
+                  "page": 17,
+                  "section": "المشروع",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                }
+              ]
+            },
+            {
+              "criterion_id": "C04",
+              "name": "خبرة وتأهيل فريق الإدارة والتنفيذ",
+              "description": "تقييم خبرة مدير المشروع (سعودي، شهادة معتمدة، خبرة لا تقل عن 5 سنوات) وخبرات الأعضاء الآخرين (إجادة اللغتين العربية والإنجليزية، خبرة في المجالات التقنية المطلوبة).",
+              "source": "صفحات 7‐9 – مواصفات مدير المشروع وفريق العمل",
+              "weight": 15.15,
+              "weight_source": "dynamic_criterion_importance",
+              "weight_evidence": "",
+              "criterion_importance_score": 5.0,
+              "criterion_importance_reason": "فريق مؤهل يضمن تطبيق العقود وإدارة المخاطر بفعالية.",
+              "average_requirement_importance": 3.167,
+              "average_importance": 3.167,
+              "requirements": [
+                {
+                  "id": "REQ-0019",
+                  "requirement": "وكذلك من سيتم الاستعانة بھم من مقيمين وزائرين قبل بداية العمل ويجب الحصول علي",
+                  "source": "Page 16 - قبل الاختيار النھائي لصاحب العرض",
+                  "page": 16,
+                  "section": "قبل الاختيار النھائي لصاحب العرض",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                },
+                {
+                  "id": "REQ-0026",
+                  "requirement": "يلتزم مقدم الخدمة بتعيين مديراً عاماً للمشروع ويفضل أن يكون سعودي الجنسية وحاصل علي شھادة معتمدة في ھذا المجال، أو ما يعادلھا، ولديه خبرة لا تقل عن خمسة سنوات",
+                  "source": "Page 17 - إدارة الموارد خلال تنفيذ المشروع:",
+                  "page": 17,
+                  "section": "إدارة الموارد خلال تنفيذ المشروع:",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                },
+                {
+                  "id": "REQ-0027",
+                  "requirement": "يجب منح مدير المشروع جميع الصلاحيات اللازمة لاتخاذ القرارات دون تأخير أو تعليق.",
+                  "source": "Page 17 - رفض/قبول أو طلب تغيير مدير المشروع",
+                  "page": 17,
+                  "section": "رفض/قبول أو طلب تغيير مدير المشروع",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                },
+                {
+                  "id": "REQ-0028",
+                  "requirement": "يجب توفر أشخاص في فريق العمل يجيدوا اللغة العربية والانجليزية. علي مدير المشروع القيام بمھامه وواجباته للتأكد من تطبيق وتنفيذ جميع بنود العقد، علماً بأنه سيكون مسئولاً مسئولية كاملة عن مراقبة ومتابعة وتنسيق جميع أعمال المشروع. لا يحق لمقدم الخدمة استبدال مدير المشروع دون أخذ الموافقة المسبقة من ال",
+                  "source": "Page 17 - رفض/قبول أو طلب تغيير مدير المشروع",
+                  "page": 17,
+                  "section": "رفض/قبول أو طلب تغيير مدير المشروع",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                },
+                {
+                  "id": "REQ-0029",
+                  "requirement": "يلتزم مقدم الخدمة بأخذ موافقة ال",
+                  "source": "Page 17 - مؤسسة",
+                  "page": 17,
+                  "section": "مؤسسة",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                },
+                {
+                  "id": "REQ-0030",
+                  "requirement": "الصلاحيات خلال إجازة المدير الأساسي للمشروع، ويلتزم مقد",
+                  "source": "Page 17 - ( مائة",
+                  "page": 17,
+                  "section": "( مائة",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 4,
+                  "importance_level": "High",
+                  "importance_reason": "Explicit or inferred mandatory requirement; High-impact requirement wording"
+                }
+              ]
+            },
+            {
+              "criterion_id": "C05",
+              "name": "الملكية الفكرية وتسليم الشيفرة المصدرية",
+              "description": "التزام المورد بتسليم الكود المصدري الكامل (Source Code) والحقوق المتعلقة به وفقًا لأحكام الملكية الفكرية المذكورة في القسم 3 من الكراسة.",
+              "source": "قائمة المتطلبات – القسم: الملكية الفكرية (REQ‐0003)",
+              "weight": 15.15,
+              "weight_source": "dynamic_criterion_importance",
+              "weight_evidence": "",
+              "criterion_importance_score": 5.0,
+              "criterion_importance_reason": "تسليم الشيفرة يضمن استدامة النظام وإمكانية الصيانة المستقبلية من قبل المؤسسة.",
+              "average_requirement_importance": 3.0,
+              "average_importance": 3.0,
+              "requirements": [
+                {
+                  "id": "REQ-0003",
+                  "requirement": ") يلتزم المورد بتسليم الجھة المالكة للمشروع كامل الكود المصدريSource Code",
+                  "source": "Page 11 - :الملكية الفكرية",
+                  "page": 11,
+                  "section": ":الملكية الفكرية",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                }
+              ]
+            },
+            {
+              "criterion_id": "C06",
+              "name": "العرض المالي وتفاصيل جدول الدفعات",
+              "description": "تحليل السعر الإجمالي، جدول الدفعات المرتبطة بالمخرجات، عدم تجاوز الدفعة المقدمة 5 % من قيمة العقد، والالتزام بعملة الدفع المحددة.",
+              "source": "صفحات 14‐15 – جداول الدفعات والجدول المالي",
+              "weight": 12.12,
+              "weight_source": "dynamic_criterion_importance",
+              "weight_evidence": "",
+              "criterion_importance_score": 4.0,
+              "criterion_importance_reason": "الجانب المالي يحدد جدوي المشروع من منظور الميزانية المتاحة.",
+              "average_requirement_importance": 3.0,
+              "average_importance": 3.0,
+              "requirements": [
+                {
+                  "id": "REQ-0020",
+                  "requirement": "او بجداول دفع شھرية مدعمة بجداول كميات حيث يجب تقديم ما يثبت قبول الأعمال من",
+                  "source": "Page 16 - يتم دفع قيمة المشروع بالعملة المحددة في العرض المالي علي دفعات مرتبطة بالمخرجات",
+                  "page": 16,
+                  "section": "يتم دفع قيمة المشروع بالعملة المحددة في العرض المالي علي دفعات مرتبطة بالمخرجات",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                },
+                {
+                  "id": "REQ-0021",
+                  "requirement": "يلتزم مقدم الخدمة برفع المستخلصات الشھرية إذا وجدت أو شھادات الإنجاز الخاصة",
+                  "source": "Page 16 - مؤسسة",
+                  "page": 16,
+                  "section": "مؤسسة",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                },
+                {
+                  "id": "REQ-0022",
+                  "requirement": "اساسا للمفاضلة ويشترط موافقة ال",
+                  "source": "Page 16 - من قيمة العرض المالي كمستخلص ختامي ويكون ذلك%",
+                  "page": 16,
+                  "section": "من قيمة العرض المالي كمستخلص ختامي ويكون ذلك%",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                },
+                {
+                  "id": "REQ-0023",
+                  "requirement": "يجب أن لا تتجاوز الدفعة المقدمة إن وجدت عن 5 من قيمة العرض المالي ولل%",
+                  "source": "Page 16 - علي الجدول قبل إدراجه في العقد الأساسي",
+                  "page": 16,
+                  "section": "علي الجدول قبل إدراجه في العقد الأساسي",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                }
+              ]
+            },
+            {
+              "criterion_id": "C07",
+              "name": "الأمان وحماية البيانات",
+              "description": "الالتزام بآليات الأمان (RBAC, SSO, تشفير البيانات، تدقيق السجلات) وفقًا للمتطلبات الواردة في الصفحات 9‐11.",
+              "source": "صفحات 9‐11 – إدارة الأمان والبيانات",
+              "weight": 12.13,
+              "weight_source": "dynamic_criterion_importance",
+              "weight_evidence": "",
+              "criterion_importance_score": 4.0,
+              "criterion_importance_reason": "حماية المعلومات الحساسة للمؤسسة أمر حيوي لتجنب الخروقات القانونية والسمعية.",
+              "average_requirement_importance": 3.0,
+              "average_importance": 3.0,
+              "requirements": [
+                {
+                  "id": "REQ-0031",
+                  "requirement": "يجب علي مقدم الخدمة",
+                  "source": "Page 17 - إدارة معلومات المشروع:",
+                  "page": 17,
+                  "section": "إدارة معلومات المشروع:",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                },
+                {
+                  "id": "REQ-0032",
+                  "requirement": "يجب أن تكون كافة البيانات والوثائق والدراسات والتقارير المراد تسليمھا علي نسختين مطبوعتين ملونتين بالإضافة إلي نسختين إلكترونيتين علي فلاش علي أن تكون النسخ",
+                  "source": "Page 17 - الامتثال للأنظمة والقواعد الأمنية الخاصة بإدارة وحفظ واستلام",
+                  "page": 17,
+                  "section": "الامتثال للأنظمة والقواعد الأمنية الخاصة بإدارة وحفظ واستلام",
+                  "mandatory": true,
+                  "requirement_type": "إلزامي",
+                  "mandatory_evidence": "إلزامي",
+                  "response_evidence_required": "",
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement"
+                }
+              ]
+            }
+          ],
+          "mandatory_requirements": [
+            {
+              "id": "REQ-0001",
+              "requirement_id": "REQ-0001",
+              "requirement": "( يجب علي مقدم العطاء تعبئة الجدول الموجود ويعد ذلك اقرار منه بتوفرھا وسيتم استثناء مقدم العطاء في حال عدم تقديم البنود الإلزامية",
+              "criterion": "الامتثال للمتطلبات الإلزامية والوثائق المطلوبة",
+              "criterion_id": "C01",
+              "source": "Page 4 - ضمان بنكي",
+              "page": 4,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0002",
+              "requirement_id": "REQ-0002",
+              "requirement": "بجميع ما ورد في ھذه الكراسة التزاماً مطلقاً وتأكيداً لذلك فإنه يجب التوقيع علي جميع صفحات الكراسة والنماذج المرفقة من قِبَل صاحب المؤسسة / الشركة )المورد( أو المفوض بالتوقيع مع ختم",
+              "criterion": "الامتثال للمتطلبات الإلزامية والوثائق المطلوبة",
+              "criterion_id": "C01",
+              "source": "Page 5 - أو تأمين مشترياته الالتزام",
+              "page": 5,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0004",
+              "requirement_id": "REQ-0004",
+              "requirement": "ويجب ان يحتوي التقديم علي كافة",
+              "criterion": "الامتثال للمتطلبات الإلزامية والوثائق المطلوبة",
+              "criterion_id": "C01",
+              "source": "Page 14 - الملك سلمان غير الربحية",
+              "page": 14,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0005",
+              "requirement_id": "REQ-0005",
+              "requirement": "يجب التقيد بالآلية التالية:",
+              "criterion": "الامتثال للمتطلبات الإلزامية والوثائق المطلوبة",
+              "criterion_id": "C01",
+              "source": "Page 14 - المتطلبات الإلزامية في قائمة تدقيق المنافسين الموضحة في الصفحة الثانية من ھذه الكراسة. كما",
+              "page": 14,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0006",
+              "requirement_id": "REQ-0006",
+              "requirement": "يجب ان يكون البريد الذي ترد منه العروض مسجلاً تحت العنوان الرسمي للشركة المقدمة للعرض.",
+              "criterion": "الامتثال للمتطلبات الإلزامية والوثائق المطلوبة",
+              "criterion_id": "C01",
+              "source": "Page 14 - المتطلبات الإلزامية في قائمة تدقيق المنافسين الموضحة في الصفحة الثانية من ھذه الكراسة. كما",
+              "page": 14,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0007",
+              "requirement_id": "REQ-0007",
+              "requirement": ":ويجب علي الاقل أن يحتوي علي",
+              "criterion": "الامتثال للمتطلبات الإلزامية والوثائق المطلوبة",
+              "criterion_id": "C01",
+              "source": "Page 14 - يقدم العرض الفني في ملف منفصل بصيغةPDF",
+              "page": 14,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0008",
+              "requirement_id": "REQ-0008",
+              "requirement": "ويجب علي الأقل ان يحتوي",
+              "criterion": "الامتثال للمتطلبات الإلزامية والوثائق المطلوبة",
+              "criterion_id": "C01",
+              "source": "Page 15 - وملفEXCEL",
+              "page": 15,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0014",
+              "requirement_id": "REQ-0014",
+              "requirement": ") يجب أن لا تقل صلاحية العروض عن90",
+              "criterion": "الامتثال للمتطلبات الإلزامية والوثائق المطلوبة",
+              "criterion_id": "C01",
+              "source": "Page 16 - صفحة 16",
+              "page": 16,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0015",
+              "requirement_id": "REQ-0015",
+              "requirement": "يجب علي مقدم العرض ختم جميع صفحات كراسة شروط المواصفات وجداول الكميات",
+              "criterion": "الامتثال للمتطلبات الإلزامية والوثائق المطلوبة",
+              "criterion_id": "C01",
+              "source": "Page 16 - .( تسعين يوماً من تاريخ تقديم العرض",
+              "page": 16,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0016",
+              "requirement_id": "REQ-0016",
+              "requirement": "يجب علي مقدم العرض التصريح بتعارض المصالح إن وجد ويكون ذلك بشكل مكتوب يقدم ضمن العرض ويشمل ذلك الأقارب حتي الدرجة الرابعة.",
+              "criterion": "الامتثال للمتطلبات الإلزامية والوثائق المطلوبة",
+              "criterion_id": "C01",
+              "source": "Page 16 - مؤسسة",
+              "page": 16,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0009",
+              "requirement_id": "REQ-0009",
+              "requirement": "مطلوبة لتوضيح الدعوة إلي تقديم العطاءات، بما في ذلك المواصفات التي يجب تقديمھا إلي",
+              "criterion": "جودة الحل الفني وتوافقه مع المتطلبات الوظيفية",
+              "criterion_id": "C02",
+              "source": "Page 15 - أو أي معلومات إضافية",
+              "page": 15,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0017",
+              "requirement_id": "REQ-0017",
+              "requirement": "يجب علي مقدم العرض إيضاح الأجزاء التي سيتم تنفيذھا من قبل مقاولي الباطن ضمن نطاق",
+              "criterion": "جودة الحل الفني وتوافقه مع المتطلبات الوظيفية",
+              "criterion_id": "C02",
+              "source": "Page 16 - مؤسسة",
+              "page": 16,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0024",
+              "requirement_id": "REQ-0024",
+              "requirement": "وتوضح مدي التزام مقدم الخدمة بالأداء التشغيلي للمشروع. لذا يجب علي مقدم الخدمة",
+              "criterion": "جودة الحل الفني وتوافقه مع المتطلبات الوظيفية",
+              "criterion_id": "C02",
+              "source": "Page 17 - والأھداف المرجو",
+              "page": 17,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0018",
+              "requirement_id": "REQ-0018",
+              "requirement": "يجب علي مقدم الخدمة الفائز بالمشروع إعداد خطة عمل تفصيلية لتنفيذ المشروع وإعداد خطة تدريب وخطة دعم تفصيلية \"عند الحاجة\".",
+              "criterion": "خطة التنفيذ والجدول الزمني",
+              "criterion_id": "C03",
+              "source": "Page 16 - المطلوبة وجميع الشروط التي تتضمنھا الكراسة وكذلك الالتزامات والبنود التي يُتفق عليھا",
+              "page": 16,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0025",
+              "requirement_id": "REQ-0025",
+              "requirement": "، مع مراعاة أن القائمة التفصيلية النھائية يجب تنسيقھا والاتفاق عليھا مع مالك",
+              "criterion": "خطة التنفيذ والجدول الزمني",
+              "criterion_id": "C03",
+              "source": "Page 17 - المشروع",
+              "page": 17,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0019",
+              "requirement_id": "REQ-0019",
+              "requirement": "وكذلك من سيتم الاستعانة بھم من مقيمين وزائرين قبل بداية العمل ويجب الحصول علي",
+              "criterion": "خبرة وتأهيل فريق الإدارة والتنفيذ",
+              "criterion_id": "C04",
+              "source": "Page 16 - قبل الاختيار النھائي لصاحب العرض",
+              "page": 16,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0026",
+              "requirement_id": "REQ-0026",
+              "requirement": "يلتزم مقدم الخدمة بتعيين مديراً عاماً للمشروع ويفضل أن يكون سعودي الجنسية وحاصل علي شھادة معتمدة في ھذا المجال، أو ما يعادلھا، ولديه خبرة لا تقل عن خمسة سنوات",
+              "criterion": "خبرة وتأهيل فريق الإدارة والتنفيذ",
+              "criterion_id": "C04",
+              "source": "Page 17 - إدارة الموارد خلال تنفيذ المشروع:",
+              "page": 17,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0027",
+              "requirement_id": "REQ-0027",
+              "requirement": "يجب منح مدير المشروع جميع الصلاحيات اللازمة لاتخاذ القرارات دون تأخير أو تعليق.",
+              "criterion": "خبرة وتأهيل فريق الإدارة والتنفيذ",
+              "criterion_id": "C04",
+              "source": "Page 17 - رفض/قبول أو طلب تغيير مدير المشروع",
+              "page": 17,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0028",
+              "requirement_id": "REQ-0028",
+              "requirement": "يجب توفر أشخاص في فريق العمل يجيدوا اللغة العربية والانجليزية. علي مدير المشروع القيام بمھامه وواجباته للتأكد من تطبيق وتنفيذ جميع بنود العقد، علماً بأنه سيكون مسئولاً مسئولية كاملة عن مراقبة ومتابعة وتنسيق جميع أعمال المشروع. لا يحق لمقدم الخدمة استبدال مدير المشروع دون أخذ الموافقة المسبقة من ال",
+              "criterion": "خبرة وتأهيل فريق الإدارة والتنفيذ",
+              "criterion_id": "C04",
+              "source": "Page 17 - رفض/قبول أو طلب تغيير مدير المشروع",
+              "page": 17,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0029",
+              "requirement_id": "REQ-0029",
+              "requirement": "يلتزم مقدم الخدمة بأخذ موافقة ال",
+              "criterion": "خبرة وتأهيل فريق الإدارة والتنفيذ",
+              "criterion_id": "C04",
+              "source": "Page 17 - مؤسسة",
+              "page": 17,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0030",
+              "requirement_id": "REQ-0030",
+              "requirement": "الصلاحيات خلال إجازة المدير الأساسي للمشروع، ويلتزم مقد",
+              "criterion": "خبرة وتأهيل فريق الإدارة والتنفيذ",
+              "criterion_id": "C04",
+              "source": "Page 17 - ( مائة",
+              "page": 17,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 4,
+              "importance_level": "High",
+              "importance_reason": "Explicit or inferred mandatory requirement; High-impact requirement wording"
+            },
+            {
+              "id": "REQ-0003",
+              "requirement_id": "REQ-0003",
+              "requirement": ") يلتزم المورد بتسليم الجھة المالكة للمشروع كامل الكود المصدريSource Code",
+              "criterion": "الملكية الفكرية وتسليم الشيفرة المصدرية",
+              "criterion_id": "C05",
+              "source": "Page 11 - :الملكية الفكرية",
+              "page": 11,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0020",
+              "requirement_id": "REQ-0020",
+              "requirement": "او بجداول دفع شھرية مدعمة بجداول كميات حيث يجب تقديم ما يثبت قبول الأعمال من",
+              "criterion": "العرض المالي وتفاصيل جدول الدفعات",
+              "criterion_id": "C06",
+              "source": "Page 16 - يتم دفع قيمة المشروع بالعملة المحددة في العرض المالي علي دفعات مرتبطة بالمخرجات",
+              "page": 16,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0021",
+              "requirement_id": "REQ-0021",
+              "requirement": "يلتزم مقدم الخدمة برفع المستخلصات الشھرية إذا وجدت أو شھادات الإنجاز الخاصة",
+              "criterion": "العرض المالي وتفاصيل جدول الدفعات",
+              "criterion_id": "C06",
+              "source": "Page 16 - مؤسسة",
+              "page": 16,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0022",
+              "requirement_id": "REQ-0022",
+              "requirement": "اساسا للمفاضلة ويشترط موافقة ال",
+              "criterion": "العرض المالي وتفاصيل جدول الدفعات",
+              "criterion_id": "C06",
+              "source": "Page 16 - من قيمة العرض المالي كمستخلص ختامي ويكون ذلك%",
+              "page": 16,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0023",
+              "requirement_id": "REQ-0023",
+              "requirement": "يجب أن لا تتجاوز الدفعة المقدمة إن وجدت عن 5 من قيمة العرض المالي ولل%",
+              "criterion": "العرض المالي وتفاصيل جدول الدفعات",
+              "criterion_id": "C06",
+              "source": "Page 16 - علي الجدول قبل إدراجه في العقد الأساسي",
+              "page": 16,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0031",
+              "requirement_id": "REQ-0031",
+              "requirement": "يجب علي مقدم الخدمة",
+              "criterion": "الأمان وحماية البيانات",
+              "criterion_id": "C07",
+              "source": "Page 17 - إدارة معلومات المشروع:",
+              "page": 17,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0032",
+              "requirement_id": "REQ-0032",
+              "requirement": "يجب أن تكون كافة البيانات والوثائق والدراسات والتقارير المراد تسليمھا علي نسختين مطبوعتين ملونتين بالإضافة إلي نسختين إلكترونيتين علي فلاش علي أن تكون النسخ",
+              "criterion": "الأمان وحماية البيانات",
+              "criterion_id": "C07",
+              "source": "Page 17 - الامتثال للأنظمة والقواعد الأمنية الخاصة بإدارة وحفظ واستلام",
+              "page": 17,
+              "mandatory_evidence": "إلزامي",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            }
+          ],
+          "all_requirements": [
+            {
+              "id": "REQ-0001",
+              "requirement": "( يجب علي مقدم العطاء تعبئة الجدول الموجود ويعد ذلك اقرار منه بتوفرھا وسيتم استثناء مقدم العطاء في حال عدم تقديم البنود الإلزامية",
+              "source": "Page 4 - ضمان بنكي",
+              "page": 4,
+              "section": "ضمان بنكي",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0002",
+              "requirement": "بجميع ما ورد في ھذه الكراسة التزاماً مطلقاً وتأكيداً لذلك فإنه يجب التوقيع علي جميع صفحات الكراسة والنماذج المرفقة من قِبَل صاحب المؤسسة / الشركة )المورد( أو المفوض بالتوقيع مع ختم",
+              "source": "Page 5 - أو تأمين مشترياته الالتزام",
+              "page": 5,
+              "section": "أو تأمين مشترياته الالتزام",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0003",
+              "requirement": ") يلتزم المورد بتسليم الجھة المالكة للمشروع كامل الكود المصدريSource Code",
+              "source": "Page 11 - :الملكية الفكرية",
+              "page": 11,
+              "section": ":الملكية الفكرية",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0004",
+              "requirement": "ويجب ان يحتوي التقديم علي كافة",
+              "source": "Page 14 - الملك سلمان غير الربحية",
+              "page": 14,
+              "section": "الملك سلمان غير الربحية",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0005",
+              "requirement": "يجب التقيد بالآلية التالية:",
+              "source": "Page 14 - المتطلبات الإلزامية في قائمة تدقيق المنافسين الموضحة في الصفحة الثانية من ھذه الكراسة. كما",
+              "page": 14,
+              "section": "المتطلبات الإلزامية في قائمة تدقيق المنافسين الموضحة في الصفحة الثانية من ھذه الكراسة. كما",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0006",
+              "requirement": "يجب ان يكون البريد الذي ترد منه العروض مسجلاً تحت العنوان الرسمي للشركة المقدمة للعرض.",
+              "source": "Page 14 - المتطلبات الإلزامية في قائمة تدقيق المنافسين الموضحة في الصفحة الثانية من ھذه الكراسة. كما",
+              "page": 14,
+              "section": "المتطلبات الإلزامية في قائمة تدقيق المنافسين الموضحة في الصفحة الثانية من ھذه الكراسة. كما",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0007",
+              "requirement": ":ويجب علي الاقل أن يحتوي علي",
+              "source": "Page 14 - يقدم العرض الفني في ملف منفصل بصيغةPDF",
+              "page": 14,
+              "section": "يقدم العرض الفني في ملف منفصل بصيغةPDF",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0008",
+              "requirement": "ويجب علي الأقل ان يحتوي",
+              "source": "Page 15 - وملفEXCEL",
+              "page": 15,
+              "section": "وملفEXCEL",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0009",
+              "requirement": "مطلوبة لتوضيح الدعوة إلي تقديم العطاءات، بما في ذلك المواصفات التي يجب تقديمھا إلي",
+              "source": "Page 15 - أو أي معلومات إضافية",
+              "page": 15,
+              "section": "أو أي معلومات إضافية",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0010",
+              "requirement": "صفات الفنية المطلوبة لتحديد",
+              "source": "Page 15 - العروض المطابقة لجميع الشروط والموا",
+              "page": 15,
+              "section": "العروض المطابقة لجميع الشروط والموا",
+              "mandatory": false,
+              "requirement_type": "",
+              "mandatory_evidence": "",
+              "response_evidence_required": "",
+              "importance_score": 2,
+              "importance_level": "Moderate",
+              "importance_reason": "General RFP requirement"
+            },
+            {
+              "id": "REQ-0011",
+              "requirement": "ات المطلوبة",
+              "source": "Page 15 - أو الخدم",
+              "page": 15,
+              "section": "أو الخدم",
+              "mandatory": false,
+              "requirement_type": "",
+              "mandatory_evidence": "",
+              "response_evidence_required": "",
+              "importance_score": 2,
+              "importance_level": "Moderate",
+              "importance_reason": "General RFP requirement"
+            },
+            {
+              "id": "REQ-0012",
+              "requirement": ".التخطيط لتنفيذ المشروع وتقديم مخرجات حسب المطلوب",
+              "source": "Page 15 - جودة منھجية وخطة العمل المقدمة",
+              "page": 15,
+              "section": "جودة منھجية وخطة العمل المقدمة",
+              "mandatory": false,
+              "requirement_type": "",
+              "mandatory_evidence": "",
+              "response_evidence_required": "",
+              "importance_score": 2,
+              "importance_level": "Moderate",
+              "importance_reason": "General RFP requirement"
+            },
+            {
+              "id": "REQ-0013",
+              "requirement": ".جدول زمني متوافق مع التواريخ المطلوبة لتنفيذ المشروع",
+              "source": "Page 15 - جودة منھجية وخطة العمل المقدمة",
+              "page": 15,
+              "section": "جودة منھجية وخطة العمل المقدمة",
+              "mandatory": false,
+              "requirement_type": "",
+              "mandatory_evidence": "",
+              "response_evidence_required": "",
+              "importance_score": 2,
+              "importance_level": "Moderate",
+              "importance_reason": "General RFP requirement"
+            },
+            {
+              "id": "REQ-0014",
+              "requirement": ") يجب أن لا تقل صلاحية العروض عن90",
+              "source": "Page 16 - صفحة 16",
+              "page": 16,
+              "section": "صفحة 16",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0015",
+              "requirement": "يجب علي مقدم العرض ختم جميع صفحات كراسة شروط المواصفات وجداول الكميات",
+              "source": "Page 16 - .( تسعين يوماً من تاريخ تقديم العرض",
+              "page": 16,
+              "section": ".( تسعين يوماً من تاريخ تقديم العرض",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0016",
+              "requirement": "يجب علي مقدم العرض التصريح بتعارض المصالح إن وجد ويكون ذلك بشكل مكتوب يقدم ضمن العرض ويشمل ذلك الأقارب حتي الدرجة الرابعة.",
+              "source": "Page 16 - مؤسسة",
+              "page": 16,
+              "section": "مؤسسة",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0017",
+              "requirement": "يجب علي مقدم العرض إيضاح الأجزاء التي سيتم تنفيذھا من قبل مقاولي الباطن ضمن نطاق",
+              "source": "Page 16 - مؤسسة",
+              "page": 16,
+              "section": "مؤسسة",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0018",
+              "requirement": "يجب علي مقدم الخدمة الفائز بالمشروع إعداد خطة عمل تفصيلية لتنفيذ المشروع وإعداد خطة تدريب وخطة دعم تفصيلية \"عند الحاجة\".",
+              "source": "Page 16 - المطلوبة وجميع الشروط التي تتضمنھا الكراسة وكذلك الالتزامات والبنود التي يُتفق عليھا",
+              "page": 16,
+              "section": "المطلوبة وجميع الشروط التي تتضمنھا الكراسة وكذلك الالتزامات والبنود التي يُتفق عليھا",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0019",
+              "requirement": "وكذلك من سيتم الاستعانة بھم من مقيمين وزائرين قبل بداية العمل ويجب الحصول علي",
+              "source": "Page 16 - قبل الاختيار النھائي لصاحب العرض",
+              "page": 16,
+              "section": "قبل الاختيار النھائي لصاحب العرض",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0020",
+              "requirement": "او بجداول دفع شھرية مدعمة بجداول كميات حيث يجب تقديم ما يثبت قبول الأعمال من",
+              "source": "Page 16 - يتم دفع قيمة المشروع بالعملة المحددة في العرض المالي علي دفعات مرتبطة بالمخرجات",
+              "page": 16,
+              "section": "يتم دفع قيمة المشروع بالعملة المحددة في العرض المالي علي دفعات مرتبطة بالمخرجات",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0021",
+              "requirement": "يلتزم مقدم الخدمة برفع المستخلصات الشھرية إذا وجدت أو شھادات الإنجاز الخاصة",
+              "source": "Page 16 - مؤسسة",
+              "page": 16,
+              "section": "مؤسسة",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0022",
+              "requirement": "اساسا للمفاضلة ويشترط موافقة ال",
+              "source": "Page 16 - من قيمة العرض المالي كمستخلص ختامي ويكون ذلك%",
+              "page": 16,
+              "section": "من قيمة العرض المالي كمستخلص ختامي ويكون ذلك%",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0023",
+              "requirement": "يجب أن لا تتجاوز الدفعة المقدمة إن وجدت عن 5 من قيمة العرض المالي ولل%",
+              "source": "Page 16 - علي الجدول قبل إدراجه في العقد الأساسي",
+              "page": 16,
+              "section": "علي الجدول قبل إدراجه في العقد الأساسي",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0024",
+              "requirement": "وتوضح مدي التزام مقدم الخدمة بالأداء التشغيلي للمشروع. لذا يجب علي مقدم الخدمة",
+              "source": "Page 17 - والأھداف المرجو",
+              "page": 17,
+              "section": "والأھداف المرجو",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0025",
+              "requirement": "، مع مراعاة أن القائمة التفصيلية النھائية يجب تنسيقھا والاتفاق عليھا مع مالك",
+              "source": "Page 17 - المشروع",
+              "page": 17,
+              "section": "المشروع",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0026",
+              "requirement": "يلتزم مقدم الخدمة بتعيين مديراً عاماً للمشروع ويفضل أن يكون سعودي الجنسية وحاصل علي شھادة معتمدة في ھذا المجال، أو ما يعادلھا، ولديه خبرة لا تقل عن خمسة سنوات",
+              "source": "Page 17 - إدارة الموارد خلال تنفيذ المشروع:",
+              "page": 17,
+              "section": "إدارة الموارد خلال تنفيذ المشروع:",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0027",
+              "requirement": "يجب منح مدير المشروع جميع الصلاحيات اللازمة لاتخاذ القرارات دون تأخير أو تعليق.",
+              "source": "Page 17 - رفض/قبول أو طلب تغيير مدير المشروع",
+              "page": 17,
+              "section": "رفض/قبول أو طلب تغيير مدير المشروع",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0028",
+              "requirement": "يجب توفر أشخاص في فريق العمل يجيدوا اللغة العربية والانجليزية. علي مدير المشروع القيام بمھامه وواجباته للتأكد من تطبيق وتنفيذ جميع بنود العقد، علماً بأنه سيكون مسئولاً مسئولية كاملة عن مراقبة ومتابعة وتنسيق جميع أعمال المشروع. لا يحق لمقدم الخدمة استبدال مدير المشروع دون أخذ الموافقة المسبقة من ال",
+              "source": "Page 17 - رفض/قبول أو طلب تغيير مدير المشروع",
+              "page": 17,
+              "section": "رفض/قبول أو طلب تغيير مدير المشروع",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0029",
+              "requirement": "يلتزم مقدم الخدمة بأخذ موافقة ال",
+              "source": "Page 17 - مؤسسة",
+              "page": 17,
+              "section": "مؤسسة",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0030",
+              "requirement": "الصلاحيات خلال إجازة المدير الأساسي للمشروع، ويلتزم مقد",
+              "source": "Page 17 - ( مائة",
+              "page": 17,
+              "section": "( مائة",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 4,
+              "importance_level": "High",
+              "importance_reason": "Explicit or inferred mandatory requirement; High-impact requirement wording"
+            },
+            {
+              "id": "REQ-0031",
+              "requirement": "يجب علي مقدم الخدمة",
+              "source": "Page 17 - إدارة معلومات المشروع:",
+              "page": 17,
+              "section": "إدارة معلومات المشروع:",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            },
+            {
+              "id": "REQ-0032",
+              "requirement": "يجب أن تكون كافة البيانات والوثائق والدراسات والتقارير المراد تسليمھا علي نسختين مطبوعتين ملونتين بالإضافة إلي نسختين إلكترونيتين علي فلاش علي أن تكون النسخ",
+              "source": "Page 17 - الامتثال للأنظمة والقواعد الأمنية الخاصة بإدارة وحفظ واستلام",
+              "page": 17,
+              "section": "الامتثال للأنظمة والقواعد الأمنية الخاصة بإدارة وحفظ واستلام",
+              "mandatory": true,
+              "requirement_type": "إلزامي",
+              "mandatory_evidence": "إلزامي",
+              "response_evidence_required": "",
+              "importance_score": 3,
+              "importance_level": "Important",
+              "importance_reason": "Explicit or inferred mandatory requirement"
+            }
+          ],
+          "metadata": {
+            "criteria_count": 7,
+            "requirement_count": 32,
+            "mandatory_requirement_count": 28,
+            "total_weight": 100.0,
+            "weight_source": "dynamic_criterion_importance",
+            "document_language": "Arabic",
+            "requirement_extraction_method": "deterministic_structured_fallback",
+            "criteria_discovery_method": "dynamic_llm_discovery",
+            "requirement_assignment_method": "batched_llm_assignment_with_deterministic_validation",
+            "weighting_method": "explicit_rfp_if_complete_else_dynamic_criterion_importance",
+            "criterion_weight_count_independent": true,
+            "dynamic_criteria": true
+          }
+        },
+        "criteria": [
+          {
+            "criterion_id": "C01",
+            "name": "الامتثال للمتطلبات الإلزامية والوثائق المطلوبة",
+            "description": "تقديم جميع المستندات المطلوبة (ضمان بنكي، توقيع وختم جميع صفحات الكراسة، إقرار عدم تعارض المصالح، بريد رسمي، ملف PDF للعرض الفني وملف Excel للعرض المالي) وفقًا لقائمة تدقيق المنافسين المذكورة في الصفحات 2‐4.",
+            "source": "قائمة تدقيق المنافسين (صفحات 2‐4) – المتطلبات الإلزامية",
+            "weight": 15.15,
+            "weight_source": "dynamic_criterion_importance",
+            "weight_evidence": "",
+            "criterion_importance_score": 5.0,
+            "criterion_importance_reason": "غياب أي من هذه الوثائق يؤدي إلي استبعاد العارض من المنافسة.",
+            "average_requirement_importance": 3.0,
+            "average_importance": 3.0,
+            "requirements": [
+              {
+                "id": "REQ-0001",
+                "requirement": "( يجب علي مقدم العطاء تعبئة الجدول الموجود ويعد ذلك اقرار منه بتوفرھا وسيتم استثناء مقدم العطاء في حال عدم تقديم البنود الإلزامية",
+                "source": "Page 4 - ضمان بنكي",
+                "page": 4,
+                "section": "ضمان بنكي",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              },
+              {
+                "id": "REQ-0002",
+                "requirement": "بجميع ما ورد في ھذه الكراسة التزاماً مطلقاً وتأكيداً لذلك فإنه يجب التوقيع علي جميع صفحات الكراسة والنماذج المرفقة من قِبَل صاحب المؤسسة / الشركة )المورد( أو المفوض بالتوقيع مع ختم",
+                "source": "Page 5 - أو تأمين مشترياته الالتزام",
+                "page": 5,
+                "section": "أو تأمين مشترياته الالتزام",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              },
+              {
+                "id": "REQ-0004",
+                "requirement": "ويجب ان يحتوي التقديم علي كافة",
+                "source": "Page 14 - الملك سلمان غير الربحية",
+                "page": 14,
+                "section": "الملك سلمان غير الربحية",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              },
+              {
+                "id": "REQ-0005",
+                "requirement": "يجب التقيد بالآلية التالية:",
+                "source": "Page 14 - المتطلبات الإلزامية في قائمة تدقيق المنافسين الموضحة في الصفحة الثانية من ھذه الكراسة. كما",
+                "page": 14,
+                "section": "المتطلبات الإلزامية في قائمة تدقيق المنافسين الموضحة في الصفحة الثانية من ھذه الكراسة. كما",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              },
+              {
+                "id": "REQ-0006",
+                "requirement": "يجب ان يكون البريد الذي ترد منه العروض مسجلاً تحت العنوان الرسمي للشركة المقدمة للعرض.",
+                "source": "Page 14 - المتطلبات الإلزامية في قائمة تدقيق المنافسين الموضحة في الصفحة الثانية من ھذه الكراسة. كما",
+                "page": 14,
+                "section": "المتطلبات الإلزامية في قائمة تدقيق المنافسين الموضحة في الصفحة الثانية من ھذه الكراسة. كما",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              },
+              {
+                "id": "REQ-0007",
+                "requirement": ":ويجب علي الاقل أن يحتوي علي",
+                "source": "Page 14 - يقدم العرض الفني في ملف منفصل بصيغةPDF",
+                "page": 14,
+                "section": "يقدم العرض الفني في ملف منفصل بصيغةPDF",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              },
+              {
+                "id": "REQ-0008",
+                "requirement": "ويجب علي الأقل ان يحتوي",
+                "source": "Page 15 - وملفEXCEL",
+                "page": 15,
+                "section": "وملفEXCEL",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              },
+              {
+                "id": "REQ-0014",
+                "requirement": ") يجب أن لا تقل صلاحية العروض عن90",
+                "source": "Page 16 - صفحة 16",
+                "page": 16,
+                "section": "صفحة 16",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              },
+              {
+                "id": "REQ-0015",
+                "requirement": "يجب علي مقدم العرض ختم جميع صفحات كراسة شروط المواصفات وجداول الكميات",
+                "source": "Page 16 - .( تسعين يوماً من تاريخ تقديم العرض",
+                "page": 16,
+                "section": ".( تسعين يوماً من تاريخ تقديم العرض",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              },
+              {
+                "id": "REQ-0016",
+                "requirement": "يجب علي مقدم العرض التصريح بتعارض المصالح إن وجد ويكون ذلك بشكل مكتوب يقدم ضمن العرض ويشمل ذلك الأقارب حتي الدرجة الرابعة.",
+                "source": "Page 16 - مؤسسة",
+                "page": 16,
+                "section": "مؤسسة",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              }
+            ]
+          },
+          {
+            "criterion_id": "C02",
+            "name": "جودة الحل الفني وتوافقه مع المتطلبات الوظيفية",
+            "description": "تقييم مدي توافق الحل المقترح مع المتطلبات الوظيفية مثل بنية النظام، التكامل مع أنظمة RFID، OCR، البحث المتكامل، الأمان، والقدرة علي توفير الخدمات الرقمية المطلوبة.",
+            "source": "صفحات 8‐12 – مواصفات النظام والتقنيات المتقدمة",
+            "weight": 15.15,
+            "weight_source": "dynamic_criterion_importance",
+            "weight_evidence": "",
+            "criterion_importance_score": 5.0,
+            "criterion_importance_reason": "الملاءمة التقنية هي أساس نجاح المشروع وتحديد قدرته علي تحقيق أهداف المؤسسة.",
+            "average_requirement_importance": 2.6,
+            "average_importance": 2.6,
+            "requirements": [
+              {
+                "id": "REQ-0009",
+                "requirement": "مطلوبة لتوضيح الدعوة إلي تقديم العطاءات، بما في ذلك المواصفات التي يجب تقديمھا إلي",
+                "source": "Page 15 - أو أي معلومات إضافية",
+                "page": 15,
+                "section": "أو أي معلومات إضافية",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              },
+              {
+                "id": "REQ-0010",
+                "requirement": "صفات الفنية المطلوبة لتحديد",
+                "source": "Page 15 - العروض المطابقة لجميع الشروط والموا",
+                "page": 15,
+                "section": "العروض المطابقة لجميع الشروط والموا",
+                "mandatory": false,
+                "requirement_type": "",
+                "mandatory_evidence": "",
+                "response_evidence_required": "",
+                "importance_score": 2,
+                "importance_level": "Moderate",
+                "importance_reason": "General RFP requirement"
+              },
+              {
+                "id": "REQ-0011",
+                "requirement": "ات المطلوبة",
+                "source": "Page 15 - أو الخدم",
+                "page": 15,
+                "section": "أو الخدم",
+                "mandatory": false,
+                "requirement_type": "",
+                "mandatory_evidence": "",
+                "response_evidence_required": "",
+                "importance_score": 2,
+                "importance_level": "Moderate",
+                "importance_reason": "General RFP requirement"
+              },
+              {
+                "id": "REQ-0017",
+                "requirement": "يجب علي مقدم العرض إيضاح الأجزاء التي سيتم تنفيذھا من قبل مقاولي الباطن ضمن نطاق",
+                "source": "Page 16 - مؤسسة",
+                "page": 16,
+                "section": "مؤسسة",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              },
+              {
+                "id": "REQ-0024",
+                "requirement": "وتوضح مدي التزام مقدم الخدمة بالأداء التشغيلي للمشروع. لذا يجب علي مقدم الخدمة",
+                "source": "Page 17 - والأھداف المرجو",
+                "page": 17,
+                "section": "والأھداف المرجو",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              }
+            ]
+          },
+          {
+            "criterion_id": "C03",
+            "name": "خطة التنفيذ والجدول الزمني",
+            "description": "تقديم خطة عمل مفصلة تشمل مراحل التنفيذ، مخرجات كل مرحلة، تواريخ التسليم، ومؤشرات نجاح المشروع وفقًا للجدول الزمني المطلوب (90 يومًا علي الأقل لصلاحية العرض).",
+            "source": "صفحات 5‐7 – جدول التنفيذ وتواريخ الاستجابة والاعتماد",
+            "weight": 15.15,
+            "weight_source": "dynamic_criterion_importance",
+            "weight_evidence": "",
+            "criterion_importance_score": 5.0,
+            "criterion_importance_reason": "ضمان إكمال المشروع ضمن الإطار الزمني المتفق عليه وتجنب التأخير.",
+            "average_requirement_importance": 2.5,
+            "average_importance": 2.5,
+            "requirements": [
+              {
+                "id": "REQ-0012",
+                "requirement": ".التخطيط لتنفيذ المشروع وتقديم مخرجات حسب المطلوب",
+                "source": "Page 15 - جودة منھجية وخطة العمل المقدمة",
+                "page": 15,
+                "section": "جودة منھجية وخطة العمل المقدمة",
+                "mandatory": false,
+                "requirement_type": "",
+                "mandatory_evidence": "",
+                "response_evidence_required": "",
+                "importance_score": 2,
+                "importance_level": "Moderate",
+                "importance_reason": "General RFP requirement"
+              },
+              {
+                "id": "REQ-0013",
+                "requirement": ".جدول زمني متوافق مع التواريخ المطلوبة لتنفيذ المشروع",
+                "source": "Page 15 - جودة منھجية وخطة العمل المقدمة",
+                "page": 15,
+                "section": "جودة منھجية وخطة العمل المقدمة",
+                "mandatory": false,
+                "requirement_type": "",
+                "mandatory_evidence": "",
+                "response_evidence_required": "",
+                "importance_score": 2,
+                "importance_level": "Moderate",
+                "importance_reason": "General RFP requirement"
+              },
+              {
+                "id": "REQ-0018",
+                "requirement": "يجب علي مقدم الخدمة الفائز بالمشروع إعداد خطة عمل تفصيلية لتنفيذ المشروع وإعداد خطة تدريب وخطة دعم تفصيلية \"عند الحاجة\".",
+                "source": "Page 16 - المطلوبة وجميع الشروط التي تتضمنھا الكراسة وكذلك الالتزامات والبنود التي يُتفق عليھا",
+                "page": 16,
+                "section": "المطلوبة وجميع الشروط التي تتضمنھا الكراسة وكذلك الالتزامات والبنود التي يُتفق عليھا",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              },
+              {
+                "id": "REQ-0025",
+                "requirement": "، مع مراعاة أن القائمة التفصيلية النھائية يجب تنسيقھا والاتفاق عليھا مع مالك",
+                "source": "Page 17 - المشروع",
+                "page": 17,
+                "section": "المشروع",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              }
+            ]
+          },
+          {
+            "criterion_id": "C04",
+            "name": "خبرة وتأهيل فريق الإدارة والتنفيذ",
+            "description": "تقييم خبرة مدير المشروع (سعودي، شهادة معتمدة، خبرة لا تقل عن 5 سنوات) وخبرات الأعضاء الآخرين (إجادة اللغتين العربية والإنجليزية، خبرة في المجالات التقنية المطلوبة).",
+            "source": "صفحات 7‐9 – مواصفات مدير المشروع وفريق العمل",
+            "weight": 15.15,
+            "weight_source": "dynamic_criterion_importance",
+            "weight_evidence": "",
+            "criterion_importance_score": 5.0,
+            "criterion_importance_reason": "فريق مؤهل يضمن تطبيق العقود وإدارة المخاطر بفعالية.",
+            "average_requirement_importance": 3.167,
+            "average_importance": 3.167,
+            "requirements": [
+              {
+                "id": "REQ-0019",
+                "requirement": "وكذلك من سيتم الاستعانة بھم من مقيمين وزائرين قبل بداية العمل ويجب الحصول علي",
+                "source": "Page 16 - قبل الاختيار النھائي لصاحب العرض",
+                "page": 16,
+                "section": "قبل الاختيار النھائي لصاحب العرض",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              },
+              {
+                "id": "REQ-0026",
+                "requirement": "يلتزم مقدم الخدمة بتعيين مديراً عاماً للمشروع ويفضل أن يكون سعودي الجنسية وحاصل علي شھادة معتمدة في ھذا المجال، أو ما يعادلھا، ولديه خبرة لا تقل عن خمسة سنوات",
+                "source": "Page 17 - إدارة الموارد خلال تنفيذ المشروع:",
+                "page": 17,
+                "section": "إدارة الموارد خلال تنفيذ المشروع:",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              },
+              {
+                "id": "REQ-0027",
+                "requirement": "يجب منح مدير المشروع جميع الصلاحيات اللازمة لاتخاذ القرارات دون تأخير أو تعليق.",
+                "source": "Page 17 - رفض/قبول أو طلب تغيير مدير المشروع",
+                "page": 17,
+                "section": "رفض/قبول أو طلب تغيير مدير المشروع",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              },
+              {
+                "id": "REQ-0028",
+                "requirement": "يجب توفر أشخاص في فريق العمل يجيدوا اللغة العربية والانجليزية. علي مدير المشروع القيام بمھامه وواجباته للتأكد من تطبيق وتنفيذ جميع بنود العقد، علماً بأنه سيكون مسئولاً مسئولية كاملة عن مراقبة ومتابعة وتنسيق جميع أعمال المشروع. لا يحق لمقدم الخدمة استبدال مدير المشروع دون أخذ الموافقة المسبقة من ال",
+                "source": "Page 17 - رفض/قبول أو طلب تغيير مدير المشروع",
+                "page": 17,
+                "section": "رفض/قبول أو طلب تغيير مدير المشروع",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              },
+              {
+                "id": "REQ-0029",
+                "requirement": "يلتزم مقدم الخدمة بأخذ موافقة ال",
+                "source": "Page 17 - مؤسسة",
+                "page": 17,
+                "section": "مؤسسة",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              },
+              {
+                "id": "REQ-0030",
+                "requirement": "الصلاحيات خلال إجازة المدير الأساسي للمشروع، ويلتزم مقد",
+                "source": "Page 17 - ( مائة",
+                "page": 17,
+                "section": "( مائة",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 4,
+                "importance_level": "High",
+                "importance_reason": "Explicit or inferred mandatory requirement; High-impact requirement wording"
+              }
+            ]
+          },
+          {
+            "criterion_id": "C05",
+            "name": "الملكية الفكرية وتسليم الشيفرة المصدرية",
+            "description": "التزام المورد بتسليم الكود المصدري الكامل (Source Code) والحقوق المتعلقة به وفقًا لأحكام الملكية الفكرية المذكورة في القسم 3 من الكراسة.",
+            "source": "قائمة المتطلبات – القسم: الملكية الفكرية (REQ‐0003)",
+            "weight": 15.15,
+            "weight_source": "dynamic_criterion_importance",
+            "weight_evidence": "",
+            "criterion_importance_score": 5.0,
+            "criterion_importance_reason": "تسليم الشيفرة يضمن استدامة النظام وإمكانية الصيانة المستقبلية من قبل المؤسسة.",
+            "average_requirement_importance": 3.0,
+            "average_importance": 3.0,
+            "requirements": [
+              {
+                "id": "REQ-0003",
+                "requirement": ") يلتزم المورد بتسليم الجھة المالكة للمشروع كامل الكود المصدريSource Code",
+                "source": "Page 11 - :الملكية الفكرية",
+                "page": 11,
+                "section": ":الملكية الفكرية",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              }
+            ]
+          },
+          {
+            "criterion_id": "C06",
+            "name": "العرض المالي وتفاصيل جدول الدفعات",
+            "description": "تحليل السعر الإجمالي، جدول الدفعات المرتبطة بالمخرجات، عدم تجاوز الدفعة المقدمة 5 % من قيمة العقد، والالتزام بعملة الدفع المحددة.",
+            "source": "صفحات 14‐15 – جداول الدفعات والجدول المالي",
+            "weight": 12.12,
+            "weight_source": "dynamic_criterion_importance",
+            "weight_evidence": "",
+            "criterion_importance_score": 4.0,
+            "criterion_importance_reason": "الجانب المالي يحدد جدوي المشروع من منظور الميزانية المتاحة.",
+            "average_requirement_importance": 3.0,
+            "average_importance": 3.0,
+            "requirements": [
+              {
+                "id": "REQ-0020",
+                "requirement": "او بجداول دفع شھرية مدعمة بجداول كميات حيث يجب تقديم ما يثبت قبول الأعمال من",
+                "source": "Page 16 - يتم دفع قيمة المشروع بالعملة المحددة في العرض المالي علي دفعات مرتبطة بالمخرجات",
+                "page": 16,
+                "section": "يتم دفع قيمة المشروع بالعملة المحددة في العرض المالي علي دفعات مرتبطة بالمخرجات",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              },
+              {
+                "id": "REQ-0021",
+                "requirement": "يلتزم مقدم الخدمة برفع المستخلصات الشھرية إذا وجدت أو شھادات الإنجاز الخاصة",
+                "source": "Page 16 - مؤسسة",
+                "page": 16,
+                "section": "مؤسسة",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              },
+              {
+                "id": "REQ-0022",
+                "requirement": "اساسا للمفاضلة ويشترط موافقة ال",
+                "source": "Page 16 - من قيمة العرض المالي كمستخلص ختامي ويكون ذلك%",
+                "page": 16,
+                "section": "من قيمة العرض المالي كمستخلص ختامي ويكون ذلك%",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              },
+              {
+                "id": "REQ-0023",
+                "requirement": "يجب أن لا تتجاوز الدفعة المقدمة إن وجدت عن 5 من قيمة العرض المالي ولل%",
+                "source": "Page 16 - علي الجدول قبل إدراجه في العقد الأساسي",
+                "page": 16,
+                "section": "علي الجدول قبل إدراجه في العقد الأساسي",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              }
+            ]
+          },
+          {
+            "criterion_id": "C07",
+            "name": "الأمان وحماية البيانات",
+            "description": "الالتزام بآليات الأمان (RBAC, SSO, تشفير البيانات، تدقيق السجلات) وفقًا للمتطلبات الواردة في الصفحات 9‐11.",
+            "source": "صفحات 9‐11 – إدارة الأمان والبيانات",
+            "weight": 12.13,
+            "weight_source": "dynamic_criterion_importance",
+            "weight_evidence": "",
+            "criterion_importance_score": 4.0,
+            "criterion_importance_reason": "حماية المعلومات الحساسة للمؤسسة أمر حيوي لتجنب الخروقات القانونية والسمعية.",
+            "average_requirement_importance": 3.0,
+            "average_importance": 3.0,
+            "requirements": [
+              {
+                "id": "REQ-0031",
+                "requirement": "يجب علي مقدم الخدمة",
+                "source": "Page 17 - إدارة معلومات المشروع:",
+                "page": 17,
+                "section": "إدارة معلومات المشروع:",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              },
+              {
+                "id": "REQ-0032",
+                "requirement": "يجب أن تكون كافة البيانات والوثائق والدراسات والتقارير المراد تسليمھا علي نسختين مطبوعتين ملونتين بالإضافة إلي نسختين إلكترونيتين علي فلاش علي أن تكون النسخ",
+                "source": "Page 17 - الامتثال للأنظمة والقواعد الأمنية الخاصة بإدارة وحفظ واستلام",
+                "page": 17,
+                "section": "الامتثال للأنظمة والقواعد الأمنية الخاصة بإدارة وحفظ واستلام",
+                "mandatory": true,
+                "requirement_type": "إلزامي",
+                "mandatory_evidence": "إلزامي",
+                "response_evidence_required": "",
+                "importance_score": 3,
+                "importance_level": "Important",
+                "importance_reason": "Explicit or inferred mandatory requirement"
+              }
+            ]
+          }
+        ],
+        "totalCriteria": 7,
+        "totalWeight": 100.0
+      },
+      "totalVendors": 1,
+      "vendors": [
+        {
+          "vendor": "Technical_Proposal_02",
+          "overallScore": 16.06,
+          "scoring": {
+            "criterion_scores": [
+              {
+                "criterion": "الامتثال للمتطلبات الإلزامية والوثائق المطلوبة",
+                "score": 0.0,
+                "weight": 15.15,
+                "weight_source": "dynamic_criterion_importance",
+                "weight_evidence": "",
+                "importance_total": null,
+                "average_importance": 3.0,
+                "weighted_score": 0.0,
+                "mandatory_requirements": 10,
+                "mandatory_full_matches": 0,
+                "mandatory_partial_matches": 0,
+                "mandatory_no_matches": 0,
+                "mandatory_not_provided": 10,
+                "mandatory_compliance_percentage": 0.0
+              },
+              {
+                "criterion": "جودة الحل الفني وتوافقه مع المتطلبات الوظيفية",
+                "score": 29.0,
+                "weight": 15.15,
+                "weight_source": "dynamic_criterion_importance",
+                "weight_evidence": "",
+                "importance_total": null,
+                "average_importance": 2.6,
+                "weighted_score": 4.39,
+                "mandatory_requirements": 3,
+                "mandatory_full_matches": 0,
+                "mandatory_partial_matches": 1,
+                "mandatory_no_matches": 0,
+                "mandatory_not_provided": 2,
+                "mandatory_compliance_percentage": 0.0
+              },
+              {
+                "criterion": "خطة التنفيذ والجدول الزمني",
+                "score": 65.0,
+                "weight": 15.15,
+                "weight_source": "dynamic_criterion_importance",
+                "weight_evidence": "",
+                "importance_total": null,
+                "average_importance": 2.5,
+                "weighted_score": 9.85,
+                "mandatory_requirements": 2,
+                "mandatory_full_matches": 0,
+                "mandatory_partial_matches": 1,
+                "mandatory_no_matches": 0,
+                "mandatory_not_provided": 1,
+                "mandatory_compliance_percentage": 0.0
+              },
+              {
+                "criterion": "خبرة وتأهيل فريق الإدارة والتنفيذ",
+                "score": 0.0,
+                "weight": 15.15,
+                "weight_source": "dynamic_criterion_importance",
+                "weight_evidence": "",
+                "importance_total": null,
+                "average_importance": 3.167,
+                "weighted_score": 0.0,
+                "mandatory_requirements": 6,
+                "mandatory_full_matches": 0,
+                "mandatory_partial_matches": 0,
+                "mandatory_no_matches": 0,
+                "mandatory_not_provided": 6,
+                "mandatory_compliance_percentage": 0.0
+              },
+              {
+                "criterion": "الملكية الفكرية وتسليم الشيفرة المصدرية",
+                "score": 0.0,
+                "weight": 15.15,
+                "weight_source": "dynamic_criterion_importance",
+                "weight_evidence": "",
+                "importance_total": null,
+                "average_importance": 3.0,
+                "weighted_score": 0.0,
+                "mandatory_requirements": 1,
+                "mandatory_full_matches": 0,
+                "mandatory_partial_matches": 0,
+                "mandatory_no_matches": 0,
+                "mandatory_not_provided": 1,
+                "mandatory_compliance_percentage": 0.0
+              },
+              {
+                "criterion": "العرض المالي وتفاصيل جدول الدفعات",
+                "score": 15.0,
+                "weight": 12.12,
+                "weight_source": "dynamic_criterion_importance",
+                "weight_evidence": "",
+                "importance_total": null,
+                "average_importance": 3.0,
+                "weighted_score": 1.82,
+                "mandatory_requirements": 4,
+                "mandatory_full_matches": 0,
+                "mandatory_partial_matches": 1,
+                "mandatory_no_matches": 0,
+                "mandatory_not_provided": 3,
+                "mandatory_compliance_percentage": 0.0
+              },
+              {
+                "criterion": "الأمان وحماية البيانات",
+                "score": 0.0,
+                "weight": 12.13,
+                "weight_source": "dynamic_criterion_importance",
+                "weight_evidence": "",
+                "importance_total": null,
+                "average_importance": 3.0,
+                "weighted_score": 0.0,
+                "mandatory_requirements": 2,
+                "mandatory_full_matches": 0,
+                "mandatory_partial_matches": 0,
+                "mandatory_no_matches": 0,
+                "mandatory_not_provided": 2,
+                "mandatory_compliance_percentage": 0.0
+              }
+            ],
+            "final_score": 16.06,
+            "overall_mandatory_compliance": 0.0,
+            "mandatory_summary": {
+              "total_mandatory_requirements": 28,
+              "fully_met": 0,
+              "partially_met": 3,
+              "no_match": 0,
+              "not_provided": 25
+            },
+            "mandatory_results": [
+              {
+                "criterion": "الامتثال للمتطلبات الإلزامية والوثائق المطلوبة",
+                "requirement_id": "REQ-0001",
+                "status": "NOT_PROVIDED"
+              },
+              {
+                "criterion": "الامتثال للمتطلبات الإلزامية والوثائق المطلوبة",
+                "requirement_id": "REQ-0002",
+                "status": "NOT_PROVIDED"
+              },
+              {
+                "criterion": "الامتثال للمتطلبات الإلزامية والوثائق المطلوبة",
+                "requirement_id": "REQ-0004",
+                "status": "NOT_PROVIDED"
+              },
+              {
+                "criterion": "الامتثال للمتطلبات الإلزامية والوثائق المطلوبة",
+                "requirement_id": "REQ-0005",
+                "status": "NOT_PROVIDED"
+              },
+              {
+                "criterion": "الامتثال للمتطلبات الإلزامية والوثائق المطلوبة",
+                "requirement_id": "REQ-0006",
+                "status": "NOT_PROVIDED"
+              },
+              {
+                "criterion": "الامتثال للمتطلبات الإلزامية والوثائق المطلوبة",
+                "requirement_id": "REQ-0007",
+                "status": "NOT_PROVIDED"
+              },
+              {
+                "criterion": "الامتثال للمتطلبات الإلزامية والوثائق المطلوبة",
+                "requirement_id": "REQ-0008",
+                "status": "NOT_PROVIDED"
+              },
+              {
+                "criterion": "الامتثال للمتطلبات الإلزامية والوثائق المطلوبة",
+                "requirement_id": "REQ-0014",
+                "status": "NOT_PROVIDED"
+              },
+              {
+                "criterion": "الامتثال للمتطلبات الإلزامية والوثائق المطلوبة",
+                "requirement_id": "REQ-0015",
+                "status": "NOT_PROVIDED"
+              },
+              {
+                "criterion": "الامتثال للمتطلبات الإلزامية والوثائق المطلوبة",
+                "requirement_id": "REQ-0016",
+                "status": "NOT_PROVIDED"
+              },
+              {
+                "criterion": "جودة الحل الفني وتوافقه مع المتطلبات الوظيفية",
+                "requirement_id": "REQ-0009",
+                "status": "NOT_PROVIDED"
+              },
+              {
+                "criterion": "جودة الحل الفني وتوافقه مع المتطلبات الوظيفية",
+                "requirement_id": "REQ-0017",
+                "status": "NOT_PROVIDED"
+              },
+              {
+                "criterion": "جودة الحل الفني وتوافقه مع المتطلبات الوظيفية",
+                "requirement_id": "REQ-0024",
+                "status": "PARTIAL_MATCH"
+              },
+              {
+                "criterion": "خطة التنفيذ والجدول الزمني",
+                "requirement_id": "REQ-0018",
+                "status": "PARTIAL_MATCH"
+              },
+              {
+                "criterion": "خطة التنفيذ والجدول الزمني",
+                "requirement_id": "REQ-0025",
+                "status": "NOT_PROVIDED"
+              },
+              {
+                "criterion": "خبرة وتأهيل فريق الإدارة والتنفيذ",
+                "requirement_id": "REQ-0019",
+                "status": "NOT_PROVIDED"
+              },
+              {
+                "criterion": "خبرة وتأهيل فريق الإدارة والتنفيذ",
+                "requirement_id": "REQ-0026",
+                "status": "NOT_PROVIDED"
+              },
+              {
+                "criterion": "خبرة وتأهيل فريق الإدارة والتنفيذ",
+                "requirement_id": "REQ-0027",
+                "status": "NOT_PROVIDED"
+              },
+              {
+                "criterion": "خبرة وتأهيل فريق الإدارة والتنفيذ",
+                "requirement_id": "REQ-0028",
+                "status": "NOT_PROVIDED"
+              },
+              {
+                "criterion": "خبرة وتأهيل فريق الإدارة والتنفيذ",
+                "requirement_id": "REQ-0029",
+                "status": "NOT_PROVIDED"
+              },
+              {
+                "criterion": "خبرة وتأهيل فريق الإدارة والتنفيذ",
+                "requirement_id": "REQ-0030",
+                "status": "NOT_PROVIDED"
+              },
+              {
+                "criterion": "الملكية الفكرية وتسليم الشيفرة المصدرية",
+                "requirement_id": "REQ-0003",
+                "status": "NOT_PROVIDED"
+              },
+              {
+                "criterion": "العرض المالي وتفاصيل جدول الدفعات",
+                "requirement_id": "REQ-0020",
+                "status": "PARTIAL_MATCH"
+              },
+              {
+                "criterion": "العرض المالي وتفاصيل جدول الدفعات",
+                "requirement_id": "REQ-0021",
+                "status": "NOT_PROVIDED"
+              },
+              {
+                "criterion": "العرض المالي وتفاصيل جدول الدفعات",
+                "requirement_id": "REQ-0022",
+                "status": "NOT_PROVIDED"
+              },
+              {
+                "criterion": "العرض المالي وتفاصيل جدول الدفعات",
+                "requirement_id": "REQ-0023",
+                "status": "NOT_PROVIDED"
+              },
+              {
+                "criterion": "الأمان وحماية البيانات",
+                "requirement_id": "REQ-0031",
+                "status": "NOT_PROVIDED"
+              },
+              {
+                "criterion": "الأمان وحماية البيانات",
+                "requirement_id": "REQ-0032",
+                "status": "NOT_PROVIDED"
+              }
+            ],
+            "weighting": {
+              "total_weight": 100.0,
+              "sources": [
+                "dynamic_criterion_importance"
+              ]
+            }
+          },
+          "overallMandatoryCompliance": 0.0,
+          "mandatorySummary": {
+            "total_mandatory_requirements": 28,
+            "fully_met": 0,
+            "partially_met": 3,
+            "no_match": 0,
+            "not_provided": 25
+          },
+          "riskLevel": "High",
+          "compliant": false,
+          "missingRequirements": [
+            {
+              "requirement_id": "REQ-0001",
+              "requirement": "( يجب علي مقدم العطاء تعبئة الجدول الموجود ويعد ذلك اقرار منه بتوفرھا وسيتم استثناء مقدم العطاء في حال عدم تقديم البنود الإلزامية",
+              "status": "NOT_MET",
+              "gap": "Missing required table and acknowledgement statement"
+            },
+            {
+              "requirement_id": "REQ-0002",
+              "requirement": "بجميع ما ورد في ھذه الكراسة التزاماً مطلقاً وتأكيداً لذلك فإنه يجب التوقيع علي جميع صفحات الكراسة والنماذج المرفقة من قِبَل صاحب المؤسسة / الشركة )المورد( أو المفوض بالتوقيع مع ختم",
+              "status": "NOT_MET",
+              "gap": "No signatures or official stamps on proposal pages"
+            },
+            {
+              "requirement_id": "REQ-0004",
+              "requirement": "ويجب ان يحتوي التقديم علي كافة",
+              "status": "NOT_MET",
+              "gap": "Unclear if all required submission items are present"
+            },
+            {
+              "requirement_id": "REQ-0005",
+              "requirement": "يجب التقيد بالآلية التالية:",
+              "status": "NOT_MET",
+              "gap": "No procedural mechanism described"
+            },
+            {
+              "requirement_id": "REQ-0006",
+              "requirement": "يجب ان يكون البريد الذي ترد منه العروض مسجلاً تحت العنوان الرسمي للشركة المقدمة للعرض.",
+              "status": "NOT_MET",
+              "gap": "No official corporate email address provided"
+            },
+            {
+              "requirement_id": "REQ-0007",
+              "requirement": ":ويجب علي الاقل أن يحتوي علي",
+              "status": "PARTIAL",
+              "gap": "Does not explicitly confirm the document is a separate PDF file as required"
+            },
+            {
+              "requirement_id": "REQ-0008",
+              "requirement": "ويجب علي الأقل ان يحتوي",
+              "status": "NOT_MET",
+              "gap": "No Excel file or spreadsheet data supplied"
+            },
+            {
+              "requirement_id": "REQ-0014",
+              "requirement": ") يجب أن لا تقل صلاحية العروض عن90",
+              "status": "NOT_MET",
+              "gap": "Offer validity period not stated"
+            },
+            {
+              "requirement_id": "REQ-0015",
+              "requirement": "يجب علي مقدم العرض ختم جميع صفحات كراسة شروط المواصفات وجداول الكميات",
+              "status": "NOT_MET",
+              "gap": "No official stamps on pages"
+            },
+            {
+              "requirement_id": "REQ-0016",
+              "requirement": "يجب علي مقدم العرض التصريح بتعارض المصالح إن وجد ويكون ذلك بشكل مكتوب يقدم ضمن العرض ويشمل ذلك الأقارب حتي الدرجة الرابعة.",
+              "status": "NOT_MET",
+              "gap": "Conflict‑of‑interest declaration missing"
+            },
+            {
+              "requirement_id": "REQ-0009",
+              "requirement": "مطلوبة لتوضيح الدعوة إلي تقديم العطاءات، بما في ذلك المواصفات التي يجب تقديمھا إلي",
+              "status": "NOT_MET",
+              "gap": "Invitation and specification clarification not provided"
+            },
+            {
+              "requirement_id": "REQ-0017",
+              "requirement": "يجب علي مقدم العرض إيضاح الأجزاء التي سيتم تنفيذھا من قبل مقاولي الباطن ضمن نطاق",
+              "status": "NOT_MET",
+              "gap": "No subcontractor scope described"
+            },
+            {
+              "requirement_id": "REQ-0024",
+              "requirement": "وتوضح مدي التزام مقدم الخدمة بالأداء التشغيلي للمشروع. لذا يجب علي مقدم الخدمة",
+              "status": "NOT_MET",
+              "gap": "Performance commitment not articulated"
+            },
+            {
+              "requirement_id": "REQ-0018",
+              "requirement": "يجب علي مقدم الخدمة الفائز بالمشروع إعداد خطة عمل تفصيلية لتنفيذ المشروع وإعداد خطة تدريب وخطة دعم تفصيلية \"عند الحاجة\".",
+              "status": "PARTIAL",
+              "gap": "Detailed work, training, and support plans not fully described"
+            },
+            {
+              "requirement_id": "REQ-0025",
+              "requirement": "، مع مراعاة أن القائمة التفصيلية النھائية يجب تنسيقھا والاتفاق عليھا مع مالك",
+              "status": "NOT_MET",
+              "gap": "Final detailed list not included or coordinated"
+            },
+            {
+              "requirement_id": "REQ-0019",
+              "requirement": "وكذلك من سيتم الاستعانة بھم من مقيمين وزائرين قبل بداية العمل ويجب الحصول علي",
+              "status": "NOT_MET",
+              "gap": "No information on evaluators or visitors before work start"
+            },
+            {
+              "requirement_id": "REQ-0026",
+              "requirement": "يلتزم مقدم الخدمة بتعيين مديراً عاماً للمشروع ويفضل أن يكون سعودي الجنسية وحاصل علي شھادة معتمدة في ھذا المجال، أو ما يعادلھا، ولديه خبرة لا تقل عن خمسة سنوات",
+              "status": "NOT_MET",
+              "gap": "Project manager nationality and qualifications not disclosed"
+            },
+            {
+              "requirement_id": "REQ-0027",
+              "requirement": "يجب منح مدير المشروع جميع الصلاحيات اللازمة لاتخاذ القرارات دون تأخير أو تعليق.",
+              "status": "NOT_MET",
+              "gap": "Authority delegation for project manager not stated"
+            },
+            {
+              "requirement_id": "REQ-0028",
+              "requirement": "يجب توفر أشخاص في فريق العمل يجيدوا اللغة العربية والانجليزية. علي مدير المشروع القيام بمھامه وواجباته للتأكد من تطبيق وتنفيذ جميع بنود العقد، علماً بأنه سيكون مسئولاً مسئولية كاملة عن مراقبة ومتابعة وتنسيق جميع أعمال المشروع. لا يحق لمقدم الخدمة استبدال مدير المشروع دون أخذ الموافقة المسبقة من ال",
+              "status": "NOT_MET",
+              "gap": "Language proficiency and replacement restrictions not confirmed"
+            },
+            {
+              "requirement_id": "REQ-0029",
+              "requirement": "يلتزم مقدم الخدمة بأخذ موافقة ال",
+              "status": "NOT_MET",
+              "gap": "Approval process not described"
+            },
+            {
+              "requirement_id": "REQ-0030",
+              "requirement": "الصلاحيات خلال إجازة المدير الأساسي للمشروع، ويلتزم مقد",
+              "status": "NOT_MET",
+              "gap": "No evidence of authority delegation during project manager leave"
+            },
+            {
+              "requirement_id": "REQ-0003",
+              "requirement": ") يلتزم المورد بتسليم الجھة المالكة للمشروع كامل الكود المصدريSource Code",
+              "status": "NOT_MET",
+              "gap": "No source code delivery commitment"
+            },
+            {
+              "requirement_id": "REQ-0020",
+              "requirement": "او بجداول دفع شھرية مدعمة بجداول كميات حيث يجب تقديم ما يثبت قبول الأعمال من",
+              "status": "NOT_MET",
+              "gap": "Missing payment schedule and acceptance proof"
+            },
+            {
+              "requirement_id": "REQ-0021",
+              "requirement": "يلتزم مقدم الخدمة برفع المستخلصات الشھرية إذا وجدت أو شھادات الإنجاز الخاصة",
+              "status": "NOT_MET",
+              "gap": "No monthly extracts or achievement certificates"
+            },
+            {
+              "requirement_id": "REQ-0022",
+              "requirement": "اساسا للمفاضلة ويشترط موافقة ال",
+              "status": "NOT_MET",
+              "gap": "No supporting evidence for financial approval requirement"
+            },
+            {
+              "requirement_id": "REQ-0023",
+              "requirement": "يجب أن لا تتجاوز الدفعة المقدمة إن وجدت عن 5 من قيمة العرض المالي ولل%",
+              "status": "NOT_MET",
+              "gap": "Advance payment limit not addressed"
+            },
+            {
+              "requirement_id": "REQ-0032",
+              "requirement": "يجب أن تكون كافة البيانات والوثائق والدراسات والتقارير المراد تسليمھا علي نسختين مطبوعتين ملونتين بالإضافة إلي نسختين إلكترونيتين علي فلاش علي أن تكون النسخ",
+              "status": "NOT_MET",
+              "gap": "Delivery format for documents not specified"
+            }
+          ],
+          "complianceRationale": "Mandatory compliance evaluation completed against 28 requirements. MET: 1, PARTIAL: 2, NOT_MET: 25. Compliance score: 7.14%.",
+          "evaluations": [
+            {
+              "criterion": "الامتثال للمتطلبات الإلزامية والوثائق المطلوبة",
+              "score": 0.0,
+              "mandatory_compliance_percentage": 0.0,
+              "requirement_results": [
+                {
+                  "requirement_id": "REQ-0001",
+                  "requirement": "( يجب علي مقدم العطاء تعبئة الجدول الموجود ويعد ذلك اقرار منه بتوفرھا وسيتم استثناء مقدم العطاء في حال عدم تقديم البنود الإلزامية",
+                  "rfp_source": "Page 4 - ضمان بنكي",
+                  "mandatory": true,
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement",
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "The proposal does not include the required filled table or any declaration of mandatory items."
+                },
+                {
+                  "requirement_id": "REQ-0002",
+                  "requirement": "بجميع ما ورد في ھذه الكراسة التزاماً مطلقاً وتأكيداً لذلك فإنه يجب التوقيع علي جميع صفحات الكراسة والنماذج المرفقة من قِبَل صاحب المؤسسة / الشركة )المورد( أو المفوض بالتوقيع مع ختم",
+                  "rfp_source": "Page 5 - أو تأمين مشترياته الالتزام",
+                  "mandatory": true,
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement",
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "No signatures or stamps on all pages are presented in the submitted documents."
+                },
+                {
+                  "requirement_id": "REQ-0004",
+                  "requirement": "ويجب ان يحتوي التقديم علي كافة",
+                  "rfp_source": "Page 14 - الملك سلمان غير الربحية",
+                  "mandatory": true,
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement",
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "The submission does not demonstrate that it contains all items referenced by this requirement."
+                },
+                {
+                  "requirement_id": "REQ-0005",
+                  "requirement": "يجب التقيد بالآلية التالية:",
+                  "rfp_source": "Page 14 - المتطلبات الإلزامية في قائمة تدقيق المنافسين الموضحة في الصفحة الثانية من ھذه الكراسة. كما",
+                  "mandatory": true,
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement",
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "No evidence is provided that the vendor follows the specified mechanism."
+                },
+                {
+                  "requirement_id": "REQ-0006",
+                  "requirement": "يجب ان يكون البريد الذي ترد منه العروض مسجلاً تحت العنوان الرسمي للشركة المقدمة للعرض.",
+                  "rfp_source": "Page 14 - المتطلبات الإلزامية في قائمة تدقيق المنافسين الموضحة في الصفحة الثانية من ھذه الكراسة. كما",
+                  "mandatory": true,
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement",
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "The proposal contains no official email address or verification thereof."
+                },
+                {
+                  "requirement_id": "REQ-0007",
+                  "requirement": ":ويجب علي الاقل أن يحتوي علي",
+                  "rfp_source": "Page 14 - يقدم العرض الفني في ملف منفصل بصيغةPDF",
+                  "mandatory": true,
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement",
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "There is no indication that the technical offer was submitted as a separate PDF file meeting the required content."
+                },
+                {
+                  "requirement_id": "REQ-0008",
+                  "requirement": "ويجب علي الأقل ان يحتوي",
+                  "rfp_source": "Page 15 - وملفEXCEL",
+                  "mandatory": true,
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement",
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "The financial offer is presented in the narrative text; no Excel file is supplied."
+                },
+                {
+                  "requirement_id": "REQ-0014",
+                  "requirement": ") يجب أن لا تقل صلاحية العروض عن90",
+                  "rfp_source": "Page 16 - صفحة 16",
+                  "mandatory": true,
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement",
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "The proposal does not state the validity period of the offer."
+                },
+                {
+                  "requirement_id": "REQ-0015",
+                  "requirement": "يجب علي مقدم العرض ختم جميع صفحات كراسة شروط المواصفات وجداول الكميات",
+                  "rfp_source": "Page 16 - .( تسعين يوماً من تاريخ تقديم العرض",
+                  "mandatory": true,
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement",
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "No stamped pages of the specifications booklet are included."
+                },
+                {
+                  "requirement_id": "REQ-0016",
+                  "requirement": "يجب علي مقدم العرض التصريح بتعارض المصالح إن وجد ويكون ذلك بشكل مكتوب يقدم ضمن العرض ويشمل ذلك الأقارب حتي الدرجة الرابعة.",
+                  "rfp_source": "Page 16 - مؤسسة",
+                  "mandatory": true,
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement",
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "The proposal lacks a written declaration of conflict of interest."
+                }
+              ],
+              "summary": {
+                "requirements_evaluated": 10,
+                "full_matches": 0,
+                "partial_matches": 0,
+                "no_matches": 0,
+                "not_provided": 10,
+                "batch_size": 16,
+                "batches_processed": 1,
+                "batch_workers": 2
+              },
+              "strengths": [],
+              "gaps": [
+                "( يجب علي مقدم العطاء تعبئة الجدول الموجود ويعد ذلك اقرار منه بتوفرھا وسيتم استثناء مقدم العطاء في حال عدم تقديم البنود الإلزامية: NOT_PROVIDED",
+                "بجميع ما ورد في ھذه الكراسة التزاماً مطلقاً وتأكيداً لذلك فإنه يجب التوقيع علي جميع صفحات الكراسة والنماذج المرفقة من قِبَل صاحب المؤسسة / الشركة )المورد( أو المفوض بالتوقيع مع ختم: NOT_PROVIDED",
+                "ويجب ان يحتوي التقديم علي كافة: NOT_PROVIDED",
+                "يجب التقيد بالآلية التالية:: NOT_PROVIDED",
+                "يجب ان يكون البريد الذي ترد منه العروض مسجلاً تحت العنوان الرسمي للشركة المقدمة للعرض.: NOT_PROVIDED"
+              ],
+              "rationale": "Criterion 'الامتثال للمتطلبات الإلزامية والوثائق المطلوبة' evaluated across 10 RFP requirements. 0 full matches, 0 partial matches, 0 no-matches, and 10 not provided."
+            },
+            {
+              "criterion": "جودة الحل الفني وتوافقه مع المتطلبات الوظيفية",
+              "score": 29.0,
+              "mandatory_compliance_percentage": 0.0,
+              "requirement_results": [
+                {
+                  "requirement_id": "REQ-0009",
+                  "requirement": "مطلوبة لتوضيح الدعوة إلي تقديم العطاءات، بما في ذلك المواصفات التي يجب تقديمھا إلي",
+                  "rfp_source": "Page 15 - أو أي معلومات إضافية",
+                  "mandatory": true,
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement",
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "The proposal does not contain any information clarifying the invitation to tender or specifying the required submission specifications."
+                },
+                {
+                  "requirement_id": "REQ-0010",
+                  "requirement": "صفات الفنية المطلوبة لتحديد",
+                  "rfp_source": "Page 15 - العروض المطابقة لجميع الشروط والموا",
+                  "mandatory": false,
+                  "importance_score": 2,
+                  "importance_level": "Moderate",
+                  "importance_reason": "General RFP requirement",
+                  "status": "PARTIAL_MATCH",
+                  "match_score": 75.0,
+                  "proposal_evidence": "Section 3 (Technical & Security Architecture) describes the cloud platform, 99.95% availability guarantee, API‑first integration approach, MFA, RBAC, end‑to‑end encryption and audit logging.",
+                  "rationale": "The vendor provides technical attributes of the solution that align with the requirement, but the requirement wording is vague and the evidence does not cover every possible attribute that might be expected."
+                },
+                {
+                  "requirement_id": "REQ-0011",
+                  "requirement": "ات المطلوبة",
+                  "rfp_source": "Page 15 - أو الخدم",
+                  "mandatory": false,
+                  "importance_score": 2,
+                  "importance_level": "Moderate",
+                  "importance_reason": "General RFP requirement",
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "The requirement text is incomplete and the proposal does not contain any discernible information that can be linked to it."
+                },
+                {
+                  "requirement_id": "REQ-0017",
+                  "requirement": "يجب علي مقدم العرض إيضاح الأجزاء التي سيتم تنفيذھا من قبل مقاولي الباطن ضمن نطاق",
+                  "rfp_source": "Page 16 - مؤسسة",
+                  "mandatory": true,
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement",
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "The proposal lists the internal project team but does not mention any subcontractors or indicate which parts of the solution would be delivered by them."
+                },
+                {
+                  "requirement_id": "REQ-0024",
+                  "requirement": "وتوضح مدي التزام مقدم الخدمة بالأداء التشغيلي للمشروع. لذا يجب علي مقدم الخدمة",
+                  "rfp_source": "Page 17 - والأھداف المرجو",
+                  "mandatory": true,
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement",
+                  "status": "PARTIAL_MATCH",
+                  "match_score": 70.0,
+                  "proposal_evidence": "The vendor commits to a 99.95% guaranteed availability, provides performance monitoring dashboards (Financial Reporting, Executive Dashboards) and outlines security measures to ensure operational reliability.",
+                  "rationale": "Evidence shows a clear commitment to operational performance through availability guarantees and monitoring, but the proposal does not explicitly detail service‑level metrics for all operational aspects, resulting in a partial rather than full match."
+                }
+              ],
+              "summary": {
+                "requirements_evaluated": 5,
+                "full_matches": 0,
+                "partial_matches": 2,
+                "no_matches": 0,
+                "not_provided": 3,
+                "batch_size": 16,
+                "batches_processed": 1,
+                "batch_workers": 2
+              },
+              "strengths": [
+                "صفات الفنية المطلوبة لتحديد: PARTIAL_MATCH (75.0)",
+                "وتوضح مدي التزام مقدم الخدمة بالأداء التشغيلي للمشروع. لذا يجب علي مقدم الخدمة: PARTIAL_MATCH (70.0)"
+              ],
+              "gaps": [
+                "مطلوبة لتوضيح الدعوة إلي تقديم العطاءات، بما في ذلك المواصفات التي يجب تقديمھا إلي: NOT_PROVIDED",
+                "ات المطلوبة: NOT_PROVIDED",
+                "يجب علي مقدم العرض إيضاح الأجزاء التي سيتم تنفيذھا من قبل مقاولي الباطن ضمن نطاق: NOT_PROVIDED",
+                "وتوضح مدي التزام مقدم الخدمة بالأداء التشغيلي للمشروع. لذا يجب علي مقدم الخدمة: PARTIAL_MATCH",
+                "صفات الفنية المطلوبة لتحديد: PARTIAL_MATCH"
+              ],
+              "rationale": "Technical evaluation completed across 5 requirements. 0 full matches, 2 partial matches, 0 explicit no-matches, and 3 not provided."
+            },
+            {
+              "criterion": "خطة التنفيذ والجدول الزمني",
+              "score": 65.0,
+              "mandatory_compliance_percentage": 0.0,
+              "requirement_results": [
+                {
+                  "requirement_id": "REQ-0012",
+                  "requirement": ".التخطيط لتنفيذ المشروع وتقديم مخرجات حسب المطلوب",
+                  "rfp_source": "Page 15 - جودة منھجية وخطة العمل المقدمة",
+                  "mandatory": false,
+                  "importance_score": 2,
+                  "importance_level": "Moderate",
+                  "importance_reason": "General RFP requirement",
+                  "status": "FULL_MATCH",
+                  "match_score": 100.0,
+                  "proposal_evidence": "Page 4 – Project Implementation Timeline outlines phases (Assessment & Design, Core Development, Integration & Testing, Deployment & Training) with key activities and durations, and Page 5 – Project Team lists responsibilities, demonstrating a concrete implementation plan and intended deliverables.",
+                  "rationale": "The proposal provides a structured implementation plan and specifies the outputs for each phase, directly satisfying the requirement for planning the project execution and delivering required outputs."
+                },
+                {
+                  "requirement_id": "REQ-0013",
+                  "requirement": ".جدول زمني متوافق مع التواريخ المطلوبة لتنفيذ المشروع",
+                  "rfp_source": "Page 15 - جودة منھجية وخطة العمل المقدمة",
+                  "mandatory": false,
+                  "importance_score": 2,
+                  "importance_level": "Moderate",
+                  "importance_reason": "General RFP requirement",
+                  "status": "FULL_MATCH",
+                  "match_score": 100.0,
+                  "proposal_evidence": "Page 4 – The timeline states “Our project plan strictly adheres to the requested 10‑month delivery schedule,” showing alignment with the RFP’s required dates.",
+                  "rationale": "The vendor explicitly claims that its 10‑month schedule matches the dates requested in the RFP, fulfilling the scheduling requirement."
+                },
+                {
+                  "requirement_id": "REQ-0018",
+                  "requirement": "يجب علي مقدم الخدمة الفائز بالمشروع إعداد خطة عمل تفصيلية لتنفيذ المشروع وإعداد خطة تدريب وخطة دعم تفصيلية \"عند الحاجة\".",
+                  "rfp_source": "Page 16 - المطلوبة وجميع الشروط التي تتضمنھا الكراسة وكذلك الالتزامات والبنود التي يُتفق عليھا",
+                  "mandatory": true,
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement",
+                  "status": "PARTIAL_MATCH",
+                  "match_score": 60.0,
+                  "proposal_evidence": "Page 4 – Phase 4 “Deployment & Training” mentions user training and documentation handover. Page 6 – Financial Proposal includes a line item for “First Year Support & Maintenance.”",
+                  "rationale": "The proposal references training and support activities but does not provide a separate, detailed training plan or a detailed support plan as the requirement demands, therefore only partially meeting the requirement."
+                },
+                {
+                  "requirement_id": "REQ-0025",
+                  "requirement": "، مع مراعاة أن القائمة التفصيلية النھائية يجب تنسيقھا والاتفاق عليھا مع مالك",
+                  "rfp_source": "Page 17 - المشروع",
+                  "mandatory": true,
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement",
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "The proposal contains no statement about coordinating or agreeing on a final detailed list with the owner, so the requirement cannot be evaluated as met."
+                }
+              ],
+              "strengths": [
+                "The proposal provides a structured implementation plan and specifies the outputs for each phase, directly satisfying the requirement for planning the project execution and delivering required outputs.",
+                "The vendor explicitly claims that its 10‑month schedule matches the dates requested in the RFP, fulfilling the scheduling requirement."
+              ],
+              "gaps": [
+                "The proposal contains no statement about coordinating or agreeing on a final detailed list with the owner, so the requirement cannot be evaluated as met.",
+                "The proposal references training and support activities but does not provide a separate, detailed training plan or a detailed support plan as the requirement demands, therefore only partially meeting the requirement."
+              ],
+              "rationale": "Project plan evaluated at requirement level. 2 fully matched, 1 partially matched, 1 not matched or not provided."
+            },
+            {
+              "criterion": "خبرة وتأهيل فريق الإدارة والتنفيذ",
+              "score": 0.0,
+              "mandatory_compliance_percentage": 0.0,
+              "requirement_results": [
+                {
+                  "requirement_id": "REQ-0019",
+                  "requirement": "وكذلك من سيتم الاستعانة بھم من مقيمين وزائرين قبل بداية العمل ويجب الحصول علي",
+                  "rfp_source": "Page 16 - قبل الاختيار النھائي لصاحب العرض",
+                  "mandatory": true,
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement",
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "The proposal does not mention any evaluators, visitors, or related pre‑work approvals."
+                },
+                {
+                  "requirement_id": "REQ-0026",
+                  "requirement": "يلتزم مقدم الخدمة بتعيين مديراً عاماً للمشروع ويفضل أن يكون سعودي الجنسية وحاصل علي شھادة معتمدة في ھذا المجال، أو ما يعادلھا، ولديه خبرة لا تقل عن خمسة سنوات",
+                  "rfp_source": "Page 17 - إدارة الموارد خلال تنفيذ المشروع:",
+                  "mandatory": true,
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement",
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "No information is provided about a Saudi project manager, certified credentials, or minimum five‑year experience."
+                },
+                {
+                  "requirement_id": "REQ-0027",
+                  "requirement": "يجب منح مدير المشروع جميع الصلاحيات اللازمة لاتخاذ القرارات دون تأخير أو تعليق.",
+                  "rfp_source": "Page 17 - رفض/قبول أو طلب تغيير مدير المشروع",
+                  "mandatory": true,
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement",
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "The proposal does not address granting the project manager full decision‑making authority."
+                },
+                {
+                  "requirement_id": "REQ-0028",
+                  "requirement": "يجب توفر أشخاص في فريق العمل يجيدوا اللغة العربية والانجليزية. علي مدير المشروع القيام بمھامه وواجباته للتأكد من تطبيق وتنفيذ جميع بنود العقد، علماً بأنه سيكون مسئولاً مسئولية كاملة عن مراقبة ومتابعة وتنسيق جميع أعمال المشروع. لا يحق لمقدم الخدمة استبدال مدير المشروع دون أخذ الموافقة المسبقة من ال",
+                  "rfp_source": "Page 17 - رفض/قبول أو طلب تغيير مدير المشروع",
+                  "mandatory": true,
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement",
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "There is no evidence of team members being bilingual in Arabic and English or of restrictions on replacing the project manager."
+                },
+                {
+                  "requirement_id": "REQ-0029",
+                  "requirement": "يلتزم مقدم الخدمة بأخذ موافقة ال",
+                  "rfp_source": "Page 17 - مؤسسة",
+                  "mandatory": true,
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement",
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "The proposal contains no statement about obtaining the required approvals from the authority."
+                },
+                {
+                  "requirement_id": "REQ-0030",
+                  "requirement": "الصلاحيات خلال إجازة المدير الأساسي للمشروع، ويلتزم مقد",
+                  "rfp_source": "Page 17 - ( مائة",
+                  "mandatory": true,
+                  "importance_score": 4,
+                  "importance_level": "High",
+                  "importance_reason": "Explicit or inferred mandatory requirement; High-impact requirement wording",
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "No details are given regarding authority delegation during the primary project manager’s leave."
+                }
+              ],
+              "summary": {
+                "requirements_evaluated": 6,
+                "full_matches": 0,
+                "partial_matches": 0,
+                "no_matches": 0,
+                "not_provided": 6,
+                "batch_size": 16,
+                "batches_processed": 1,
+                "batch_workers": 2
+              },
+              "strengths": [],
+              "gaps": [
+                "وكذلك من سيتم الاستعانة بھم من مقيمين وزائرين قبل بداية العمل ويجب الحصول علي: NOT_PROVIDED",
+                "يلتزم مقدم الخدمة بتعيين مديراً عاماً للمشروع ويفضل أن يكون سعودي الجنسية وحاصل علي شھادة معتمدة في ھذا المجال، أو ما يعادلھا، ولديه خبرة لا تقل عن خمسة سنوات: NOT_PROVIDED",
+                "يجب منح مدير المشروع جميع الصلاحيات اللازمة لاتخاذ القرارات دون تأخير أو تعليق.: NOT_PROVIDED",
+                "يجب توفر أشخاص في فريق العمل يجيدوا اللغة العربية والانجليزية. علي مدير المشروع القيام بمھامه وواجباته للتأكد من تطبيق وتنفيذ جميع بنود العقد، علماً بأنه سيكون مسئولاً مسئولية كاملة عن مراقبة ومتابعة وتنسيق جميع أعمال المشروع. لا يحق لمقدم الخدمة استبدال مدير المشروع دون أخذ الموافقة المسبقة من ال: NOT_PROVIDED",
+                "يلتزم مقدم الخدمة بأخذ موافقة ال: NOT_PROVIDED"
+              ],
+              "rationale": "Criterion 'خبرة وتأهيل فريق الإدارة والتنفيذ' evaluated across 6 RFP requirements. 0 full matches, 0 partial matches, 0 no-matches, and 6 not provided."
+            },
+            {
+              "criterion": "الملكية الفكرية وتسليم الشيفرة المصدرية",
+              "score": 0.0,
+              "mandatory_compliance_percentage": 0.0,
+              "requirement_results": [
+                {
+                  "requirement_id": "REQ-0003",
+                  "requirement": ") يلتزم المورد بتسليم الجھة المالكة للمشروع كامل الكود المصدريSource Code",
+                  "rfp_source": "Page 11 - :الملكية الفكرية",
+                  "mandatory": true,
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement",
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "The proposal does not contain any statement or clause indicating that the supplier will deliver the complete source code or transfer related intellectual property rights to the project owner."
+                }
+              ],
+              "summary": {
+                "requirements_evaluated": 1,
+                "full_matches": 0,
+                "partial_matches": 0,
+                "no_matches": 0,
+                "not_provided": 1,
+                "batch_size": 16,
+                "batches_processed": 1,
+                "batch_workers": 2
+              },
+              "strengths": [],
+              "gaps": [
+                ") يلتزم المورد بتسليم الجھة المالكة للمشروع كامل الكود المصدريSource Code: NOT_PROVIDED"
+              ],
+              "rationale": "Criterion 'الملكية الفكرية وتسليم الشيفرة المصدرية' evaluated across 1 RFP requirements. 0 full matches, 0 partial matches, 0 no-matches, and 1 not provided."
+            },
+            {
+              "vendor": "Technical_Proposal_02",
+              "criterion": "العرض المالي وتفاصيل جدول الدفعات",
+              "criterion_description": "تحليل السعر الإجمالي، جدول الدفعات المرتبطة بالمخرجات، عدم تجاوز الدفعة المقدمة 5 % من قيمة العقد، والالتزام بعملة الدفع المحددة.",
+              "score": 15.0,
+              "mandatory_compliance_percentage": 0.0,
+              "requirement_results": [
+                {
+                  "requirement_id": "REQ-0020",
+                  "requirement": "او بجداول دفع شھرية مدعمة بجداول كميات حيث يجب تقديم ما يثبت قبول الأعمال من",
+                  "rfp_source": "Page 16 - يتم دفع قيمة المشروع بالعملة المحددة في العرض المالي علي دفعات مرتبطة بالمخرجات",
+                  "mandatory": true,
+                  "status": "PARTIAL_MATCH",
+                  "match_score": 60.0,
+                  "proposal_evidence": "Financial Proposal section lists the total estimated budget as SAR 4,450,000 and provides a cost breakdown by component, indicating the currency (SAR) to be used for payment.",
+                  "rationale": "The proposal specifies the currency and total contract value, satisfying the requirement that payment be made in the specified currency. However, it does not include monthly payment tables, quantity tables, or any linkage of payments to specific deliverable outputs, which are explicit parts of the requirement."
+                },
+                {
+                  "requirement_id": "REQ-0021",
+                  "requirement": "يلتزم مقدم الخدمة برفع المستخلصات الشھرية إذا وجدت أو شھادات الإنجاز الخاصة",
+                  "rfp_source": "Page 16 - مؤسسة",
+                  "mandatory": true,
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "The proposal contains no information about the submission of monthly invoices, progress certificates, or any mechanism for raising monthly extracts as required."
+                },
+                {
+                  "requirement_id": "REQ-0022",
+                  "requirement": "اساسا للمفاضلة ويشترط موافقة ال",
+                  "rfp_source": "Page 16 - من قيمة العرض المالي كمستخلص ختامي ويكون ذلك%",
+                  "mandatory": true,
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "The requirement appears to refer to a final settlement percentage or approval condition, but the proposal does not mention any final payment percentage, approval process, or related commercial clause."
+                },
+                {
+                  "requirement_id": "REQ-0023",
+                  "requirement": "يجب أن لا تتجاوز الدفعة المقدمة إن وجدت عن 5 من قيمة العرض المالي ولل%",
+                  "rfp_source": "Page 16 - علي الجدول قبل إدراجه في العقد الأساسي",
+                  "mandatory": true,
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "The proposal does not state any advance payment amount nor confirms that any advance payment, if any, would be limited to 5 % of the total contract value."
+                }
+              ],
+              "summary": {
+                "evaluation_mode": "requirement_level",
+                "requirements_evaluated": 4,
+                "full_matches": 0,
+                "partial_matches": 1,
+                "no_matches": 0,
+                "not_provided": 3
+              },
+              "strengths": [
+                "Provides a clear total contract value in the required currency (SAR).",
+                "Includes a detailed cost breakdown for design, development, integration, testing, deployment, and first-year support."
+              ],
+              "gaps": [
+                "No monthly or milestone‑linked payment schedule is presented.",
+                "Missing procedures for submitting monthly invoices or achievement certificates.",
+                "No statement regarding the maximum allowable advance payment (5 % of contract value).",
+                "Absence of any final settlement percentage or approval condition."
+              ],
+              "rationale": "The vendor's financial proposal satisfies the basic requirement of specifying the contract currency and total price, but it fails to address the detailed payment schedule, invoicing process, advance payment limit, and final settlement conditions that are explicitly required by the RFP. Consequently, only a partial match is achieved for the overall criterion.",
+              "confidence": "Medium"
+            },
+            {
+              "criterion": "الأمان وحماية البيانات",
+              "score": 0.0,
+              "mandatory_compliance_percentage": 0.0,
+              "requirement_results": [
+                {
+                  "requirement_id": "REQ-0031",
+                  "requirement": "يجب علي مقدم الخدمة",
+                  "rfp_source": "Page 17 - إدارة معلومات المشروع:",
+                  "mandatory": true,
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement",
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "The proposal contains no evidence addressing the unspecified service provider obligation described in REQ-0031."
+                },
+                {
+                  "requirement_id": "REQ-0032",
+                  "requirement": "يجب أن تكون كافة البيانات والوثائق والدراسات والتقارير المراد تسليمھا علي نسختين مطبوعتين ملونتين بالإضافة إلي نسختين إلكترونيتين علي فلاش علي أن تكون النسخ",
+                  "rfp_source": "Page 17 - الامتثال للأنظمة والقواعد الأمنية الخاصة بإدارة وحفظ واستلام",
+                  "mandatory": true,
+                  "importance_score": 3,
+                  "importance_level": "Important",
+                  "importance_reason": "Explicit or inferred mandatory requirement",
+                  "status": "NOT_PROVIDED",
+                  "match_score": 0.0,
+                  "proposal_evidence": "Not Provided",
+                  "rationale": "The proposal does not mention delivering data, documents, studies, or reports in two printed colored copies and two electronic copies on flash as required by REQ-0032."
+                }
+              ],
+              "summary": {
+                "requirements_evaluated": 2,
+                "full_matches": 0,
+                "partial_matches": 0,
+                "no_matches": 0,
+                "not_provided": 2,
+                "batch_size": 16,
+                "batches_processed": 1,
+                "batch_workers": 2
+              },
+              "strengths": [],
+              "gaps": [
+                "يجب علي مقدم الخدمة: NOT_PROVIDED",
+                "يجب أن تكون كافة البيانات والوثائق والدراسات والتقارير المراد تسليمھا علي نسختين مطبوعتين ملونتين بالإضافة إلي نسختين إلكترونيتين علي فلاش علي أن تكون النسخ: NOT_PROVIDED"
+              ],
+              "rationale": "Criterion 'الأمان وحماية البيانات' evaluated across 2 RFP requirements. 0 full matches, 0 partial matches, 0 no-matches, and 2 not provided."
+            }
+          ],
+          "rank": 1
+        }
+      ],
+      "ranking": {
+        "recommendationStatus": "NO_ELIGIBLE_VENDOR",
+        "topRankedVendor": "Technical_Proposal_02",
+        "topRankedVendorScore": 16.06,
+        "recommendedVendor": null,
+        "recommendedVendorScore": null,
+        "ranking": [
+          {
+            "rank": 1,
+            "vendor": "Technical_Proposal_02",
+            "score": 16.06,
+            "riskLevel": "High",
+            "compliant": false,
+            "eligible": false,
+            "mandatoryCompliance": 0.0
+          }
+        ],
+        "comparisonSummary": "Technical_Proposal_02 achieved the highest deterministic score of 16.06, yet it fulfilled none of the 28 mandatory requirements, resulting in 0% mandatory compliance, a high risk rating, and ineligibility for award.",
+        "tradeOffs": [
+          "A higher technical score cannot compensate for the complete lack of mandatory compliance; awarding to a non‑compliant vendor would violate procurement policy."
+        ],
+        "finalRecommendation": "The official Python decision identifies Technical_Proposal_02 as the top‑ranked vendor but marks it non‑compliant and ineligible. Consequently, no vendor can be recommended. The procuring entity should consider re‑issuing the tender, seeking clarifications, or exploring alternative sources, with a mandatory human review before any further action.",
+        "rankingInsights": [
+          {
+            "vendor": "Technical_Proposal_02",
+            "summary": "Top‑ranked vendor with a score of 16.06 but zero mandatory compliance and a high risk level.",
+            "keyStrengths": [
+              "Provides a detailed implementation plan that fully meets execution and schedule requirements.",
+              "Partial technical matches demonstrate awareness of solution architecture and performance guarantees.",
+              "Financial proposal specifies total contract value in SAR and includes a clear cost breakdown."
+            ],
+            "keyRisks": [
+              "All 25 of 28 mandatory requirements are not provided, including critical items such as signed documents, conflict‑of‑interest declaration, and source‑code delivery.",
+              "No evidence of adherence to mandatory submission formats (PDF, Excel) or official stamps and signatures.",
+              "Payment schedule, advance‑payment limit, and monthly invoicing procedures are missing.",
+              "Security and data‑handling requirements are not addressed at all.",
+              "Overall compliance score of 7.14% and a high risk classification make the vendor ineligible."
+            ]
+          }
+        ],
+        "humanReviewRequired": true
+      },
+      "topRankedVendor": "Technical_Proposal_02",
+      "topRankedVendorScore": 16.06,
+      "recommendedVendor": null,
+      "recommendedVendorScore": null,
+      "recommendationStatus": "NO_ELIGIBLE_VENDOR",
+      "humanReviewRequired": true
+    }
   }
 }

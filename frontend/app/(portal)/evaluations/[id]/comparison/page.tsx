@@ -24,14 +24,8 @@ import {
 
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/empty-state'
-
 import { evaluationsApi } from '@/lib/api'
-
-import {
-  formatDate,
-  formatPercent,
-} from '@/lib/labels'
-
+import { formatDate, formatPercent } from '@/lib/labels'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/lib/i18n/context'
 
@@ -48,50 +42,34 @@ export default function EvaluationComparisonPage({
     id: string
   }>
 }) {
-  const {
-    id,
-  } =
-    use(params)
-
+  const { id } = use(params)
 
   const {
     language,
     isArabic,
-  } =
-    useLanguage()
-
+  } = useLanguage()
 
   const [
     evaluation,
     setEvaluation,
-  ] =
-    useState<Evaluation | null>(
-      null,
-    )
-
+  ] = useState<Evaluation | null>(null)
 
   const [
     vendors,
     setVendors,
-  ] =
-    useState<Vendor[]>([])
-
+  ] = useState<Vendor[]>([])
 
   const [
     loading,
     setLoading,
-  ] =
-    useState(true)
-
+  ] = useState(true)
 
   /* ========================================== */
   /* LOAD */
   /* ========================================== */
 
   useEffect(() => {
-    let active =
-      true
-
+    let active = true
 
     Promise.all([
       evaluationsApi.get(id),
@@ -106,16 +84,13 @@ export default function EvaluationComparisonPage({
             return
           }
 
-
           setEvaluation(
             evaluationData,
           )
 
-
           setVendors(
             vendorData,
           )
-
 
           setLoading(
             false,
@@ -131,21 +106,17 @@ export default function EvaluationComparisonPage({
             error,
           )
 
-
           if (!active) {
             return
           }
-
 
           setEvaluation(
             null,
           )
 
-
           setVendors(
             [],
           )
-
 
           setLoading(
             false,
@@ -153,15 +124,12 @@ export default function EvaluationComparisonPage({
         },
       )
 
-
     return () => {
-      active =
-        false
+      active = false
     }
   }, [
     id,
   ])
-
 
   /* ========================================== */
   /* DERIVED DATA */
@@ -183,36 +151,52 @@ export default function EvaluationComparisonPage({
       ],
     )
 
-
   const topVendor =
     sortedVendors[0] ??
     null
 
-
-  const eligibleCount =
-    sortedVendors.filter(
-      (
-        vendor,
-      ) =>
-        vendor.eligible,
-    ).length
-
-
-  const averageScore =
-    sortedVendors.length >
-    0
-      ? sortedVendors.reduce(
+  const eligibleVendors =
+    useMemo(
+      () =>
+        sortedVendors.filter(
           (
-            sum,
             vendor,
           ) =>
-            sum +
-            vendor.overallScore,
-          0,
-        ) /
-        sortedVendors.length
-      : 0
+            vendor.eligible,
+        ),
+      [
+        sortedVendors,
+      ],
+    )
 
+  const eligibleCount =
+    eligibleVendors.length
+
+  const highestEligibleVendor =
+    eligibleVendors[0] ??
+    null
+
+  const recommendedVendor =
+    evaluation?.recommendedVendor
+      ? sortedVendors.find(
+          (
+            vendor,
+          ) =>
+            vendor.name ===
+            evaluation.recommendedVendor,
+        ) ??
+        null
+      : null
+
+  const noEligibleVendor =
+    evaluation?.recommendationStatus ===
+      'NO_ELIGIBLE_VENDOR'
+    ||
+    eligibleCount === 0
+
+  const highestScore =
+    topVendor?.overallScore ??
+    0
 
   const averageCompliance =
     sortedVendors.length >
@@ -229,12 +213,10 @@ export default function EvaluationComparisonPage({
         sortedVendors.length
       : 0
 
-
   const ArrowIcon =
     isArabic
       ? ArrowLeft
       : ArrowRight
-
 
   /* ========================================== */
   /* LOADING */
@@ -245,7 +227,6 @@ export default function EvaluationComparisonPage({
       <LoadingState />
     )
   }
-
 
   /* ========================================== */
   /* NOT FOUND */
@@ -259,11 +240,9 @@ export default function EvaluationComparisonPage({
           bg-white
           px-5
           py-16
-
           sm:px-8
         "
       >
-
         <div
           className="
             mx-auto
@@ -273,7 +252,6 @@ export default function EvaluationComparisonPage({
             p-10
           "
         >
-
           <EmptyState
             icon={
               GitCompareArrows
@@ -305,13 +283,10 @@ export default function EvaluationComparisonPage({
               </Button>
             }
           />
-
         </div>
-
       </div>
     )
   }
-
 
   return (
     <div
@@ -336,15 +311,12 @@ export default function EvaluationComparisonPage({
           bg-[#F1ECE0]
           px-5
           py-10
-
           sm:px-8
           sm:py-12
-
           lg:px-12
           lg:py-14
         "
       >
-
         <div
           className="
             mx-auto
@@ -352,14 +324,11 @@ export default function EvaluationComparisonPage({
             w-full
             max-w-[1500px]
             gap-5
-
             xl:grid-cols-[0.68fr_1fr]
           "
         >
 
-          {/* ================================= */}
           {/* NAVY PANEL */}
-          {/* ================================= */}
 
           <div
             className="
@@ -371,13 +340,10 @@ export default function EvaluationComparisonPage({
               bg-[#131B4F]
               p-7
               text-white
-
               sm:p-9
-
               lg:p-10
             "
           >
-
             <div
               className="
                 pointer-events-none
@@ -391,16 +357,12 @@ export default function EvaluationComparisonPage({
               "
             />
 
-
-            {/* TOP */}
-
             <div
               className="
                 relative
                 z-10
               "
             >
-
               <div
                 className="
                   flex
@@ -409,7 +371,6 @@ export default function EvaluationComparisonPage({
                   gap-4
                 "
               >
-
                 <span
                   className="
                     bg-white/10
@@ -426,7 +387,6 @@ export default function EvaluationComparisonPage({
                     : 'VENDOR COMPARISON'}
                 </span>
 
-
                 <span
                   className="
                     text-xs
@@ -435,9 +395,7 @@ export default function EvaluationComparisonPage({
                 >
                   #{evaluation.id}
                 </span>
-
               </div>
-
 
               <p
                 className="
@@ -452,7 +410,6 @@ export default function EvaluationComparisonPage({
                   ? 'مقارنة موحدة'
                   : 'SIDE-BY-SIDE REVIEW'}
               </p>
-
 
               <h1
                 className="
@@ -469,11 +426,7 @@ export default function EvaluationComparisonPage({
                   ? 'شوف الفرق بين عروض الموردين بوضوح'
                   : 'See how vendor proposals compare'}
               </h1>
-
             </div>
-
-
-            {/* BOTTOM */}
 
             <div
               className="
@@ -483,7 +436,6 @@ export default function EvaluationComparisonPage({
                 max-w-[610px]
               "
             >
-
               <p
                 className="
                   text-[15px]
@@ -492,10 +444,9 @@ export default function EvaluationComparisonPage({
                 "
               >
                 {isArabic
-                  ? 'تجمع المقارنة درجات الموردين، الامتثال، الأهلية والمخاطر في مكان واحد، وتوضح الفروقات بينهم على نفس معايير المنافسة.'
-                  : 'The comparison brings vendor scores, compliance, eligibility, and risk together in one place and highlights differences using the same competition criteria.'}
+                  ? 'تقارن الصفحة الدرجات والامتثال والأهلية والمخاطر على نفس إطار المنافسة، مع فصل أعلى نتيجة رقمية عن التوصية النهائية.'
+                  : 'Compare scores, compliance, eligibility, and risk on the same evaluation framework while keeping the highest numeric score separate from the final recommendation.'}
               </p>
-
 
               <div
                 className="
@@ -512,13 +463,11 @@ export default function EvaluationComparisonPage({
                   text-white/55
                 "
               >
-
                 <span>
                   {
                     evaluation.rfpName
                   }
                 </span>
-
 
                 <span
                   className="
@@ -526,11 +475,9 @@ export default function EvaluationComparisonPage({
                     size-1
                     rounded-full
                     bg-white/30
-
                     sm:block
                   "
                 />
-
 
                 <span>
                   {formatDate(
@@ -538,17 +485,11 @@ export default function EvaluationComparisonPage({
                     language,
                   )}
                 </span>
-
               </div>
-
             </div>
-
           </div>
 
-
-          {/* ================================= */}
           {/* OVERVIEW CARDS */}
-          {/* ================================= */}
 
           <div
             className="
@@ -556,7 +497,6 @@ export default function EvaluationComparisonPage({
               gap-5
             "
           >
-
             <ComparisonOverviewCard
               number="01"
               eyebrow={
@@ -579,7 +519,6 @@ export default function EvaluationComparisonPage({
               }
             />
 
-
             <ComparisonOverviewCard
               number="02"
               eyebrow={
@@ -594,60 +533,85 @@ export default function EvaluationComparisonPage({
               }
               description={
                 isArabic
-                  ? 'الأهلية تعتمد على استيفاء البنود والمتطلبات الإلزامية في المنافسة.'
-                  : 'Eligibility depends on satisfying the mandatory competition requirements.'
+                  ? 'الأهلية مستقلة عن ترتيب الدرجات، وتعتمد على استيفاء المتطلبات الإلزامية.'
+                  : 'Eligibility is separate from score ranking and depends on satisfying mandatory requirements.'
               }
               icon={
                 ShieldCheck
               }
             />
 
-
             <ComparisonOverviewCard
               number="03"
               eyebrow={
-                isArabic
-                  ? 'المتصدر'
-                  : 'CURRENT LEADER'
-              }
-              title={
-                topVendor
-                  ? topVendor.name
+                noEligibleVendor
+                  ? (
+                    isArabic
+                      ? 'حالة التوصية'
+                      : 'RECOMMENDATION STATUS'
+                  )
                   : (
                     isArabic
-                      ? 'لا يوجد مورد متصدر'
-                      : 'No leading vendor'
+                      ? 'المورد الموصى به'
+                      : 'RECOMMENDED VENDOR'
+                  )
+              }
+              title={
+                noEligibleVendor
+                  ? (
+                    isArabic
+                      ? 'لا يوجد مورد مؤهل حاليًا'
+                      : 'No vendor is currently eligible'
+                  )
+                  : (
+                    recommendedVendor?.name ??
+                    highestEligibleVendor?.name ??
+                    (
+                      isArabic
+                        ? 'تتطلب النتيجة مراجعة بشرية'
+                        : 'Human review is required'
+                    )
                   )
               }
               description={
-                topVendor
-                  ? isArabic
-                    ? `يتصدر المقارنة بدرجة ${formatPercent(
-                        topVendor.overallScore,
-                        1,
-                      )}.`
-                    : `Currently leads with a score of ${formatPercent(
-                        topVendor.overallScore,
-                        1,
-                      )}.`
-                  : isArabic
-                    ? 'ستظهر النتيجة عند توفر نتائج المقارنة.'
-                    : 'The result will appear once comparison data is available.'
+                noEligibleVendor
+                  ? (
+                    topVendor
+                      ? (
+                        isArabic
+                          ? `أعلى نتيجة رقمية هي ${formatPercent(
+                              topVendor.overallScore,
+                              1,
+                            )}، لكنها لا تمثل توصية لأن المورد غير مستوفٍ للأهلية.`
+                          : `The highest numeric score is ${formatPercent(
+                              topVendor.overallScore,
+                              1,
+                            )}, but it is not a recommendation because the vendor is not eligible.`
+                      )
+                      : (
+                        isArabic
+                          ? 'لا توجد نتائج موردين متاحة.'
+                          : 'No vendor results are available.'
+                      )
+                  )
+                  : (
+                    isArabic
+                      ? 'يعكس هذا الحقل التوصية الفعلية من نتيجة التقييم، وليس مجرد أعلى درجة رقمية.'
+                      : 'This reflects the actual recommendation returned by the evaluation, not simply the highest numeric score.'
+                  )
               }
               icon={
-                Trophy
+                noEligibleVendor
+                  ? ShieldAlert
+                  : Trophy
               }
             />
-
           </div>
-
         </div>
-
       </section>
 
-
       {/* ===================================== */}
-      {/* SECTION 2 — TOP VENDOR */}
+      {/* SECTION 2 — HIGHEST SCORE */}
       {/* ===================================== */}
 
       <section
@@ -655,14 +619,11 @@ export default function EvaluationComparisonPage({
           bg-white
           px-5
           py-16
-
           sm:px-8
-
           lg:px-12
           lg:py-20
         "
       >
-
         <div
           className="
             mx-auto
@@ -670,26 +631,19 @@ export default function EvaluationComparisonPage({
             max-w-[1500px]
           "
         >
-
           <div
             className="
               grid
               gap-10
-
               lg:grid-cols-[330px_1fr]
             "
           >
-
-            {/* INTRO */}
-
             <div>
-
               <SectionEyebrow>
                 {isArabic
-                  ? 'المورد الأعلى'
-                  : 'TOP RANKED'}
+                  ? 'أعلى نتيجة رقمية'
+                  : 'HIGHEST NUMERIC SCORE'}
               </SectionEyebrow>
-
 
               <h2
                 className="
@@ -702,10 +656,9 @@ export default function EvaluationComparisonPage({
                 "
               >
                 {isArabic
-                  ? 'مين متصدر المقارنة؟'
-                  : 'Who is leading the comparison?'}
+                  ? 'من حصل على أعلى درجة؟'
+                  : 'Who received the highest score?'}
               </h2>
-
 
               <p
                 className="
@@ -716,28 +669,19 @@ export default function EvaluationComparisonPage({
                 "
               >
                 {isArabic
-                  ? 'العرض الأعلى ترتيبًا حسب الدرجة الموزونة وحالة الامتثال والأهلية.'
-                  : 'The highest-ranked proposal based on weighted score, compliance, and eligibility.'
-                }
+                  ? 'أعلى درجة موزونة لا تعني تلقائيًا أن المورد مؤهل أو موصى به. لذلك نعرض الأهلية والتوصية بشكل منفصل.'
+                  : 'The highest weighted score does not automatically mean the vendor is eligible or recommended, so eligibility and recommendation are shown separately.'}
               </p>
-
             </div>
-
-
-            {/* VENDOR FEATURE */}
 
             {topVendor ? (
               <div
                 className="
                   grid
                   overflow-hidden
-
                   md:grid-cols-[1fr_0.42fr]
                 "
               >
-
-                {/* VENDOR */}
-
                 <div
                   className="
                     flex
@@ -746,13 +690,10 @@ export default function EvaluationComparisonPage({
                     justify-between
                     bg-[#F7F7F5]
                     p-7
-
                     sm:p-9
                   "
                 >
-
                   <div>
-
                     <div
                       className="
                         flex
@@ -761,7 +702,6 @@ export default function EvaluationComparisonPage({
                         gap-3
                       "
                     >
-
                       <span
                         className="
                           text-[10px]
@@ -771,10 +711,9 @@ export default function EvaluationComparisonPage({
                         "
                       >
                         {isArabic
-                          ? 'العرض المتصدر'
-                          : 'LEADING PROPOSAL'}
+                          ? 'أعلى نتيجة'
+                          : 'HIGHEST SCORE'}
                       </span>
-
 
                       <span
                         className="
@@ -788,9 +727,7 @@ export default function EvaluationComparisonPage({
                       >
                         #{topVendor.rank}
                       </span>
-
                     </div>
-
 
                     <h3
                       className="
@@ -809,7 +746,6 @@ export default function EvaluationComparisonPage({
                       }
                     </h3>
 
-
                     <p
                       className="
                         mt-5
@@ -819,13 +755,33 @@ export default function EvaluationComparisonPage({
                         text-[#6F7788]
                       "
                     >
-                      {
-                        topVendor.summary
-                      }
+                      {isArabic
+                        ? topVendor.eligible
+                          ? `حقق العرض درجة ${formatPercent(
+                              topVendor.overallScore,
+                              1,
+                            )} مع امتثال إلزامي ${formatPercent(
+                              topVendor.overallMandatoryCompliance,
+                              1,
+                            )}، وهو مستوفٍ للأهلية وفق نتائج التقييم الحالية.`
+                          : `حقق العرض أعلى درجة رقمية وهي ${formatPercent(
+                              topVendor.overallScore,
+                              1,
+                            )}، لكنه غير مستوفٍ للأهلية. لا تُعد هذه النتيجة توصية نهائية قبل مراجعة فجوات الامتثال.`
+                        : topVendor.eligible
+                          ? `The proposal scored ${formatPercent(
+                              topVendor.overallScore,
+                              1,
+                            )} with ${formatPercent(
+                              topVendor.overallMandatoryCompliance,
+                              1,
+                            )} mandatory compliance and is currently eligible.`
+                          : `The proposal has the highest numeric score at ${formatPercent(
+                              topVendor.overallScore,
+                              1,
+                            )}, but it is not eligible. This should not be treated as a final recommendation before compliance review.`}
                     </p>
-
                   </div>
-
 
                   <div
                     className="
@@ -836,7 +792,6 @@ export default function EvaluationComparisonPage({
                       gap-3
                     "
                   >
-
                     <EligibilityBadge
                       eligible={
                         topVendor.eligible
@@ -846,7 +801,6 @@ export default function EvaluationComparisonPage({
                       }
                     />
 
-
                     <RiskBadge
                       risk={
                         topVendor.riskLevel
@@ -855,13 +809,8 @@ export default function EvaluationComparisonPage({
                         isArabic
                       }
                     />
-
                   </div>
-
                 </div>
-
-
-                {/* SCORE */}
 
                 <div
                   className="
@@ -872,11 +821,9 @@ export default function EvaluationComparisonPage({
                     bg-[#131B4F]
                     p-7
                     text-white
-
                     sm:p-9
                   "
                 >
-
                   <div
                     className="
                       flex
@@ -884,7 +831,6 @@ export default function EvaluationComparisonPage({
                       justify-between
                     "
                   >
-
                     <p
                       className="
                         text-[10px]
@@ -894,10 +840,9 @@ export default function EvaluationComparisonPage({
                       "
                     >
                       {isArabic
-                        ? 'الدرجة'
-                        : 'OVERALL SCORE'}
+                        ? 'الدرجة الموزونة'
+                        : 'WEIGHTED SCORE'}
                     </p>
-
 
                     <Trophy
                       className="
@@ -905,12 +850,9 @@ export default function EvaluationComparisonPage({
                         text-[#CDB78F]
                       "
                     />
-
                   </div>
 
-
                   <div>
-
                     <p
                       className="
                         text-[clamp(64px,7vw,96px)]
@@ -925,7 +867,6 @@ export default function EvaluationComparisonPage({
                       )}
                     </p>
 
-
                     <p
                       className="
                         mt-5
@@ -936,19 +877,15 @@ export default function EvaluationComparisonPage({
                     >
                       {isArabic
                         ? `الامتثال الإلزامي ${formatPercent(
-                            topVendor
-                              .overallMandatoryCompliance,
+                            topVendor.overallMandatoryCompliance,
                             1,
                           )}`
                         : `Mandatory compliance ${formatPercent(
-                            topVendor
-                              .overallMandatoryCompliance,
+                            topVendor.overallMandatoryCompliance,
                             1,
                           )}`}
                     </p>
-
                   </div>
-
 
                   <Link
                     href={`/evaluations/${id}/vendors/${topVendor.id}`}
@@ -963,11 +900,9 @@ export default function EvaluationComparisonPage({
                       text-white
                     "
                   >
-
                     {isArabic
                       ? 'عرض تفاصيل المورد'
                       : 'View vendor details'}
-
 
                     <ArrowIcon
                       className={cn(
@@ -976,17 +911,13 @@ export default function EvaluationComparisonPage({
                           transition-transform
                           duration-300
                         `,
-
                         isArabic
                           ? 'group-hover:-translate-x-1'
                           : 'group-hover:translate-x-1',
                       )}
                     />
-
                   </Link>
-
                 </div>
-
               </div>
             ) : (
               <div
@@ -999,7 +930,6 @@ export default function EvaluationComparisonPage({
                   text-center
                 "
               >
-
                 <GitCompareArrows
                   className="
                     mx-auto
@@ -1007,7 +937,6 @@ export default function EvaluationComparisonPage({
                     text-[#9AA1AF]
                   "
                 />
-
 
                 <p
                   className="
@@ -1021,16 +950,11 @@ export default function EvaluationComparisonPage({
                     ? 'لا توجد نتائج للموردين'
                     : 'No vendor results available'}
                 </p>
-
               </div>
             )}
-
           </div>
-
         </div>
-
       </section>
-
 
       {/* ===================================== */}
       {/* SECTION 3 — SNAPSHOT */}
@@ -1041,14 +965,11 @@ export default function EvaluationComparisonPage({
           bg-[#F1ECE0]
           px-5
           py-16
-
           sm:px-8
-
           lg:px-12
           lg:py-20
         "
       >
-
         <div
           className="
             mx-auto
@@ -1056,13 +977,11 @@ export default function EvaluationComparisonPage({
             max-w-[1500px]
           "
         >
-
           <SectionEyebrow>
             {isArabic
               ? 'ملخص المقارنة'
               : 'COMPARISON SNAPSHOT'}
           </SectionEyebrow>
-
 
           <h2
             className="
@@ -1071,7 +990,6 @@ export default function EvaluationComparisonPage({
               font-medium
               tracking-[-0.04em]
               text-[#131B4F]
-
               sm:text-[40px]
             "
           >
@@ -1080,20 +998,16 @@ export default function EvaluationComparisonPage({
               : 'Key comparison numbers'}
           </h2>
 
-
           <div
             className="
               mt-10
               grid
               border-y
               border-[#D8CCB6]
-
               sm:grid-cols-2
-
               xl:grid-cols-4
             "
           >
-
             <ComparisonMetric
               value={
                 String(
@@ -1111,7 +1025,6 @@ export default function EvaluationComparisonPage({
                   : 'Total evaluated proposals'
               }
             />
-
 
             <ComparisonMetric
               value={
@@ -1131,26 +1044,24 @@ export default function EvaluationComparisonPage({
               }
             />
 
-
             <ComparisonMetric
               value={
                 formatPercent(
-                  averageScore,
+                  highestScore,
                   1,
                 )
               }
               label={
                 isArabic
-                  ? 'متوسط الدرجة'
-                  : 'Average score'
+                  ? 'أعلى نتيجة'
+                  : 'Highest score'
               }
               helper={
                 isArabic
-                  ? 'متوسط نتائج جميع العروض'
-                  : 'Average across proposals'
+                  ? 'أعلى درجة موزونة بين العروض'
+                  : 'Highest weighted score among proposals'
               }
             />
-
 
             <ComparisonMetric
               value={
@@ -1171,13 +1082,9 @@ export default function EvaluationComparisonPage({
               }
               last
             />
-
           </div>
-
         </div>
-
       </section>
-
 
       {/* ===================================== */}
       {/* SECTION 4 — ALL VENDORS */}
@@ -1188,14 +1095,11 @@ export default function EvaluationComparisonPage({
           bg-[#F7F7F5]
           px-5
           py-16
-
           sm:px-8
-
           lg:px-12
           lg:py-20
         "
       >
-
         <div
           className="
             mx-auto
@@ -1203,24 +1107,19 @@ export default function EvaluationComparisonPage({
             max-w-[1500px]
           "
         >
-
           <div
             className="
               grid
               gap-8
-
               lg:grid-cols-[330px_1fr]
             "
           >
-
             <div>
-
               <SectionEyebrow>
                 {isArabic
                   ? 'أداء الموردين'
                   : 'VENDOR PERFORMANCE'}
               </SectionEyebrow>
-
 
               <h2
                 className="
@@ -1237,7 +1136,6 @@ export default function EvaluationComparisonPage({
                   : 'Compare every proposal directly'}
               </h2>
 
-
               <p
                 className="
                   mt-5
@@ -1247,15 +1145,12 @@ export default function EvaluationComparisonPage({
                 "
               >
                 {isArabic
-                  ? 'كل عرض يعرض الدرجة، الامتثال، الأهلية والمخاطر بنفس الشكل عشان تكون المقارنة أسرع.'
-                  : 'Each proposal shows score, compliance, eligibility, and risk in the same format for easier comparison.'}
+                  ? 'كل عرض يعرض الدرجة والامتثال والأهلية والمخاطر بنفس الشكل، بدون خلط بين الترتيب والتوصية.'
+                  : 'Each proposal shows score, compliance, eligibility, and risk in the same format without confusing ranking with recommendation.'}
               </p>
-
             </div>
 
-
             <div>
-
               {sortedVendors.length === 0 ? (
                 <div
                   className="
@@ -1265,7 +1160,6 @@ export default function EvaluationComparisonPage({
                     text-center
                   "
                 >
-
                   <GitCompareArrows
                     className="
                       mx-auto
@@ -1273,7 +1167,6 @@ export default function EvaluationComparisonPage({
                       text-[#9AA1AF]
                     "
                   />
-
 
                   <h3
                     className="
@@ -1287,7 +1180,6 @@ export default function EvaluationComparisonPage({
                       ? 'لا توجد نتائج للموردين'
                       : 'No vendor results available'}
                   </h3>
-
                 </div>
               ) : (
                 <div
@@ -1296,15 +1188,12 @@ export default function EvaluationComparisonPage({
                       grid
                       gap-4
                     `,
-
                     sortedVendors.length ===
                       1 &&
                       'grid-cols-1',
-
                     sortedVendors.length ===
                       2 &&
                       'lg:grid-cols-2',
-
                     sortedVendors.length >=
                       3 &&
                       `
@@ -1313,7 +1202,6 @@ export default function EvaluationComparisonPage({
                       `,
                   )}
                 >
-
                   {sortedVendors.map(
                     (
                       vendor,
@@ -1334,18 +1222,12 @@ export default function EvaluationComparisonPage({
                       />
                     ),
                   )}
-
                 </div>
               )}
-
             </div>
-
           </div>
-
         </div>
-
       </section>
-
 
       {/* ===================================== */}
       {/* SECTION 5 — CRITERIA COMPARISON */}
@@ -1358,14 +1240,11 @@ export default function EvaluationComparisonPage({
             bg-white
             px-5
             py-16
-
             sm:px-8
-
             lg:px-12
             lg:py-20
           "
         >
-
           <div
             className="
               mx-auto
@@ -1373,24 +1252,19 @@ export default function EvaluationComparisonPage({
               max-w-[1500px]
             "
           >
-
             <div
               className="
                 grid
                 gap-8
-
                 lg:grid-cols-[330px_1fr]
               "
             >
-
               <div>
-
                 <SectionEyebrow>
                   {isArabic
                     ? 'مقارنة المعايير'
                     : 'CRITERIA COMPARISON'}
                 </SectionEyebrow>
-
 
                 <h2
                   className="
@@ -1407,7 +1281,6 @@ export default function EvaluationComparisonPage({
                     : 'Where does each vendor perform best?'}
                 </h2>
 
-
                 <p
                   className="
                     mt-5
@@ -1417,12 +1290,10 @@ export default function EvaluationComparisonPage({
                   "
                 >
                   {isArabic
-                    ? 'يعرض الجدول أداء كل مورد على مستوى كل معيار موزون، عشان توضح نقاط القوة والفروقات بينهم.'
-                    : 'The table shows vendor performance for every weighted criterion to surface strengths and differences.'}
+                    ? 'علامة الأفضل تُحسب لكل معيار على حدة، وليس حسب ترتيب المورد العام.'
+                    : 'The best marker is calculated per criterion rather than using the vendor’s overall rank.'}
                 </p>
-
               </div>
-
 
               <div
                 className="
@@ -1432,7 +1303,6 @@ export default function EvaluationComparisonPage({
                   bg-white
                 "
               >
-
                 <CriteriaComparisonTable
                   vendors={
                     sortedVendors
@@ -1441,16 +1311,11 @@ export default function EvaluationComparisonPage({
                     isArabic
                   }
                 />
-
               </div>
-
             </div>
-
           </div>
-
         </section>
       )}
-
 
       {/* ===================================== */}
       {/* SECTION 6 — NEXT STEP */}
@@ -1461,14 +1326,11 @@ export default function EvaluationComparisonPage({
           bg-[#F1ECE0]
           px-5
           py-12
-
           sm:px-8
-
           lg:px-12
           lg:py-14
         "
       >
-
         <div
           className="
             mx-auto
@@ -1476,34 +1338,27 @@ export default function EvaluationComparisonPage({
             max-w-[1500px]
           "
         >
-
           <div
             className="
               grid
               overflow-hidden
               bg-white
-
               lg:grid-cols-[1fr_auto]
             "
           >
-
             <div
               className="
                 px-6
                 py-7
-
                 sm:px-8
-
                 lg:px-10
               "
             >
-
               <SectionEyebrow>
                 {isArabic
                   ? 'الخطوة التالية'
                   : 'NEXT STEP'}
               </SectionEyebrow>
-
 
               <h2
                 className="
@@ -1512,15 +1367,21 @@ export default function EvaluationComparisonPage({
                   font-medium
                   tracking-[-0.035em]
                   text-[#131B4F]
-
                   sm:text-[30px]
                 "
               >
-                {isArabic
-                  ? 'راجع الامتثال قبل الانتقال للقرار النهائي'
-                  : 'Review compliance before the final decision'}
+                {noEligibleVendor
+                  ? (
+                    isArabic
+                      ? 'لا يوجد مورد مؤهل — راجع فجوات الامتثال'
+                      : 'No vendor is eligible — review compliance gaps'
+                  )
+                  : (
+                    isArabic
+                      ? 'راجع الامتثال قبل الانتقال للقرار النهائي'
+                      : 'Review compliance before the final decision'
+                  )}
               </h2>
-
 
               <p
                 className="
@@ -1531,13 +1392,19 @@ export default function EvaluationComparisonPage({
                   text-[#70788A]
                 "
               >
-                {isArabic
-                  ? 'بعد مقارنة الدرجات، راجع المتطلبات الإلزامية وحالات عدم الاستيفاء لكل مورد.'
-                  : 'After comparing scores, review mandatory requirements and any compliance gaps for each vendor.'}
+                {noEligibleVendor
+                  ? (
+                    isArabic
+                      ? 'جميع العروض الحالية غير مستوفية للأهلية. راجع المتطلبات الإلزامية غير المستوفاة قبل أي قرار أو توصية.'
+                      : 'All current proposals are ineligible. Review unmet mandatory requirements before making any decision or recommendation.'
+                  )
+                  : (
+                    isArabic
+                      ? 'بعد مقارنة الدرجات، راجع المتطلبات الإلزامية وحالات عدم الاستيفاء لكل مورد.'
+                      : 'After comparing scores, review mandatory requirements and any compliance gaps for each vendor.'
+                  )}
               </p>
-
             </div>
-
 
             <Link
               href={`/evaluations/${id}/compliance`}
@@ -1556,17 +1423,13 @@ export default function EvaluationComparisonPage({
                 text-white
                 transition-all
                 duration-300
-
                 hover:bg-[#1D208E]
-
                 lg:min-h-full
               "
             >
-
               {isArabic
                 ? 'عرض الامتثال'
                 : 'View Compliance'}
-
 
               <ArrowIcon
                 className={cn(
@@ -1575,21 +1438,15 @@ export default function EvaluationComparisonPage({
                     transition-transform
                     duration-300
                   `,
-
                   isArabic
                     ? 'group-hover:-translate-x-1'
                     : 'group-hover:translate-x-1',
                 )}
               />
-
             </Link>
-
           </div>
-
         </div>
-
       </section>
-
     </div>
   )
 }
@@ -1624,11 +1481,9 @@ function ComparisonOverviewCard({
         bg-white
         px-6
         py-6
-
         sm:px-8
       "
     >
-
       <div
         className="
           flex
@@ -1636,7 +1491,6 @@ function ComparisonOverviewCard({
           gap-4
         "
       >
-
         <div
           className="
             mt-1
@@ -1649,18 +1503,14 @@ function ComparisonOverviewCard({
             text-[#131B4F]
           "
         >
-
           <Icon
             className="
               size-4
             "
           />
-
         </div>
 
-
         <div>
-
           <p
             className="
               text-[10px]
@@ -1672,7 +1522,6 @@ function ComparisonOverviewCard({
             {eyebrow}
           </p>
 
-
           <h3
             className="
               mt-2
@@ -1681,13 +1530,11 @@ function ComparisonOverviewCard({
               leading-[1.18]
               tracking-[-0.03em]
               text-[#131B4F]
-
               sm:text-[24px]
             "
           >
             {title}
           </h3>
-
 
           <p
             className="
@@ -1700,11 +1547,8 @@ function ComparisonOverviewCard({
           >
             {description}
           </p>
-
         </div>
-
       </div>
-
 
       <span
         className="
@@ -1713,13 +1557,11 @@ function ComparisonOverviewCard({
           leading-none
           tracking-[-0.06em]
           text-[#131B4F]
-
           sm:text-[54px]
         "
       >
         {number}
       </span>
-
     </article>
   )
 }
@@ -1770,22 +1612,17 @@ function ComparisonMetric({
         `
           min-h-[175px]
           py-7
-
           sm:px-6
         `,
-
         !last &&
           `
             border-b
             border-[#D8CCB6]
-
             sm:border-e
-
             xl:border-b-0
           `,
       )}
     >
-
       <p
         className="
           text-[clamp(38px,3.7vw,52px)]
@@ -1798,7 +1635,6 @@ function ComparisonMetric({
         {value}
       </p>
 
-
       <p
         className="
           mt-5
@@ -1810,7 +1646,6 @@ function ComparisonMetric({
         {label}
       </p>
 
-
       <p
         className="
           mt-2
@@ -1821,7 +1656,6 @@ function ComparisonMetric({
       >
         {helper}
       </p>
-
     </div>
   )
 }
@@ -1854,15 +1688,11 @@ function VendorSummaryCard({
         bg-white
         transition-all
         duration-300
-
         hover:-translate-y-1
         hover:border-[#CDD1DA]
         hover:shadow-[0_16px_35px_rgba(19,27,79,0.07)]
       "
     >
-
-      {/* TOP */}
-
       <div
         className="
           flex
@@ -1875,13 +1705,11 @@ function VendorSummaryCard({
           py-5
         "
       >
-
         <div
           className="
             min-w-0
           "
         >
-
           <div
             className="
               flex
@@ -1889,7 +1717,6 @@ function VendorSummaryCard({
               gap-3
             "
           >
-
             <span
               className={cn(
                 `
@@ -1901,7 +1728,6 @@ function VendorSummaryCard({
                   text-xs
                   font-semibold
                 `,
-
                 vendor.rank ===
                   1
                   ? `
@@ -1917,13 +1743,11 @@ function VendorSummaryCard({
               #{vendor.rank}
             </span>
 
-
             <div
               className="
                 min-w-0
               "
             >
-
               <h3
                 className="
                   truncate
@@ -1936,7 +1760,6 @@ function VendorSummaryCard({
                 {vendor.name}
               </h3>
 
-
               <p
                 className="
                   mt-1
@@ -1948,13 +1771,9 @@ function VendorSummaryCard({
                   ? 'تقييم المورد'
                   : 'Vendor evaluation'}
               </p>
-
             </div>
-
           </div>
-
         </div>
-
 
         {vendor.rank ===
           1 && (
@@ -1966,11 +1785,7 @@ function VendorSummaryCard({
             "
           />
         )}
-
       </div>
-
-
-      {/* SCORES */}
 
       <div
         className="
@@ -1980,7 +1795,6 @@ function VendorSummaryCard({
           border-[#ECEEF2]
         "
       >
-
         <CardMetric
           label={
             isArabic
@@ -1994,7 +1808,6 @@ function VendorSummaryCard({
             )
           }
         />
-
 
         <CardMetric
           label={
@@ -2010,11 +1823,7 @@ function VendorSummaryCard({
           }
           last
         />
-
       </div>
-
-
-      {/* STATUS */}
 
       <div
         className="
@@ -2027,7 +1836,6 @@ function VendorSummaryCard({
           py-4
         "
       >
-
         <EligibilityBadge
           eligible={
             vendor.eligible
@@ -2037,7 +1845,6 @@ function VendorSummaryCard({
           }
         />
 
-
         <RiskBadge
           risk={
             vendor.riskLevel
@@ -2046,11 +1853,7 @@ function VendorSummaryCard({
             isArabic
           }
         />
-
       </div>
-
-
-      {/* SUMMARY */}
 
       <div
         className="
@@ -2059,7 +1862,6 @@ function VendorSummaryCard({
           py-5
         "
       >
-
         <p
           className="
             line-clamp-4
@@ -2068,13 +1870,39 @@ function VendorSummaryCard({
             text-[#646D7F]
           "
         >
-          {vendor.summary}
+          {isArabic
+            ? vendor.eligible
+              ? `درجة موزونة ${formatPercent(
+                  vendor.overallScore,
+                  1,
+                )} وامتثال إلزامي ${formatPercent(
+                  vendor.overallMandatoryCompliance,
+                  1,
+                )}. المورد مستوفٍ للأهلية وفق نتائج التقييم الحالية.`
+              : `درجة موزونة ${formatPercent(
+                  vendor.overallScore,
+                  1,
+                )} وامتثال إلزامي ${formatPercent(
+                  vendor.overallMandatoryCompliance,
+                  1,
+                )}. المورد غير مستوفٍ للأهلية ويحتاج مراجعة فجوات الامتثال.`
+            : vendor.eligible
+              ? `Weighted score ${formatPercent(
+                  vendor.overallScore,
+                  1,
+                )} with ${formatPercent(
+                  vendor.overallMandatoryCompliance,
+                  1,
+                )} mandatory compliance. The vendor is currently eligible.`
+              : `Weighted score ${formatPercent(
+                  vendor.overallScore,
+                  1,
+                )} with ${formatPercent(
+                  vendor.overallMandatoryCompliance,
+                  1,
+                )} mandatory compliance. The vendor is not eligible and requires compliance-gap review.`}
         </p>
-
       </div>
-
-
-      {/* LINK */}
 
       <div
         className="
@@ -2084,7 +1912,6 @@ function VendorSummaryCard({
           py-4
         "
       >
-
         <span
           className="
             inline-flex
@@ -2099,7 +1926,6 @@ function VendorSummaryCard({
             ? 'عرض التفاصيل'
             : 'View details'}
 
-
           <ArrowRight
             className={cn(
               `
@@ -2107,20 +1933,15 @@ function VendorSummaryCard({
                 transition-transform
                 duration-300
               `,
-
               isArabic &&
                 'rotate-180',
-
               isArabic
                 ? 'group-hover:translate-x-[-4px]'
                 : 'group-hover:translate-x-1',
             )}
           />
-
         </span>
-
       </div>
-
     </Link>
   )
 }
@@ -2146,12 +1967,10 @@ function CardMetric({
           px-5
           py-4
         `,
-
         !last &&
           'border-e border-[#ECEEF2]',
       )}
     >
-
       <p
         className="
           text-[10px]
@@ -2161,7 +1980,6 @@ function CardMetric({
       >
         {label}
       </p>
-
 
       <p
         className="
@@ -2174,7 +1992,6 @@ function CardMetric({
       >
         {value}
       </p>
-
     </div>
   )
 }
@@ -2195,35 +2012,26 @@ function CriteriaComparisonTable({
     vendors[0]?.criterionScores ??
     []
 
-
   return (
     <div
       className="
         overflow-x-auto
-
         [scrollbar-color:#B9BEC8_transparent]
         [scrollbar-width:thin]
-
         [&::-webkit-scrollbar]:h-[7px]
-
         [&::-webkit-scrollbar-track]:bg-transparent
-
         [&::-webkit-scrollbar-thumb]:rounded-full
         [&::-webkit-scrollbar-thumb]:bg-[#B9BEC8]
-
         hover:[&::-webkit-scrollbar-thumb]:bg-[#9299A8]
       "
     >
-
       <table
         className="
           w-full
           min-w-[850px]
         "
       >
-
         <thead>
-
           <tr
             className="
               border-b
@@ -2231,7 +2039,6 @@ function CriteriaComparisonTable({
               bg-[#FAFBFC]
             "
           >
-
             <th
               className="
                 px-6
@@ -2247,7 +2054,6 @@ function CriteriaComparisonTable({
                 : 'Criterion'}
             </th>
 
-
             <th
               className="
                 px-5
@@ -2262,7 +2068,6 @@ function CriteriaComparisonTable({
                 ? 'الوزن'
                 : 'Weight'}
             </th>
-
 
             {vendors.map(
               (
@@ -2287,201 +2092,210 @@ function CriteriaComparisonTable({
                 </th>
               ),
             )}
-
           </tr>
-
         </thead>
 
-
         <tbody>
-
           {criteria.map(
             (
               criterion,
               index,
-            ) => (
-              <tr
-                key={
-                  criterion.criterionId
-                }
-                className={cn(
-                  `
-                    transition-colors
-
-                    hover:bg-[#FBFCFD]
-                  `,
-
-                  index !==
-                    criteria.length -
-                      1 &&
-                    `
-                      border-b
-                      border-[#ECEEF2]
-                    `,
-                )}
-              >
-
-                <td
-                  className="
-                    px-6
-                    py-5
-                  "
-                >
-
-                  <p
-                    className="
-                      text-[14px]
-                      font-semibold
-                      text-[#131B4F]
-                    "
-                  >
-                    {
-                      criterion.criterionName
-                    }
-                  </p>
-
-                </td>
-
-
-                <td
-                  className="
-                    px-5
-                    py-5
-                  "
-                >
-
-                  <span
-                    className="
-                      bg-[#F4F5F7]
-                      px-2.5
-                      py-1
-                      text-xs
-                      font-semibold
-                      text-[#131B4F]
-                    "
-                  >
-                    {
-                      criterion.weight
-                    }
-                    %
-                  </span>
-
-                </td>
-
-
-                {vendors.map(
-                  (
-                    vendor,
-                  ) => {
-                    const score =
-                      vendor.criterionScores.find(
+            ) => {
+              const bestScoreForCriterion =
+                Math.max(
+                  ...vendors.map(
+                    (
+                      candidate,
+                    ) =>
+                      candidate.criterionScores.find(
                         (
                           item,
                         ) =>
                           item.criterionId ===
                           criterion.criterionId,
-                      )
+                      )?.score ??
+                      0,
+                  ),
+                )
 
+              return (
+                <tr
+                  key={
+                    criterion.criterionId
+                  }
+                  className={cn(
+                    `
+                      transition-colors
+                      hover:bg-[#FBFCFD]
+                    `,
+                    index !==
+                      criteria.length -
+                        1 &&
+                      `
+                        border-b
+                        border-[#ECEEF2]
+                      `,
+                  )}
+                >
+                  <td
+                    className="
+                      px-6
+                      py-5
+                    "
+                  >
+                    <p
+                      className="
+                        text-[14px]
+                        font-semibold
+                        text-[#131B4F]
+                      "
+                    >
+                      {
+                        criterion.criterionName
+                      }
+                    </p>
+                  </td>
 
-                    const scoreValue =
-                      score?.score ??
-                      0
+                  <td
+                    className="
+                      px-5
+                      py-5
+                    "
+                  >
+                    <span
+                      className="
+                        bg-[#F4F5F7]
+                        px-2.5
+                        py-1
+                        text-xs
+                        font-semibold
+                        text-[#131B4F]
+                      "
+                    >
+                      {
+                        criterion.weight
+                      }
+                      %
+                    </span>
+                  </td>
 
+                  {vendors.map(
+                    (
+                      vendor,
+                    ) => {
+                      const score =
+                        vendor.criterionScores.find(
+                          (
+                            item,
+                          ) =>
+                            item.criterionId ===
+                            criterion.criterionId,
+                        )
 
-                    return (
-                      <td
-                        key={
-                          vendor.id
-                        }
-                        className="
-                          px-5
-                          py-5
-                        "
-                      >
+                      const scoreValue =
+                        score?.score ??
+                        0
 
-                        <div
+                      const isBestForCriterion =
+                        scoreValue ===
+                        bestScoreForCriterion
+
+                      return (
+                        <td
+                          key={
+                            vendor.id
+                          }
                           className="
-                            min-w-[150px]
+                            px-5
+                            py-5
                           "
                         >
-
                           <div
                             className="
-                              mb-2
-                              flex
-                              items-center
-                              justify-between
+                              min-w-[150px]
                             "
                           >
-
-                            <span
+                            <div
                               className="
-                                text-sm
-                                font-semibold
-                                text-[#131B4F]
+                                mb-2
+                                flex
+                                items-center
+                                justify-between
+                                gap-3
                               "
                             >
-                              {
-                                scoreValue
-                              }
-                              %
-                            </span>
-
-
-                            {vendor.rank ===
-                              1 && (
-                              <Trophy
+                              <span
                                 className="
-                                  size-3.5
-                                  text-[#CDB78F]
+                                  text-sm
+                                  font-semibold
+                                  text-[#131B4F]
                                 "
-                              />
-                            )}
+                              >
+                                {
+                                  scoreValue
+                                }
+                                %
+                              </span>
 
-                          </div>
+                              {isBestForCriterion && (
+                                <span
+                                  className="
+                                    inline-flex
+                                    items-center
+                                    gap-1.5
+                                    text-[10px]
+                                    font-semibold
+                                    text-[#8F7546]
+                                  "
+                                >
+                                  <Trophy
+                                    className="
+                                      size-3.5
+                                      text-[#CDB78F]
+                                    "
+                                  />
 
-
-                          <div
-                            className="
-                              h-1.5
-                              overflow-hidden
-                              bg-[#ECEEF2]
-                            "
-                          >
+                                  {isArabic
+                                    ? 'الأفضل'
+                                    : 'Best'}
+                                </span>
+                              )}
+                            </div>
 
                             <div
                               className="
-                                h-full
-                                bg-[#131B4F]
+                                h-1.5
+                                overflow-hidden
+                                bg-[#ECEEF2]
                               "
-                              style={{
-                                width: `${Math.min(
-                                  Math.max(
-                                    scoreValue,
-                                    0,
-                                  ),
-                                  100,
-                                )}%`,
-                              }}
-                            />
-
+                            >
+                              <div
+                                className="
+                                  h-full
+                                  bg-[#131B4F]
+                                "
+                                style={{
+                                  width: `${Math.min(
+                                    Math.max(
+                                      scoreValue,
+                                      0,
+                                    ),
+                                    100,
+                                  )}%`,
+                                }}
+                              />
+                            </div>
                           </div>
-
-                        </div>
-
-                      </td>
-                    )
-                  },
-                )}
-
-              </tr>
-            ),
+                        </td>
+                      )
+                    },
+                  )}
+                </tr>
+              )
+            },
           )}
-
         </tbody>
-
       </table>
-
     </div>
   )
 }
@@ -2513,18 +2327,15 @@ function EligibilityBadge({
         text-[#25724C]
       "
     >
-
       <CheckCircle2
         className="
           size-3.5
         "
       />
 
-
       {isArabic
         ? 'مؤهل'
         : 'Eligible'}
-
     </span>
   ) : (
     <span
@@ -2541,18 +2352,15 @@ function EligibilityBadge({
         text-[#A44444]
       "
     >
-
       <ShieldAlert
         className="
           size-3.5
         "
       />
 
-
       {isArabic
         ? 'غير مؤهل'
         : 'Not Eligible'}
-
     </span>
   )
 }
@@ -2572,14 +2380,11 @@ function RiskBadge({
   const styles = {
     LOW:
       'bg-[#EEF8F2] text-[#25724C]',
-
     MEDIUM:
       'bg-[#FFF8E8] text-[#966515]',
-
     HIGH:
       'bg-[#FFF1F1] text-[#A44444]',
   }
-
 
   return (
     <span
@@ -2594,17 +2399,14 @@ function RiskBadge({
           text-xs
           font-semibold
         `,
-
         styles[risk],
       )}
     >
-
       <ShieldCheck
         className="
           size-3.5
         "
       />
-
 
       {isArabic
         ? `مخاطر ${formatRiskArabic(
@@ -2613,7 +2415,6 @@ function RiskBadge({
         : `${formatRisk(
             risk,
           )} Risk`}
-
     </span>
   )
 }
@@ -2644,7 +2445,6 @@ function formatRiskArabic(
     HIGH: 'مرتفعة',
   }
 
-
   return labels[risk]
 }
 
@@ -2661,30 +2461,24 @@ function LoadingState() {
         bg-white
       "
     >
-
       <div
         className="
           bg-[#F1ECE0]
           px-5
           py-10
-
           sm:px-8
-
           lg:px-12
         "
       >
-
         <div
           className="
             mx-auto
             grid
             max-w-[1500px]
             gap-5
-
             xl:grid-cols-[0.68fr_1fr]
           "
         >
-
           <div
             className="
               h-[520px]
@@ -2693,13 +2487,19 @@ function LoadingState() {
             "
           />
 
-
           <div
             className="
               grid
               gap-5
             "
           >
+            <div
+              className="
+                h-[155px]
+                animate-pulse
+                bg-white
+              "
+            />
 
             <div
               className="
@@ -2709,7 +2509,6 @@ function LoadingState() {
               "
             />
 
-
             <div
               className="
                 h-[155px]
@@ -2717,22 +2516,9 @@ function LoadingState() {
                 bg-white
               "
             />
-
-
-            <div
-              className="
-                h-[155px]
-                animate-pulse
-                bg-white
-              "
-            />
-
           </div>
-
         </div>
-
       </div>
-
 
       <div
         className="
@@ -2740,13 +2526,10 @@ function LoadingState() {
           max-w-[1500px]
           px-5
           py-16
-
           sm:px-8
-
           lg:px-12
         "
       >
-
         <div
           className="
             h-[260px]
@@ -2754,7 +2537,6 @@ function LoadingState() {
             bg-[#F5F6F8]
           "
         />
-
 
         <div
           className="
@@ -2765,7 +2547,6 @@ function LoadingState() {
           "
         />
 
-
         <div
           className="
             mt-12
@@ -2774,9 +2555,7 @@ function LoadingState() {
             bg-[#F5F6F8]
           "
         />
-
       </div>
-
     </div>
   )
 }
