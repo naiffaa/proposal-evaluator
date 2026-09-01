@@ -15,6 +15,17 @@ from utils.proposal_context import (
 
 
 class ComplianceAgent:
+    """
+    Evaluates explicit RFP eligibility/submission gates only.
+
+    Key rules:
+    - Missing evidence is UNVERIFIED, not automatic failure.
+    - FAIL is deterministic and occurs only when an exclusion-grade gate
+      is affirmatively NOT_MET.
+    - Ordinary mandatory implementation requirements should not be passed
+      to this agent; ProposalEvaluationService supplies eligibility gates.
+    """
+
     BATCH_SIZE = 20
     MAX_BATCH_WORKERS = 2
     MAX_BATCH_RETRIES = 1
@@ -23,6 +34,8 @@ class ComplianceAgent:
         "MET",
         "PARTIAL",
         "NOT_MET",
+        "UNVERIFIED",
+        "NOT_APPLICABLE",
     }
 
     VALID_RISK_LEVELS = {
@@ -34,10 +47,11 @@ class ComplianceAgent:
     def __init__(self):
         pass
 
-    def _normalize_text(
-        self,
-        value,
-    ):
+    # =====================================================
+    # Generic helpers
+    # =====================================================
+
+    def _normalize_text(self, value):
         if value is None:
             return ""
 
@@ -47,14 +61,46 @@ class ComplianceAgent:
             str(value),
         ).strip()
 
+    def _normalize_bool(self, value):
+        if isinstance(value, str):
+            return (
+                value.strip().lower()
+                in {
+                    "true",
+                    "yes",
+                    "1",
+                    "y",
+                }
+            )
+
+        return bool(value)
+
+    def _normalize_list(self, value):
+        if value is None:
+            return []
+
+        if not isinstance(value, list):
+            value = [value]
+
+        cleaned = []
+
+        for item in value:
+            if isinstance(item, dict):
+                cleaned.append(item)
+                continue
+
+            text = str(item).strip()
+
+            if text:
+                cleaned.append(text)
+
+        return cleaned
+
     # =====================================================
     # Robust JSON
     # =====================================================
 
-    def _extract_first_json_object(
-        self,
-        text,
-    ):
+    def _extract_first_json_object(self, text):
         if not isinstance(text, str):
             return None
 
@@ -67,10 +113,7 @@ class ComplianceAgent:
         in_string = False
         escaped = False
 
-        for index in range(
-            start,
-            len(text),
-        ):
+        for index in range(start, len(text)):
             char = text[index]
 
             if in_string:
@@ -98,20 +141,14 @@ class ComplianceAgent:
                 depth -= 1
 
                 if depth == 0:
-                    return text[
-                        start:index + 1
-                    ]
+                    return text[start:index + 1]
 
         return None
 
-    def _parse_json(
-        self,
-        result,
-    ):
+    def _parse_json(self, result):
         if not isinstance(result, str):
             raise ValueError(
-                "Compliance Agent response "
-                "must be text."
+                "Compliance Agent response must be text."
             )
 
         text = result.strip()
@@ -133,27 +170,22 @@ class ComplianceAgent:
             return json.loads(text)
 
         except json.JSONDecodeError:
-            extracted = (
-                self._extract_first_json_object(
-                    text
-                )
+            extracted = self._extract_first_json_object(
+                text
             )
 
             if extracted:
                 try:
-                    return json.loads(
-                        extracted
-                    )
+                    return json.loads(extracted)
                 except json.JSONDecodeError:
                     pass
 
             raise ValueError(
-                "Compliance Agent returned "
-                "invalid JSON."
+                "Compliance Agent returned invalid JSON."
             )
 
     # =====================================================
-    # Requirements
+    # Requirement normalization
     # =====================================================
 
     def _get_requirement_id(
@@ -161,24 +193,17 @@ class ComplianceAgent:
         requirement,
         fallback_index=None,
     ):
-        if not isinstance(
-            requirement,
-            dict,
-        ):
+        if not isinstance(requirement, dict):
             return None
 
         requirement_id = (
             requirement.get("id")
             or
-            requirement.get(
-                "requirement_id"
-            )
+            requirement.get("requirement_id")
         )
 
-        requirement_id = (
-            self._normalize_text(
-                requirement_id
-            )
+        requirement_id = self._normalize_text(
+            requirement_id
         )
 
         if requirement_id:
@@ -186,7 +211,8 @@ class ComplianceAgent:
 
         if fallback_index is not None:
             return (
-                f"MANDATORY-{fallback_index:04d}"
+                "ELIG-%03d"
+                % fallback_index
             )
 
         return None
@@ -202,43 +228,39 @@ class ComplianceAgent:
             mandatory_requirements,
             start=1,
         ):
-            if not isinstance(
-                requirement,
-                dict,
-            ):
+            if not isinstance(requirement, dict):
                 raise ValueError(
-                    "Each mandatory requirement "
-                    "must be an object."
+                    "Each eligibility requirement must be an object."
                 )
 
-            requirement_id = (
-                self._get_requirement_id(
-                    requirement,
-                    fallback_index=index,
-                )
+            requirement_id = self._get_requirement_id(
+                requirement,
+                fallback_index=index,
             )
 
-            requirement_text = (
-                self._normalize_text(
+            requirement_text = self._normalize_text(
+                requirement.get(
+                    "requirement",
                     requirement.get(
-                        "requirement",
-                        "",
-                    )
+                        "description",
+                        requirement.get(
+                            "name",
+                            "",
+                        ),
+                    ),
                 )
             )
 
             if not requirement_text:
                 raise ValueError(
-                    "Mandatory requirement "
-                    f"'{requirement_id}' "
-                    "has empty requirement text."
+                    "Eligibility requirement '%s' has empty text."
+                    % requirement_id
                 )
 
             if requirement_id in seen_ids:
                 raise ValueError(
-                    "Duplicate mandatory "
-                    "requirement ID: "
-                    f"{requirement_id}"
+                    "Duplicate eligibility requirement ID: %s"
+                    % requirement_id
                 )
 
             seen_ids.add(requirement_id)
@@ -247,58 +269,101 @@ class ComplianceAgent:
                 {
                     **requirement,
                     "id": requirement_id,
-                    "requirement_id": (
-                        requirement_id
+                    "requirement_id": requirement_id,
+                    "requirement": requirement_text,
+                    "name": self._normalize_text(
+                        requirement.get(
+                            "name",
+                            "",
+                        )
                     ),
-                    "requirement": (
-                        requirement_text
+                    "description": self._normalize_text(
+                        requirement.get(
+                            "description",
+                            "",
+                        )
+                    ),
+                    "category": self._normalize_text(
+                        requirement.get(
+                            "category",
+                            "OTHER",
+                        )
+                    ),
+                    "source_section": self._normalize_text(
+                        requirement.get(
+                            "source_section",
+                            "",
+                        )
+                    ),
+                    "source_quote": self._normalize_text(
+                        requirement.get(
+                            "source_quote",
+                            "",
+                        )
+                    ),
+                    "evidence_expected": self._normalize_text(
+                        requirement.get(
+                            "evidence_expected",
+                            "",
+                        )
+                    ),
+                    "exclusion_grade": self._normalize_bool(
+                        requirement.get(
+                            "exclusion_grade",
+                            False,
+                        )
                     ),
                 }
             )
 
         return normalized
 
-    def _format_requirements(
-        self,
-        requirements,
-    ):
+    def _format_requirements(self, requirements):
         cleaned = []
 
         for requirement in requirements:
             cleaned.append(
                 {
-                    "requirement_id": (
-                        requirement[
-                            "requirement_id"
-                        ]
+                    "requirement_id": requirement[
+                        "requirement_id"
+                    ],
+                    "name": requirement.get(
+                        "name",
+                        "",
                     ),
-                    "requirement": (
-                        requirement[
-                            "requirement"
-                        ]
+                    "requirement": requirement[
+                        "requirement"
+                    ],
+                    "description": requirement.get(
+                        "description",
+                        "",
                     ),
-                    "source": (
-                        requirement.get(
-                            "source",
-                            "",
-                        )
+                    "category": requirement.get(
+                        "category",
+                        "OTHER",
                     ),
-                    "page": (
-                        requirement.get(
-                            "page"
-                        )
+                    "source": requirement.get(
+                        "source",
+                        "",
                     ),
-                    "criterion": (
-                        requirement.get(
-                            "criterion",
-                            "",
-                        )
+                    "source_section": requirement.get(
+                        "source_section",
+                        "",
                     ),
-                    "mandatory_evidence": (
-                        requirement.get(
-                            "mandatory_evidence",
-                            "",
-                        )
+                    "source_quote": requirement.get(
+                        "source_quote",
+                        "",
+                    ),
+                    "page": requirement.get(
+                        "page"
+                    ),
+                    "evidence_expected": requirement.get(
+                        "evidence_expected",
+                        "",
+                    ),
+                    "exclusion_grade": requirement.get(
+                        "exclusion_grade",
+                        False,
                     ),
                 }
             )
@@ -336,18 +401,13 @@ class ComplianceAgent:
         for index, evaluation in enumerate(
             evaluations
         ):
-            if not isinstance(
-                evaluation,
-                dict,
-            ):
+            if not isinstance(evaluation, dict):
                 return evaluations, 0
 
-            received = (
-                self._normalize_text(
-                    evaluation.get(
-                        "requirement_id",
-                        "",
-                    )
+            received = self._normalize_text(
+                evaluation.get(
+                    "requirement_id",
+                    "",
                 )
             )
 
@@ -367,12 +427,10 @@ class ComplianceAgent:
         for index, evaluation in enumerate(
             evaluations
         ):
-            received = (
-                self._normalize_text(
-                    evaluation.get(
-                        "requirement_id",
-                        "",
-                    )
+            received = self._normalize_text(
+                evaluation.get(
+                    "requirement_id",
+                    "",
                 )
             )
 
@@ -388,59 +446,64 @@ class ComplianceAgent:
         if repaired:
             print(
                 "Compliance deterministic repair: "
-                f"restored {repaired} missing "
-                "requirement_id field(s)."
+                "restored %s missing requirement_id field(s)."
+                % repaired
             )
 
         return evaluations, repaired
 
     # =====================================================
-    # Normalizers
+    # Status / risk normalization
     # =====================================================
 
-    def _normalize_list(
-        self,
-        value,
-    ):
-        if value is None:
-            return []
-
-        if not isinstance(value, list):
-            value = [value]
-
-        cleaned = []
-
-        for item in value:
-            if isinstance(item, dict):
-                cleaned.append(item)
-                continue
-
-            text = str(item).strip()
-
-            if text:
-                cleaned.append(text)
-
-        return cleaned
-
-    def _normalize_status(
-        self,
-        value,
-    ):
-        status = str(
-            value or "NOT_MET"
+    def _normalize_status(self, value):
+        raw = str(
+            value
+            or
+            "UNVERIFIED"
         ).strip().upper()
 
-        if status not in self.VALID_STATUSES:
-            return "NOT_MET"
+        aliases = {
+            "MET": "MET",
+            "PASS": "MET",
+            "SUPPORTED": "MET",
+            "FULL_MATCH": "MET",
 
-        return status
+            "PARTIAL": "PARTIAL",
+            "PARTIALLY_MET": "PARTIAL",
+            "PARTIAL_MATCH": "PARTIAL",
 
-    def _normalize_risk_level(
-        self,
-        value,
-    ):
+            "NOT_MET": "NOT_MET",
+            "FAIL": "NOT_MET",
+            "CONTRADICTED": "NOT_MET",
+            "NO_MATCH": "NOT_MET",
+
+            "UNVERIFIED": "UNVERIFIED",
+            "UNKNOWN": "UNVERIFIED",
+            "NOT_FOUND": "UNVERIFIED",
+            "NOT_PROVIDED": "UNVERIFIED",
+            "MISSING": "UNVERIFIED",
+
+            "NOT_APPLICABLE": "NOT_APPLICABLE",
+            "N/A": "NOT_APPLICABLE",
+            "NA": "NOT_APPLICABLE",
+        }
+
+        normalized = aliases.get(
+            raw,
+            "UNVERIFIED",
+        )
+
+        if normalized not in self.VALID_STATUSES:
+            return "UNVERIFIED"
+
+        return normalized
+
+    def _normalize_risk_level(self, value):
         risk = str(
-            value or "Medium"
+            value
+            or
+            "Medium"
         ).strip().title()
 
         if risk not in self.VALID_RISK_LEVELS:
@@ -448,29 +511,21 @@ class ComplianceAgent:
 
         return risk
 
-    def _risk_rank(
-        self,
-        value,
-    ):
+    def _risk_rank(self, value):
         return {
             "Low": 1,
             "Medium": 2,
             "High": 3,
         }.get(
-            self._normalize_risk_level(
-                value
-            ),
+            self._normalize_risk_level(value),
             2,
         )
 
     # =====================================================
-    # Batch helpers
+    # Batching / context
     # =====================================================
 
-    def _build_batches(
-        self,
-        requirements,
-    ):
+    def _build_batches(self, requirements):
         return [
             requirements[
                 start:
@@ -488,20 +543,16 @@ class ComplianceAgent:
         proposal_text,
         requirements,
     ):
-        return (
-            build_relevant_context(
-                proposal_text=proposal_text,
-                query_parts=(
-                    requirement_query_parts(
-                        requirements
-                    )
-                ),
-                domain_hint="compliance",
-                max_chars=(
-                    COMPLIANCE_CONTEXT_MAX_CHARS
-                ),
-                top_k=12,
-            )
+        return build_relevant_context(
+            proposal_text=proposal_text,
+            query_parts=requirement_query_parts(
+                requirements
+            ),
+            domain_hint="compliance",
+            max_chars=(
+                COMPLIANCE_CONTEXT_MAX_CHARS
+            ),
+            top_k=12,
         )
 
     def _build_batch_prompt(
@@ -510,10 +561,8 @@ class ComplianceAgent:
         proposal_context,
         retry_reason=None,
     ):
-        requirements_text = (
-            self._format_requirements(
-                requirements
-            )
+        requirements_text = self._format_requirements(
+            requirements
         )
 
         expected_ids = [
@@ -534,19 +583,48 @@ Return exactly one result for every ID:
 """
 
         return f"""
-You are a senior procurement compliance evaluator.
+You are a senior procurement eligibility and submission-compliance evaluator.
 
-Evaluate ONLY the supplied mandatory RFP requirements
-against evidence in the vendor proposal.
+Evaluate ONLY the supplied RFP eligibility/submission gates against evidence
+in the vendor proposal package.
+
+IMPORTANT:
+These eligibility gates are separate from ordinary mandatory implementation
+requirements. Do not evaluate unrelated technical scope here.
 
 Use ONLY proposal evidence.
 Do not invent evidence.
 Do not use external knowledge.
+Do not assume missing evidence means confirmed non-compliance.
 
 Statuses:
 MET
 PARTIAL
 NOT_MET
+UNVERIFIED
+NOT_APPLICABLE
+
+STATUS RULES:
+- MET: clear proposal evidence satisfies the gate.
+- PARTIAL: relevant evidence exists but is incomplete, ambiguous, expired,
+  unsigned, missing a required field, or otherwise only partially satisfies it.
+- NOT_MET: use ONLY when there is affirmative evidence of non-compliance,
+  contradiction, invalid/expired evidence, or an explicit omission confirmed
+  by the proposal. Do NOT use NOT_MET merely because evidence was not found.
+- UNVERIFIED: the required evidence was not found or cannot be verified from
+  the supplied proposal context. This is the default when evidence is absent.
+- NOT_APPLICABLE: use only when the RFP gate clearly does not apply.
+
+EXCLUSION-GRADE RULE:
+Each requirement includes exclusion_grade.
+- exclusion_grade=true means the RFP explicitly links failure/omission to
+  rejection, exclusion, invalidation or disqualification.
+- Missing evidence alone is still UNVERIFIED unless the proposal clearly
+  establishes non-compliance.
+- Python calculates PASS/PARTIAL/FAIL/UNKNOWN deterministically.
+
+EVIDENCE EXPECTED:
+Use evidence_expected to understand the proof the proposal should contain.
 
 Return EXACTLY {len(requirements)} evaluations.
 
@@ -557,20 +635,18 @@ Every evaluation MUST contain requirement_id.
 Never leave requirement_id blank.
 Never invent, omit, duplicate or reorder IDs.
 
-MET requires meaningful evidence.
-If MET has no evidence Python will downgrade it.
-
 Return ONLY valid JSON:
 
 {{
   "requirementsEvaluation": [
     {{
-      "requirement_id": "REQ-0001",
+      "requirement_id": "ELIG-001",
       "requirement": "Requirement",
       "status": "MET",
       "evidence": ["Direct proposal evidence"],
       "gap": "",
-      "reason": "Short reason"
+      "reason": "Short reason",
+      "confidence": 0.95
     }}
   ],
   "unsupportedClaims": [],
@@ -581,7 +657,7 @@ Return ONLY valid JSON:
 
 {retry}
 
-MANDATORY REQUIREMENTS:
+ELIGIBILITY REQUIREMENTS:
 {requirements_text}
 
 RELEVANT PROPOSAL:
@@ -601,21 +677,19 @@ RELEVANT PROPOSAL:
     ):
         if not isinstance(evaluations, list):
             raise ValueError(
-                "Compliance batch result is "
-                "missing requirementsEvaluation."
+                "Compliance batch result is missing requirementsEvaluation."
             )
 
         if len(evaluations) != len(requirements):
             raise ValueError(
-                "Compliance batch returned "
-                f"{len(evaluations)} evaluations "
-                f"for {len(requirements)} requirements."
+                "Compliance batch returned %s evaluations for %s requirements."
+                % (
+                    len(evaluations),
+                    len(requirements),
+                )
             )
 
-        (
-            evaluations,
-            repaired,
-        ) = (
+        evaluations, repaired = (
             self._repair_missing_requirement_ids(
                 evaluations,
                 requirements,
@@ -637,57 +711,48 @@ RELEVANT PROPOSAL:
         for index, evaluation in enumerate(
             evaluations
         ):
-            if not isinstance(
-                evaluation,
-                dict,
-            ):
+            if not isinstance(evaluation, dict):
                 raise ValueError(
-                    "Compliance evaluation "
-                    f"{index + 1} must be an object."
+                    "Compliance evaluation %s must be an object."
+                    % (
+                        index + 1
+                    )
                 )
 
-            requirement_id = (
-                self._normalize_text(
-                    evaluation.get(
-                        "requirement_id",
-                        "",
-                    )
+            requirement_id = self._normalize_text(
+                evaluation.get(
+                    "requirement_id",
+                    "",
                 )
             )
 
             if not requirement_id:
                 raise ValueError(
-                    "Compliance evaluation "
-                    f"{index + 1} is missing "
-                    "requirement_id."
+                    "Compliance evaluation %s is missing requirement_id."
+                    % (
+                        index + 1
+                    )
                 )
 
             if requirement_id != expected_ids[index]:
                 raise ValueError(
-                    "Compliance requirement ID/order "
-                    "does not match expected RFP batch."
+                    "Compliance requirement ID/order does not match expected RFP batch."
                 )
 
-            source_requirement = (
-                expected_map[
-                    requirement_id
-                ]
-            )
+            source_requirement = expected_map[
+                requirement_id
+            ]
 
-            status = (
-                self._normalize_status(
-                    evaluation.get(
-                        "status"
-                    )
+            status = self._normalize_status(
+                evaluation.get(
+                    "status"
                 )
             )
 
-            evidence = (
-                self._normalize_list(
-                    evaluation.get(
-                        "evidence",
-                        [],
-                    )
+            evidence = self._normalize_list(
+                evaluation.get(
+                    "evidence",
+                    [],
                 )
             )
 
@@ -706,45 +771,82 @@ RELEVANT PROPOSAL:
             )
 
             if status == "MET" and not evidence:
-                status = "PARTIAL"
+                status = "UNVERIFIED"
 
                 if not gap:
                     gap = (
-                        "Marked MET without "
-                        "supporting evidence."
+                        "Marked MET without supporting evidence; "
+                        "downgraded to UNVERIFIED."
                     )
+
+            confidence = evaluation.get(
+                "confidence"
+            )
+
+            try:
+                confidence = float(confidence)
+                confidence = max(
+                    0.0,
+                    min(
+                        1.0,
+                        confidence,
+                    ),
+                )
+            except (TypeError, ValueError):
+                confidence = None
 
             cleaned.append(
                 {
-                    "requirement_id": (
-                        requirement_id
+                    "requirement_id": requirement_id,
+                    "requirement": source_requirement[
+                        "requirement"
+                    ],
+                    "name": source_requirement.get(
+                        "name",
+                        "",
                     ),
-                    "requirement": (
-                        source_requirement[
-                            "requirement"
-                        ]
+                    "description": source_requirement.get(
+                        "description",
+                        "",
                     ),
-                    "source": (
+                    "category": source_requirement.get(
+                        "category",
+                        "OTHER",
+                    ),
+                    "source": source_requirement.get(
+                        "source",
+                        "",
+                    ),
+                    "source_section": source_requirement.get(
+                        "source_section",
+                        "",
+                    ),
+                    "source_quote": source_requirement.get(
+                        "source_quote",
+                        "",
+                    ),
+                    "page": source_requirement.get(
+                        "page"
+                    ),
+                    "criterion": source_requirement.get(
+                        "criterion",
+                        "",
+                    ),
+                    "evidence_expected": source_requirement.get(
+                        "evidence_expected",
+                        "",
+                    ),
+                    "exclusion_grade": self._normalize_bool(
                         source_requirement.get(
-                            "source",
-                            "",
-                        )
-                    ),
-                    "page": (
-                        source_requirement.get(
-                            "page"
-                        )
-                    ),
-                    "criterion": (
-                        source_requirement.get(
-                            "criterion",
-                            "",
+                            "exclusion_grade",
+                            False,
                         )
                     ),
                     "status": status,
                     "evidence": evidence,
                     "gap": gap,
                     "reason": reason,
+                    "confidence": confidence,
                 }
             )
 
@@ -757,24 +859,21 @@ RELEVANT PROPOSAL:
         proposal_text,
         retry_reason=None,
     ):
-        context = (
-            self._build_batch_context(
-                proposal_text,
-                requirements,
-            )
+        context = self._build_batch_context(
+            proposal_text,
+            requirements,
         )
 
-        prompt = (
-            self._build_batch_prompt(
-                requirements,
-                context,
-                retry_reason,
-            )
+        prompt = self._build_batch_prompt(
+            requirements,
+            context,
+            retry_reason,
         )
 
         print()
         print(
-            f"Compliance batch {batch_number}"
+            "Compliance batch %s"
+            % batch_number
         )
 
         client = LLMClient()
@@ -783,8 +882,8 @@ RELEVANT PROPOSAL:
             raw = client.ask(
                 prompt,
                 label=(
-                    f"ComplianceBatch"
-                    f"{batch_number}"
+                    "ComplianceBatch%s"
+                    % batch_number
                 ),
             )
         finally:
@@ -794,52 +893,41 @@ RELEVANT PROPOSAL:
 
         if not isinstance(result, dict):
             raise ValueError(
-                "Compliance batch result "
-                "must be an object."
+                "Compliance batch result must be an object."
             )
 
-        evaluations = (
-            self._validate_batch_evaluations(
-                result.get(
-                    "requirementsEvaluation",
-                    [],
-                ),
-                requirements,
-            )
+        evaluations = self._validate_batch_evaluations(
+            result.get(
+                "requirementsEvaluation",
+                [],
+            ),
+            requirements,
         )
 
         return {
             "evaluations": evaluations,
-            "unsupportedClaims": (
-                self._normalize_list(
-                    result.get(
-                        "unsupportedClaims",
-                        [],
-                    )
+            "unsupportedClaims": self._normalize_list(
+                result.get(
+                    "unsupportedClaims",
+                    [],
                 )
             ),
-            "deliveryRisks": (
-                self._normalize_list(
-                    result.get(
-                        "deliveryRisks",
-                        [],
-                    )
+            "deliveryRisks": self._normalize_list(
+                result.get(
+                    "deliveryRisks",
+                    [],
                 )
             ),
-            "ambiguousCommitments": (
-                self._normalize_list(
-                    result.get(
-                        "ambiguousCommitments",
-                        [],
-                    )
+            "ambiguousCommitments": self._normalize_list(
+                result.get(
+                    "ambiguousCommitments",
+                    [],
                 )
             ),
-            "riskLevel": (
-                self._normalize_risk_level(
-                    result.get(
-                        "batchRiskLevel",
-                        "Medium",
-                    )
+            "riskLevel": self._normalize_risk_level(
+                result.get(
+                    "batchRiskLevel",
+                    "Medium",
                 )
             ),
         }
@@ -858,20 +946,17 @@ RELEVANT PROPOSAL:
             self.MAX_BATCH_RETRIES + 2,
         ):
             try:
-                result = (
-                    self._evaluate_batch_once(
-                        batch_number,
-                        requirements,
-                        proposal_text,
-                        retry_reason,
-                    )
+                result = self._evaluate_batch_once(
+                    batch_number,
+                    requirements,
+                    proposal_text,
+                    retry_reason,
                 )
 
                 if attempt > 1:
                     print(
-                        "Compliance batch "
-                        f"{batch_number} retry "
-                        "completed successfully."
+                        "Compliance batch %s retry completed successfully."
+                        % batch_number
                     )
 
                 return result
@@ -889,73 +974,224 @@ RELEVANT PROPOSAL:
                 retry_reason = last_error
 
                 print(
-                    "Retrying compliance batch "
-                    f"{batch_number} once: "
-                    f"{last_error}"
+                    "Retrying compliance batch %s once: %s"
+                    % (
+                        batch_number,
+                        last_error,
+                    )
                 )
 
         raise RuntimeError(
-            "Compliance batch "
-            f"{batch_number} failed after retry. "
-            f"{last_error}"
+            "Compliance batch %s failed after retry. %s"
+            % (
+                batch_number,
+                last_error,
+            )
         )
 
     # =====================================================
     # Deterministic aggregation
     # =====================================================
 
-    def _calculate_compliance(
-        self,
-        evaluations,
-    ):
+    def _calculate_compliance(self, evaluations):
+        """
+        PASS:
+          All applicable gates are MET or NOT_APPLICABLE.
+
+        PARTIAL:
+          Some gates are PARTIAL / UNVERIFIED / non-exclusion NOT_MET,
+          but no confirmed exclusion-grade failure exists.
+
+        FAIL:
+          At least one exclusion_grade=true gate is affirmatively NOT_MET.
+
+        UNKNOWN:
+          Nothing applicable could be meaningfully verified.
+        """
+
         if not evaluations:
-            return True, 100.0
+            return (
+                "PASS",
+                True,
+                100.0,
+            )
+
+        applicable = [
+            item
+            for item in evaluations
+            if item.get(
+                "status"
+            )
+            !=
+            "NOT_APPLICABLE"
+        ]
+
+        if not applicable:
+            return (
+                "PASS",
+                True,
+                100.0,
+            )
+
+        exclusion_failures = [
+            item
+            for item in applicable
+            if (
+                item.get(
+                    "status"
+                )
+                ==
+                "NOT_MET"
+                and
+                self._normalize_bool(
+                    item.get(
+                        "exclusion_grade",
+                        False,
+                    )
+                )
+            )
+        ]
+
+        if exclusion_failures:
+            final_status = "FAIL"
+
+        else:
+            met_count = sum(
+                1
+                for item in applicable
+                if item.get("status") == "MET"
+            )
+
+            partial_count = sum(
+                1
+                for item in applicable
+                if item.get("status") == "PARTIAL"
+            )
+
+            unverified_count = sum(
+                1
+                for item in applicable
+                if item.get("status") == "UNVERIFIED"
+            )
+
+            non_exclusion_not_met = sum(
+                1
+                for item in applicable
+                if (
+                    item.get("status") == "NOT_MET"
+                    and
+                    not self._normalize_bool(
+                        item.get(
+                            "exclusion_grade",
+                            False,
+                        )
+                    )
+                )
+            )
+
+            if (
+                met_count == 0
+                and
+                partial_count == 0
+                and
+                non_exclusion_not_met == 0
+                and
+                unverified_count > 0
+            ):
+                final_status = "UNKNOWN"
+
+            elif (
+                partial_count > 0
+                or
+                unverified_count > 0
+                or
+                non_exclusion_not_met > 0
+            ):
+                final_status = "PARTIAL"
+
+            else:
+                final_status = "PASS"
 
         points = 0.0
-        statuses = []
 
-        for item in evaluations:
-            status = item["status"]
-            statuses.append(status)
+        for item in applicable:
+            item_status = item.get("status")
 
-            if status == "MET":
+            if item_status == "MET":
                 points += 1.0
-            elif status == "PARTIAL":
+
+            elif item_status == "PARTIAL":
                 points += 0.5
 
         score = round(
             (
                 points
                 /
-                len(evaluations)
+                len(applicable)
             )
             *
-            100,
+            100.0,
             2,
         )
 
-        compliant = all(
-            status == "MET"
-            for status in statuses
+        # Backward compatibility: only PASS is definitively compliant.
+        compliant = (
+            final_status
+            ==
+            "PASS"
         )
 
-        return compliant, score
+        return (
+            final_status,
+            compliant,
+            score,
+        )
 
     def _calculate_overall_risk(
         self,
         evaluations,
         batch_risks,
     ):
-        not_met = sum(
+        exclusion_failures = sum(
             1
             for item in evaluations
-            if item["status"] == "NOT_MET"
+            if (
+                item.get("status") == "NOT_MET"
+                and
+                self._normalize_bool(
+                    item.get(
+                        "exclusion_grade",
+                        False,
+                    )
+                )
+            )
+        )
+
+        non_exclusion_not_met = sum(
+            1
+            for item in evaluations
+            if (
+                item.get("status") == "NOT_MET"
+                and
+                not self._normalize_bool(
+                    item.get(
+                        "exclusion_grade",
+                        False,
+                    )
+                )
+            )
         )
 
         partial = sum(
             1
             for item in evaluations
-            if item["status"] == "PARTIAL"
+            if item.get("status") == "PARTIAL"
+        )
+
+        unverified = sum(
+            1
+            for item in evaluations
+            if item.get("status") == "UNVERIFIED"
         )
 
         highest = "Low"
@@ -966,27 +1202,27 @@ RELEVANT PROPOSAL:
                 >
                 self._risk_rank(highest)
             ):
-                highest = (
-                    self._normalize_risk_level(
-                        risk
-                    )
+                highest = self._normalize_risk_level(
+                    risk
                 )
 
-        if not_met >= 5:
+        if exclusion_failures > 0:
             return "High"
 
-        if not_met > 0:
+        if non_exclusion_not_met > 0:
             return (
                 "High"
                 if highest == "High"
-                else "Medium"
+                else
+                "Medium"
             )
 
-        if partial > 0:
+        if partial > 0 or unverified > 0:
             return (
                 "High"
                 if highest == "High"
-                else "Medium"
+                else
+                "Medium"
             )
 
         return highest
@@ -1000,13 +1236,18 @@ RELEVANT PROPOSAL:
         mandatory_requirements,
         proposal_text,
     ):
+        """
+        The parameter name mandatory_requirements is intentionally preserved
+        for backward compatibility. ProposalEvaluationService now passes the
+        explicit eligibility_requirements collection into this argument.
+        """
+
         if not isinstance(
             mandatory_requirements,
             list,
         ):
             raise ValueError(
-                "Mandatory requirements "
-                "must be a list."
+                "Eligibility requirements must be a list."
             )
 
         if not isinstance(
@@ -1014,21 +1255,21 @@ RELEVANT PROPOSAL:
             str,
         ):
             raise ValueError(
-                "Vendor proposal text "
-                "must be a string."
+                "Vendor proposal text must be a string."
             )
 
         proposal_text = proposal_text.strip()
 
         if not proposal_text:
             raise ValueError(
-                "Vendor proposal text "
-                "cannot be empty."
+                "Vendor proposal text cannot be empty."
             )
 
         if not mandatory_requirements:
             return {
                 "requirementsEvaluation": [],
+                "requirement_results": [],
+                "breakdown": [],
                 "missingRequirements": [],
                 "unsupportedClaims": [],
                 "complianceGaps": [],
@@ -1036,23 +1277,32 @@ RELEVANT PROPOSAL:
                 "ambiguousCommitments": [],
                 "riskLevel": "Low",
                 "rationale": (
-                    "No explicit mandatory "
-                    "requirements were found."
+                    "No explicit eligibility or submission gates were found."
                 ),
                 "compliant": True,
+                "mandatoryComplianceStatus": "PASS",
+                "mandatory_compliance_status": "PASS",
                 "complianceScore": 100.0,
+                "confirmedExclusionFailures": [],
+                "summary": {
+                    "total": 0,
+                    "met": 0,
+                    "partial": 0,
+                    "notMet": 0,
+                    "unverified": 0,
+                    "notApplicable": 0,
+                    "confirmedExclusionFailures": 0,
+                    "finalStatus": "PASS",
+                    "batchCount": 0,
+                },
             }
 
-        requirements = (
-            self._normalize_requirements(
-                mandatory_requirements
-            )
+        requirements = self._normalize_requirements(
+            mandatory_requirements
         )
 
-        batches = (
-            self._build_batches(
-                requirements
-            )
+        batches = self._build_batches(
+            requirements
         )
 
         worker_count = min(
@@ -1065,24 +1315,26 @@ RELEVANT PROPOSAL:
             "================================"
         )
         print(
-            "COMPLIANCE BATCHED EVALUATION"
+            "ELIGIBILITY COMPLIANCE EVALUATION"
         )
         print(
             "================================"
         )
         print(
-            f"Mandatory requirements: "
-            f"{len(requirements)}"
+            "Eligibility gates: %s"
+            % len(requirements)
         )
         print(
-            f"Batch size: {self.BATCH_SIZE}"
+            "Batch size: %s"
+            % self.BATCH_SIZE
         )
         print(
-            f"Total batches: {len(batches)}"
+            "Total batches: %s"
+            % len(batches)
         )
         print(
-            f"Parallel workers: "
-            f"{worker_count}"
+            "Parallel workers: %s"
+            % worker_count
         )
 
         results_by_index = {}
@@ -1110,9 +1362,9 @@ RELEVANT PROPOSAL:
             for future in as_completed(
                 future_map
             ):
-                batch_index = (
-                    future_map[future]
-                )
+                batch_index = future_map[
+                    future
+                ]
 
                 try:
                     results_by_index[
@@ -1121,14 +1373,16 @@ RELEVANT PROPOSAL:
 
                 except Exception as error:
                     raise RuntimeError(
-                        "Compliance batch "
-                        f"{batch_index} failed: "
-                        f"{error}"
+                        "Compliance batch %s failed: %s"
+                        % (
+                            batch_index,
+                            error,
+                        )
                     ) from error
 
                 print(
-                    "Compliance batch "
-                    f"{batch_index} completed."
+                    "Compliance batch %s completed."
+                    % batch_index
                 )
 
         evaluations = []
@@ -1141,11 +1395,9 @@ RELEVANT PROPOSAL:
             1,
             len(batches) + 1,
         ):
-            result = (
-                results_by_index[
-                    batch_index
-                ]
-            )
+            result = results_by_index[
+                batch_index
+            ]
 
             evaluations.extend(
                 result["evaluations"]
@@ -1177,46 +1429,62 @@ RELEVANT PROPOSAL:
 
         if expected_ids != returned_ids:
             raise RuntimeError(
-                "Merged compliance IDs/order "
-                "do not match the RFP."
+                "Merged compliance IDs/order do not match the RFP eligibility gates."
             )
 
-        compliant, score = (
-            self._calculate_compliance(
-                evaluations
-            )
+        (
+            mandatory_compliance_status,
+            compliant,
+            score,
+        ) = self._calculate_compliance(
+            evaluations
         )
 
-        risk_level = (
-            self._calculate_overall_risk(
-                evaluations,
-                batch_risks,
-            )
+        risk_level = self._calculate_overall_risk(
+            evaluations,
+            batch_risks,
         )
 
         missing = [
             {
-                "requirement_id": (
-                    item["requirement_id"]
+                "requirement_id": item[
+                    "requirement_id"
+                ],
+                "requirement": item[
+                    "requirement"
+                ],
+                "status": item[
+                    "status"
+                ],
+                "exclusion_grade": item.get(
+                    "exclusion_grade",
+                    False,
                 ),
-                "requirement": (
-                    item["requirement"]
+                "evidence_expected": item.get(
+                    "evidence_expected",
+                    "",
                 ),
-                "status": item["status"],
                 "gap": item.get(
                     "gap",
                     "",
                 ),
             }
             for item in evaluations
-            if item["status"] != "MET"
+            if item["status"]
+            not in {
+                "MET",
+                "NOT_APPLICABLE",
+            }
         ]
 
         gaps = [
             {
-                "requirement_id": (
-                    item["requirement_id"]
-                ),
+                "requirement_id": item[
+                    "requirement_id"
+                ],
+                "status": item[
+                    "status"
+                ],
                 "gap": (
                     item.get("gap")
                     or
@@ -1226,7 +1494,11 @@ RELEVANT PROPOSAL:
                 ),
             }
             for item in evaluations
-            if item["status"] != "MET"
+            if item["status"]
+            not in {
+                "MET",
+                "NOT_APPLICABLE",
+            }
         ]
 
         met_count = sum(
@@ -1247,20 +1519,58 @@ RELEVANT PROPOSAL:
             if item["status"] == "NOT_MET"
         )
 
+        unverified_count = sum(
+            1
+            for item in evaluations
+            if item["status"] == "UNVERIFIED"
+        )
+
+        not_applicable_count = sum(
+            1
+            for item in evaluations
+            if item["status"] == "NOT_APPLICABLE"
+        )
+
+        confirmed_exclusion_failures = [
+            item
+            for item in evaluations
+            if (
+                item.get("status") == "NOT_MET"
+                and
+                self._normalize_bool(
+                    item.get(
+                        "exclusion_grade",
+                        False,
+                    )
+                )
+            )
+        ]
+
         rationale = (
-            "Mandatory compliance evaluation "
-            f"completed against "
-            f"{len(evaluations)} requirements. "
-            f"MET: {met_count}, "
-            f"PARTIAL: {partial_count}, "
-            f"NOT_MET: {not_met_count}. "
-            f"Compliance score: {score}%."
+            "Eligibility compliance evaluation completed against "
+            "%s gate(s). MET: %s, PARTIAL: %s, NOT_MET: %s, "
+            "UNVERIFIED: %s, NOT_APPLICABLE: %s. "
+            "Confirmed exclusion-grade failures: %s. "
+            "Final status: %s. Evidence score: %s%%."
+            % (
+                len(evaluations),
+                met_count,
+                partial_count,
+                not_met_count,
+                unverified_count,
+                not_applicable_count,
+                len(
+                    confirmed_exclusion_failures
+                ),
+                mandatory_compliance_status,
+                score,
+            )
         )
 
         return {
-            "requirementsEvaluation": (
-                evaluations
-            ),
+            "requirementsEvaluation": evaluations,
+            "requirement_results": evaluations,
+            "breakdown": evaluations,
             "missingRequirements": missing,
             "unsupportedClaims": unsupported,
             "complianceGaps": gaps,
@@ -1269,12 +1579,49 @@ RELEVANT PROPOSAL:
             "riskLevel": risk_level,
             "rationale": rationale,
             "compliant": compliant,
+            "mandatoryComplianceStatus": (
+                mandatory_compliance_status
+            ),
+            "mandatory_compliance_status": (
+                mandatory_compliance_status
+            ),
             "complianceScore": score,
+            "confirmedExclusionFailures": [
+                {
+                    "requirement_id": item[
+                        "requirement_id"
+                    ],
+                    "requirement": item[
+                        "requirement"
+                    ],
+                    "reason": item.get(
+                        "reason",
+                        "",
+                    ),
+                    "evidence": item.get(
+                        "evidence",
+                        [],
+                    ),
+                }
+                for item in confirmed_exclusion_failures
+            ],
             "summary": {
                 "total": len(evaluations),
                 "met": met_count,
                 "partial": partial_count,
                 "notMet": not_met_count,
+                "unverified": unverified_count,
+                "notApplicable": (
+                    not_applicable_count
+                ),
+                "confirmedExclusionFailures": (
+                    len(
+                        confirmed_exclusion_failures
+                    )
+                ),
+                "finalStatus": (
+                    mandatory_compliance_status
+                ),
                 "batchCount": len(batches),
             },
         }
