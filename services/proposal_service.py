@@ -3,6 +3,7 @@ from concurrent.futures import (
     as_completed,
 )
 from pathlib import Path
+import json
 import time
 
 from agents.rfp_agent import RFPAgent
@@ -17,6 +18,8 @@ from agents.ranking_agent import RankingAgent
 
 from services.document_parser import DocumentParser
 from utils.scoring import calculate_weighted_score
+
+from config import EVALUATION_WEIGHTS_FILE
 
 
 class ProposalEvaluationService:
@@ -120,6 +123,63 @@ class ProposalEvaluationService:
         return str(
             value
         ).strip().lower()
+
+    # =====================================================
+    # Reviewer-configurable evaluation weights
+    # =====================================================
+
+    def _load_weight_config(
+        self,
+    ):
+        """
+        Optional reviewer weight configuration.
+
+        Missing or invalid files are ignored so the
+        pipeline always runs with the system-defined
+        importance weights.
+        """
+        path = Path(
+            EVALUATION_WEIGHTS_FILE
+        )
+
+        if not path.is_file():
+            return None
+
+        try:
+            with path.open(
+                "r",
+                encoding="utf-8",
+            ) as handle:
+                data = json.load(
+                    handle
+                )
+
+            if not isinstance(
+                data,
+                dict,
+            ):
+                print(
+                    "WARNING: evaluation weight file "
+                    "must contain a JSON object. "
+                    "Ignoring it."
+                )
+                return None
+
+            print(
+                "Loaded evaluation weight config: "
+                f"{path}"
+            )
+
+            return data
+
+        except Exception as error:
+            print(
+                "WARNING: could not read evaluation "
+                f"weight file {path}: {error}. "
+                "Using system-defined weights."
+            )
+
+            return None
 
     # =====================================================
     # Criterion classification
@@ -362,6 +422,67 @@ class ProposalEvaluationService:
     # =====================================================
     # Mandatory requirements
     # =====================================================
+
+    def _build_compliance_requirements(
+        self,
+        criteria,
+        eligibility_requirements,
+    ):
+        """
+        Requirements checked by the compliance track.
+
+        Eligibility gates extracted separately by RFPAgent
+        come FIRST (they decide whether a bid may be
+        considered at all), followed by scored mandatory
+        requirements. IDs are namespaced so the two sets
+        can never collide.
+        """
+        gates = []
+
+        for requirement in (
+            eligibility_requirements
+            or []
+        ):
+            if not isinstance(
+                requirement,
+                dict,
+            ):
+                continue
+
+            gates.append(
+                {
+                    **requirement,
+
+                    "gate_type": (
+                        "eligibility"
+                    ),
+
+                    "mandatory": True,
+                }
+            )
+
+        scored_mandatory = (
+            self._get_mandatory_requirements(
+                criteria
+            )
+        )
+
+        for requirement in scored_mandatory:
+            requirement.setdefault(
+                "gate_type",
+                "scored_mandatory",
+            )
+
+            # Scored mandatory requirements are only
+            # grounds for exclusion when the RFP itself
+            # says so; that signal lives on eligibility
+            # gates, so default to False here.
+            requirement.setdefault(
+                "exclusion_grade",
+                False,
+            )
+
+        return gates + scored_mandatory
 
     def _get_mandatory_requirements(
         self,
@@ -768,6 +889,11 @@ class ProposalEvaluationService:
                     agent.evaluate(
                         requirements=requirements,
                         proposal_text=proposal_text,
+                        criterion=name,
+                        criterion_description=(
+                            description
+                        ),
+                        vendor_name=vendor_name,
                     )
                 )
 
@@ -952,6 +1078,593 @@ class ProposalEvaluationService:
                 close_method()
 
     # =====================================================
+    # Executive summary
+    # =====================================================
+
+    def _build_executive_summary(
+        self,
+        rfp_analysis,
+        vendor_results,
+    ):
+        """
+        Deterministic executive summary assembled from
+        already-computed results. No extra LLM call, so it
+        can never contradict the scored output.
+        """
+        project_information = (
+            rfp_analysis.get(
+                "project_information",
+                {},
+            )
+            or {}
+        )
+
+        lines = []
+
+        project_name = str(
+            project_information.get(
+                "project_name",
+                "",
+            )
+        ).strip()
+
+        if project_name:
+            lines.append(
+                f"Project: {project_name}."
+            )
+
+        duration = str(
+            project_information.get(
+                "implementation_duration",
+                "",
+            )
+        ).strip()
+
+        if duration:
+            lines.append(
+                "Implementation duration: "
+                f"{duration}."
+            )
+
+        lines.append(
+            f"{len(vendor_results)} vendor "
+            "proposal(s) evaluated against "
+            f"{rfp_analysis.get('metadata', {}).get('criteria_count', 0)}"
+            " system-defined criteria covering "
+            f"{rfp_analysis.get('metadata', {}).get('requirement_count', 0)}"
+            " extracted RFP requirements and "
+            f"{rfp_analysis.get('metadata', {}).get('eligibility_requirement_count', 0)}"
+            " mandatory eligibility gate(s)."
+        )
+
+        weight_source = rfp_analysis.get(
+            "evaluation_weight_source",
+            "system_defined",
+        )
+
+        if weight_source != "explicit_rfp":
+            lines.append(
+                "The RFP does not publish numeric "
+                "criterion weights; the weights used "
+                "here are system-defined and "
+                "configurable, not official RFP "
+                "weights."
+            )
+
+        for vendor in vendor_results:
+            lines.append(
+                f"{vendor.get('vendor', 'Vendor')}: "
+                "overall score "
+                f"{vendor.get('overallScore')}, "
+                "mandatory compliance "
+                f"{vendor.get('mandatoryComplianceStatus', 'UNKNOWN')}"
+                " ("
+                f"{vendor.get('mandatoryCompliancePercentage')}"
+                "%), confidence "
+                f"{vendor.get('confidenceLevel', 'Medium')}."
+            )
+
+        return " ".join(lines)
+
+    # =====================================================
+    # Requirements compliance matrix
+    # =====================================================
+
+    COMPLIANCE_LABELS = {
+        "FULL_MATCH": "SUPPORTED",
+        "PARTIAL_MATCH": "PARTIAL",
+        "NOT_PROVIDED": "NOT_FOUND",
+        "NO_MATCH": "CONTRADICTED",
+        "MET": "SUPPORTED",
+        "PARTIAL": "PARTIAL",
+        "NOT_MET": "CONTRADICTED",
+        "UNVERIFIED": "NOT_FOUND",
+        "NOT_APPLICABLE": "NOT_APPLICABLE",
+    }
+
+    def _build_requirements_matrix(
+        self,
+        evaluations,
+        criteria,
+        compliance_result,
+    ):
+        """
+        Flat requirement-by-requirement compliance matrix:
+
+        Requirement | RFP requirement | Vendor evidence |
+        Status | Score | Risk / Comment
+
+        Built deterministically in Python from results the
+        agents already produced.
+        """
+        criterion_weights = {
+            str(
+                criterion.get(
+                    "name",
+                    "",
+                )
+            ).strip(): criterion.get(
+                "weight"
+            )
+            for criterion in criteria
+        }
+
+        matrix = []
+
+        for evaluation in evaluations:
+            criterion_name = str(
+                evaluation.get(
+                    "criterion",
+                    "",
+                )
+            ).strip()
+
+            for requirement in (
+                evaluation.get(
+                    "requirement_results",
+                    [],
+                )
+                or []
+            ):
+                if not isinstance(
+                    requirement,
+                    dict,
+                ):
+                    continue
+
+                status = str(
+                    requirement.get(
+                        "status",
+                        "",
+                    )
+                ).strip().upper()
+
+                risk_comment = str(
+                    requirement.get(
+                        "rationale",
+                        "",
+                    )
+                ).strip()
+
+                matrix.append(
+                    {
+                        "track": "scored",
+
+                        "requirementId": (
+                            requirement.get(
+                                "requirement_id",
+                                "",
+                            )
+                        ),
+
+                        "criterion": (
+                            criterion_name
+                        ),
+
+                        "criterionWeight": (
+                            criterion_weights.get(
+                                criterion_name
+                            )
+                        ),
+
+                        "rfpRequirement": (
+                            requirement.get(
+                                "requirement",
+                                "",
+                            )
+                        ),
+
+                        "rfpSource": (
+                            requirement.get(
+                                "rfp_source",
+                                "",
+                            )
+                        ),
+
+                        "mandatory": bool(
+                            requirement.get(
+                                "mandatory",
+                                False,
+                            )
+                        ),
+
+                        "vendorEvidence": (
+                            requirement.get(
+                                "proposal_evidence",
+                                "Not Provided",
+                            )
+                        ),
+
+                        "status": status,
+
+                        "complianceLabel": (
+                            requirement.get(
+                                "compliance_label"
+                            )
+                            or
+                            self.COMPLIANCE_LABELS.get(
+                                status,
+                                "NOT_FOUND",
+                            )
+                        ),
+
+                        "score": (
+                            requirement.get(
+                                "match_score"
+                            )
+                        ),
+
+                        "riskComment": (
+                            risk_comment
+                        ),
+                    }
+                )
+
+        for requirement in (
+            compliance_result.get(
+                "requirementsEvaluation",
+                [],
+            )
+            or []
+        ):
+            if not isinstance(
+                requirement,
+                dict,
+            ):
+                continue
+
+            status = str(
+                requirement.get(
+                    "status",
+                    "",
+                )
+            ).strip().upper()
+
+            evidence = requirement.get(
+                "evidence",
+                [],
+            )
+
+            if isinstance(
+                evidence,
+                list,
+            ):
+                evidence_text = (
+                    "; ".join(
+                        str(item)
+                        for item in evidence
+                        if str(item).strip()
+                    )
+                    or "Not Provided"
+                )
+            else:
+                evidence_text = (
+                    str(evidence)
+                    or "Not Provided"
+                )
+
+            risk_comment = (
+                requirement.get("gap")
+                or requirement.get("reason")
+                or ""
+            )
+
+            if (
+                status == "UNVERIFIED"
+                and not risk_comment
+            ):
+                risk_comment = (
+                    "Not verifiable from the "
+                    "uploaded documents."
+                )
+
+            matrix.append(
+                {
+                    "track": (
+                        "eligibility"
+                        if requirement.get(
+                            "gate_type"
+                        )
+                        == "eligibility"
+                        else "mandatory"
+                    ),
+
+                    "requirementId": (
+                        requirement.get(
+                            "requirement_id",
+                            "",
+                        )
+                    ),
+
+                    "criterion": (
+                        requirement.get(
+                            "criterion",
+                            "",
+                        )
+                        or "Mandatory Compliance"
+                    ),
+
+                    "criterionWeight": None,
+
+                    "rfpRequirement": (
+                        requirement.get(
+                            "requirement",
+                            "",
+                        )
+                    ),
+
+                    "rfpSource": (
+                        requirement.get(
+                            "source",
+                            "",
+                        )
+                    ),
+
+                    "mandatory": True,
+
+                    "exclusionGrade": bool(
+                        requirement.get(
+                            "exclusion_grade",
+                            False,
+                        )
+                    ),
+
+                    "vendorEvidence": (
+                        evidence_text
+                    ),
+
+                    "status": status,
+
+                    "complianceLabel": (
+                        self.COMPLIANCE_LABELS.get(
+                            status,
+                            "NOT_FOUND",
+                        )
+                    ),
+
+                    "score": None,
+
+                    "riskComment": str(
+                        risk_comment
+                    ).strip(),
+                }
+            )
+
+        return matrix
+
+    def _aggregate_vendor_findings(
+        self,
+        evaluations,
+        compliance_result,
+    ):
+        """
+        Deterministic roll-up of agent output into the
+        vendor-level report sections.
+        """
+        strengths = []
+        gaps = []
+        risks = []
+        missing_requirements = []
+        clarifications = []
+        confidences = []
+
+        for evaluation in evaluations:
+            criterion_name = str(
+                evaluation.get(
+                    "criterion",
+                    "",
+                )
+            ).strip()
+
+            for item in (
+                evaluation.get(
+                    "strengths",
+                    [],
+                )
+                or []
+            )[:5]:
+                text = str(item).strip()
+
+                if text:
+                    strengths.append(
+                        {
+                            "criterion": (
+                                criterion_name
+                            ),
+                            "detail": text,
+                        }
+                    )
+
+            for item in (
+                evaluation.get(
+                    "gaps",
+                    [],
+                )
+                or []
+            )[:5]:
+                text = str(item).strip()
+
+                if text:
+                    gaps.append(
+                        {
+                            "criterion": (
+                                criterion_name
+                            ),
+                            "detail": text,
+                        }
+                    )
+
+            for item in (
+                evaluation.get(
+                    "risks",
+                    [],
+                )
+                or []
+            )[:10]:
+                text = str(item).strip()
+
+                if text:
+                    risks.append(
+                        {
+                            "criterion": (
+                                criterion_name
+                            ),
+                            "detail": text,
+                        }
+                    )
+
+            for item in (
+                evaluation.get(
+                    "missing_requirements",
+                    [],
+                )
+                or []
+            ):
+                if not isinstance(
+                    item,
+                    dict,
+                ):
+                    continue
+
+                missing_requirements.append(
+                    {
+                        **item,
+                        "criterion": (
+                            criterion_name
+                        ),
+                    }
+                )
+
+            confidence = evaluation.get(
+                "confidence"
+            )
+
+            if confidence:
+                confidences.append(
+                    str(confidence).strip().title()
+                )
+
+        # Unverified mandatory items are the clearest
+        # things to ask the vendor about.
+        for item in (
+            compliance_result.get(
+                "clarificationsNeeded",
+                [],
+            )
+            or []
+        ):
+            if isinstance(
+                item,
+                dict,
+            ):
+                clarifications.append(
+                    item
+                )
+
+        # Mandatory requirements with no evidence in the
+        # scored track are also worth clarifying.
+        for item in missing_requirements:
+            if not item.get(
+                "mandatory",
+                False,
+            ):
+                continue
+
+            if len(clarifications) >= 40:
+                break
+
+            clarifications.append(
+                {
+                    "requirement_id": (
+                        item.get(
+                            "requirement_id",
+                            "",
+                        )
+                    ),
+                    "requirement": (
+                        item.get(
+                            "requirement",
+                            "",
+                        )
+                    ),
+                    "clarification": (
+                        "No evidence found in the "
+                        "proposal. Ask the vendor to "
+                        "confirm and evidence this "
+                        "requirement."
+                    ),
+                }
+            )
+
+        for item in (
+            compliance_result.get(
+                "deliveryRisks",
+                [],
+            )
+            or []
+        )[:10]:
+            text = str(item).strip()
+
+            if text:
+                risks.append(
+                    {
+                        "criterion": (
+                            "Mandatory Compliance"
+                        ),
+                        "detail": text,
+                    }
+                )
+
+        if confidences:
+            if all(
+                value == "High"
+                for value in confidences
+            ):
+                overall_confidence = "High"
+            elif any(
+                value == "Low"
+                for value in confidences
+            ):
+                overall_confidence = "Low"
+            else:
+                overall_confidence = "Medium"
+        else:
+            overall_confidence = "Medium"
+
+        return {
+            "strengths": strengths[:40],
+            "gaps": gaps[:40],
+            "risks": risks[:40],
+            "missing_requirements": (
+                missing_requirements[:200]
+            ),
+            "clarifications": (
+                clarifications[:40]
+            ),
+            "confidence": overall_confidence,
+        }
+
+    # =====================================================
     # Evaluate one vendor
     # =====================================================
 
@@ -960,6 +1673,7 @@ class ProposalEvaluationService:
         vendor_name,
         proposal_text,
         criteria,
+        eligibility_requirements=None,
     ):
         vendor_name = str(
             vendor_name
@@ -1000,15 +1714,25 @@ class ProposalEvaluationService:
         )
 
         mandatory_requirements = (
-            self._get_mandatory_requirements(
-                criteria
+            self._build_compliance_requirements(
+                criteria,
+                eligibility_requirements,
             )
+        )
+
+        eligibility_gate_count = sum(
+            1
+            for item in mandatory_requirements
+            if item.get("gate_type")
+            == "eligibility"
         )
 
         print(
             f"[{vendor_name}] "
-            "Mandatory eligibility gates: "
-            f"{len(mandatory_requirements)}"
+            "Compliance requirements: "
+            f"{len(mandatory_requirements)} "
+            f"({eligibility_gate_count} "
+            "eligibility gate(s))"
         )
 
         evaluations_by_index = {}
@@ -1223,6 +1947,54 @@ class ProposalEvaluationService:
             f"{final_score}"
         )
 
+        # =================================================
+        # Mandatory compliance (eligibility track)
+        #
+        # The compliance agent evaluates the eligibility
+        # gates and scored mandatory requirements against
+        # proposal evidence, so its percentage and status
+        # are authoritative when it ran.
+        # =================================================
+
+        compliance_percentage = (
+            compliance_result.get(
+                "complianceScore"
+            )
+        )
+
+        if compliance_percentage is None:
+            compliance_percentage = (
+                scoring_result.get(
+                    "overall_mandatory_compliance"
+                )
+            )
+
+        compliance_status = (
+            compliance_result.get(
+                "complianceStatus",
+                "UNKNOWN",
+            )
+        )
+
+        requirements_matrix = (
+            self._build_requirements_matrix(
+                evaluations=evaluations,
+                criteria=criteria,
+                compliance_result=(
+                    compliance_result
+                ),
+            )
+        )
+
+        aggregates = (
+            self._aggregate_vendor_findings(
+                evaluations=evaluations,
+                compliance_result=(
+                    compliance_result
+                ),
+            )
+        )
+
         return {
             "vendor": (
                 vendor_name
@@ -1237,14 +2009,72 @@ class ProposalEvaluationService:
             ),
 
             "overallMandatoryCompliance": (
+                compliance_percentage
+            ),
+
+            "mandatoryCompliancePercentage": (
+                compliance_percentage
+            ),
+
+            "mandatoryComplianceStatus": (
+                compliance_status
+            ),
+
+            "mandatoryComplianceBreakdown": (
+                compliance_result.get(
+                    "complianceBreakdown",
+                    {},
+                )
+            ),
+
+            "scoredMandatoryCompliance": (
                 scoring_result.get(
                     "overall_mandatory_compliance"
                 )
             ),
 
+            "requirementsComplianceMatrix": (
+                requirements_matrix
+            ),
+
+            "strengths": (
+                aggregates["strengths"]
+            ),
+
+            "gaps": (
+                aggregates["gaps"]
+            ),
+
+            "missingRequirementsDetail": (
+                aggregates[
+                    "missing_requirements"
+                ]
+            ),
+
+            "risks": (
+                aggregates["risks"]
+            ),
+
+            "clarificationsToRequest": (
+                aggregates[
+                    "clarifications"
+                ]
+            ),
+
+            "confidenceLevel": (
+                aggregates["confidence"]
+            ),
+
             "mandatorySummary": (
                 scoring_result.get(
                     "mandatory_summary",
+                    {},
+                )
+            ),
+
+            "complianceSummary": (
+                compliance_result.get(
+                    "summary",
                     {},
                 )
             ),
@@ -1289,6 +2119,7 @@ class ProposalEvaluationService:
         self,
         proposal_path,
         criteria,
+        eligibility_requirements=None,
     ):
         proposal_path = Path(
             proposal_path
@@ -1370,6 +2201,10 @@ class ProposalEvaluationService:
 
                     criteria=(
                         criteria
+                    ),
+
+                    eligibility_requirements=(
+                        eligibility_requirements
                     ),
                 )
             )
@@ -1547,9 +2382,14 @@ class ProposalEvaluationService:
             time.perf_counter()
         )
 
+        weight_config = (
+            self._load_weight_config()
+        )
+
         rfp_analysis = (
             self.rfp_agent.analyze(
-                rfp_text
+                rfp_text,
+                weight_config=weight_config,
             )
         )
 
@@ -1586,6 +2426,19 @@ class ProposalEvaluationService:
                 "RFP Agent did not return "
                 "evaluation criteria."
             )
+
+        eligibility_requirements = (
+            rfp_analysis.get(
+                "eligibility_requirements",
+                [],
+            )
+        )
+
+        if not isinstance(
+            eligibility_requirements,
+            list,
+        ):
+            eligibility_requirements = []
 
         # =================================================
         # Validate frozen framework
@@ -1658,13 +2511,21 @@ class ProposalEvaluationService:
         )
 
         print(
-            "Mandatory eligibility gates: "
+            "Scored mandatory requirements: "
             f"{len(mandatory_requirements)}"
         )
 
         print(
+            "Eligibility gates: "
+            f"{len(eligibility_requirements)}"
+        )
+
+        print(
             "Total weight: "
-            f"{round(total_weight, 2)}%"
+            f"{round(total_weight, 2)}% "
+            "(source="
+            f"{rfp_analysis.get('evaluation_weight_source', 'system_defined')}"
+            ")"
         )
 
         for criterion in (
@@ -1721,6 +2582,7 @@ class ProposalEvaluationService:
                     self._process_proposal,
                     proposal_path,
                     criteria,
+                    eligibility_requirements,
                 ): Path(
                     proposal_path
                 ).name
@@ -1948,7 +2810,41 @@ class ProposalEvaluationService:
                         2,
                     )
                 ),
+
+                "projectInformation": (
+                    rfp_analysis.get(
+                        "project_information",
+                        {},
+                    )
+                ),
+
+                "eligibilityRequirements": (
+                    eligibility_requirements
+                ),
+
+                "evaluationWeightSource": (
+                    rfp_analysis.get(
+                        "evaluation_weight_source",
+                        "system_defined",
+                    )
+                ),
             },
+
+            "evaluationWeightSource": (
+                rfp_analysis.get(
+                    "evaluation_weight_source",
+                    "system_defined",
+                )
+            ),
+
+            "executiveSummary": (
+                self._build_executive_summary(
+                    rfp_analysis=rfp_analysis,
+                    vendor_results=(
+                        vendor_results
+                    ),
+                )
+            ),
 
             "totalVendors": (
                 len(

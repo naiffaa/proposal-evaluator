@@ -432,6 +432,26 @@ STRICT RULES:
                             "",
                         )
                     ),
+
+                    # Preferred vs mandatory wording and
+                    # the evidence the RFP expects.
+                    "requirement_type": (
+                        str(
+                            requirement.get(
+                                "requirement_type",
+                                "",
+                            )
+                        ).strip()
+                    ),
+
+                    "evidence_expected": (
+                        str(
+                            requirement.get(
+                                "evidence_expected",
+                                "",
+                            )
+                        ).strip()
+                    ),
                 }
             )
 
@@ -1124,6 +1144,18 @@ as evidence.
 
 Do not invent unsupported capabilities.
 
+Do NOT give credit for a requirement unless the proposal
+contains actual evidence for it. A generic marketing
+claim ("modern, secure, scalable platform") is NOT
+evidence for specific capabilities such as protocol
+support, standards compliance, or named integrations.
+
+A requirement whose requirement_type marks it as
+preferred (تفضيلي / preferred) is a preference, not an
+obligation: evaluate the evidence honestly, but the
+absence of a preferred capability is a gap, never a
+hard failure.
+
 ==================================================
 STATUS
 ==================================================
@@ -1784,6 +1816,79 @@ VENDOR PROPOSAL
             f"and {not_provided_count} not provided."
         )
 
+        # Additive compliance labels requested by the
+        # evaluation framework:
+        # SUPPORTED / PARTIAL / NOT_FOUND / CONTRADICTED
+        label_map = {
+            "FULL_MATCH": "SUPPORTED",
+            "PARTIAL_MATCH": "PARTIAL",
+            "NOT_PROVIDED": "NOT_FOUND",
+            "NO_MATCH": "CONTRADICTED",
+        }
+
+        for item in validated_results:
+            item["compliance_label"] = (
+                label_map.get(
+                    item["status"],
+                    "NOT_FOUND",
+                )
+            )
+
+        missing_requirements = [
+            {
+                "requirement_id": (
+                    item["requirement_id"]
+                ),
+                "requirement": (
+                    item["requirement"]
+                ),
+                "status": item["status"],
+                "mandatory": item["mandatory"],
+            }
+            for item in validated_results
+            if item["status"]
+            in {"NOT_PROVIDED", "NO_MATCH"}
+        ]
+
+        risks = [
+            (
+                "Contradicted requirement "
+                f"{item['requirement_id']}: "
+                f"{item['requirement'][:120]}"
+            )
+            for item in validated_results
+            if item["status"] == "NO_MATCH"
+        ] + [
+            (
+                "Mandatory requirement without "
+                f"evidence {item['requirement_id']}: "
+                f"{item['requirement'][:120]}"
+            )
+            for item in validated_results
+            if item["mandatory"]
+            and item["status"] == "NOT_PROVIDED"
+        ]
+
+        evidence_ratio = (
+            sum(
+                1
+                for item in validated_results
+                if item["proposal_evidence"]
+                != "Not Provided"
+            )
+            /
+            len(
+                validated_results
+            )
+        )
+
+        if evidence_ratio >= 0.75:
+            confidence = "High"
+        elif evidence_ratio >= 0.4:
+            confidence = "Medium"
+        else:
+            confidence = "Low"
+
         return {
             "criterion": (
                 criterion
@@ -1802,6 +1907,18 @@ VENDOR PROPOSAL
 
             "requirement_results": (
                 validated_results
+            ),
+
+            "missing_requirements": (
+                missing_requirements
+            ),
+
+            "risks": (
+                risks[:20]
+            ),
+
+            "confidence": (
+                confidence
             ),
 
             "summary": {

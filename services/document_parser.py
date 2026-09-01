@@ -4,6 +4,7 @@ import html
 import json
 import re
 import time
+import unicodedata
 import uuid
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -258,6 +259,28 @@ class DocumentParser:
         ):
             return ""
 
+        # Arabic PDFs frequently extract as Unicode Arabic
+        # Presentation Forms (U+FB50-U+FEFF), for example
+        # "\ufedb\ufead\ufe8d\ufeb3\ufe94" instead of
+        # "\u0643\u0631\u0627\u0633\u0629". Those code
+        # points are visually identical but compare as
+        # different strings, which silently breaks every
+        # Arabic keyword match downstream (mandatory /
+        # preferential labels, section detection, retrieval)
+        # and wastes tokens in the model context.
+        #
+        # NFKC folds presentation forms back to standard
+        # Arabic letters and leaves normal Latin/Arabic text
+        # unchanged.
+        if any(
+            "\uFB50" <= character <= "\uFEFF"
+            for character in text
+        ):
+            text = unicodedata.normalize(
+                "NFKC",
+                text,
+            )
+
         text = (
             text
             .replace(
@@ -326,6 +349,15 @@ class DocumentParser:
             digest.hexdigest()
         )
 
+    # Bump when text post-processing changes in a way that
+    # makes previously cached extractions stale. Cached
+    # entries written by an older version are ignored and
+    # re-extracted rather than silently reused.
+    #
+    # v2: Arabic Presentation Forms are normalized to
+    #     standard Arabic letters in _clean_text.
+    TEXT_PIPELINE_VERSION = 2
+
     def _get_cache_path(
         self,
         file_hash,
@@ -360,6 +392,24 @@ class DocumentParser:
             )
 
         except Exception:
+
+            return None
+
+        cached_version = cached.get(
+            "text_pipeline_version",
+            1,
+        )
+
+        if (
+            cached_version
+            != self.TEXT_PIPELINE_VERSION
+        ):
+            print(
+                "Cached extraction is stale "
+                f"(v{cached_version} < "
+                f"v{self.TEXT_PIPELINE_VERSION}). "
+                "Re-extracting."
+            )
 
             return None
 
@@ -456,6 +506,10 @@ class DocumentParser:
         cache_data = {
             "file_hash": (
                 file_hash
+            ),
+
+            "text_pipeline_version": (
+                self.TEXT_PIPELINE_VERSION
             ),
 
             "text": (

@@ -294,6 +294,22 @@ class TeamAgent:
                             "",
                         )
                     ),
+                    "requirement_type": (
+                        str(
+                            requirement.get(
+                                "requirement_type",
+                                "",
+                            )
+                        ).strip()
+                    ),
+                    "evidence_expected": (
+                        str(
+                            requirement.get(
+                                "evidence_expected",
+                                "",
+                            )
+                        ).strip()
+                    ),
                 }
             )
 
@@ -514,6 +530,44 @@ Do not invent people, qualifications, CVs,
 certifications, years, roles, or staffing facts.
 
 Evaluate EVERY supplied requirement.
+
+==================================================
+MANDATORY VS PREFERRED WORDING
+==================================================
+
+Distinguish carefully between binding obligations and
+stated preferences, using the RFP's own wording:
+
+BINDING (obligation):
+يجب / يلتزم / إلزامي / لا يحق / shall / must / required
+Examples of typically binding team obligations: naming a
+dedicated project manager, giving that manager decision
+authority, minimum years of experience on similar
+projects, providing CVs with qualifications and
+certifications, having team members capable in the
+required working languages, obtaining approval before
+replacing key staff, and providing a competent
+replacement during absences.
+
+PREFERENCE (desirable, NOT binding):
+يفضل / تفضيلي / يستحسن / preferred / desirable / nice to
+have. A common example is a preferred nationality for the
+project manager.
+
+Rules:
+1. NEVER fail, NO_MATCH, or zero a vendor solely because
+   a PREFERENCE is unmet. Record it as a gap and let it
+   reduce the score modestly, nothing more.
+2. Each requirement carries a requirement_type field.
+   When it marks the item as preferred, treat it as a
+   preference regardless of how strongly it is phrased.
+3. Judge binding requirements strictly on evidence: an
+   unnamed role, a missing CV, or an unstated experience
+   duration is missing evidence, not an assumed pass.
+4. Also consider, when the RFP asks for them: clarity of
+   roles and responsibilities, availability/allocation of
+   named staff, and replacement / continuity
+   arrangements.
 
 Statuses:
 FULL_MATCH

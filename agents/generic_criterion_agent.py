@@ -361,6 +361,24 @@ class GenericCriterionAgent:
                             "",
                         )
                     ),
+
+                    "requirement_type": (
+                        str(
+                            requirement.get(
+                                "requirement_type",
+                                "",
+                            )
+                        ).strip()
+                    ),
+
+                    "evidence_expected": (
+                        str(
+                            requirement.get(
+                                "evidence_expected",
+                                "",
+                            )
+                        ).strip()
+                    ),
                 }
             )
 
@@ -797,6 +815,15 @@ The proposal explicitly conflicts with the requirement.
 
 NOT_PROVIDED:
 No meaningful proposal evidence exists.
+
+Do NOT give credit for a requirement unless the proposal
+contains actual evidence for it. Generic marketing claims
+are not evidence for specific obligations.
+
+A requirement whose requirement_type marks it as
+preferred (تفضيلي / preferred) is a preference, not an
+obligation: the absence of a preferred item is a gap,
+never a hard failure.
 
 ==================================================
 SCORING
@@ -1528,6 +1555,82 @@ RELEVANT VENDOR PROPOSAL CONTEXT
             f"and {not_provided_count} not provided."
         )
 
+        # Additive compliance labels:
+        # SUPPORTED / PARTIAL / NOT_FOUND / CONTRADICTED
+        label_map = {
+            "FULL_MATCH": "SUPPORTED",
+            "PARTIAL_MATCH": "PARTIAL",
+            "NOT_PROVIDED": "NOT_FOUND",
+            "NO_MATCH": "CONTRADICTED",
+        }
+
+        for item in validated:
+            item["compliance_label"] = (
+                label_map.get(
+                    item["status"],
+                    "NOT_FOUND",
+                )
+            )
+
+        missing_requirements = [
+            {
+                "requirement_id": (
+                    item["requirement_id"]
+                ),
+                "requirement": (
+                    item["requirement"]
+                ),
+                "status": item["status"],
+                "mandatory": item.get(
+                    "mandatory",
+                    False,
+                ),
+            }
+            for item in validated
+            if item["status"]
+            in {"NOT_PROVIDED", "NO_MATCH"}
+        ]
+
+        risks = [
+            (
+                "Contradicted requirement "
+                f"{item['requirement_id']}: "
+                f"{item['requirement'][:120]}"
+            )
+            for item in validated
+            if item["status"] == "NO_MATCH"
+        ] + [
+            (
+                "Mandatory requirement without "
+                f"evidence {item['requirement_id']}: "
+                f"{item['requirement'][:120]}"
+            )
+            for item in validated
+            if item.get("mandatory")
+            and item["status"] == "NOT_PROVIDED"
+        ]
+
+        evidence_ratio = (
+            sum(
+                1
+                for item in validated
+                if item.get(
+                    "proposal_evidence",
+                    "Not Provided",
+                )
+                != "Not Provided"
+            )
+            /
+            len(validated)
+        )
+
+        if evidence_ratio >= 0.75:
+            confidence = "High"
+        elif evidence_ratio >= 0.4:
+            confidence = "Medium"
+        else:
+            confidence = "Low"
+
         return {
             "criterion": criterion,
 
@@ -1544,6 +1647,18 @@ RELEVANT VENDOR PROPOSAL CONTEXT
 
             "requirement_results": (
                 validated
+            ),
+
+            "missing_requirements": (
+                missing_requirements
+            ),
+
+            "risks": (
+                risks[:20]
+            ),
+
+            "confidence": (
+                confidence
             ),
 
             "summary": {

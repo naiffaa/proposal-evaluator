@@ -12,6 +12,16 @@ STOPWORDS = {
     "vendor", "proposal", "requirement", "requirements", "criterion",
     "criteria", "evaluation", "rfp", "provide", "provided", "solution",
     "project", "system",
+    # Arabic function words and generic procurement filler.
+    # Stored in normalized form (see _normalize_arabic).
+    "من", "في", "الي", "علي", "عن", "مع", "ان", "او", "كما", "ثم",
+    "لا", "ما", "هذا", "هذه", "ذلك", "تلك", "التي", "الذي", "الذين",
+    "يجب", "يتم", "تم", "وفق", "وفقا", "خلال", "جميع", "كل", "بعض",
+    "لدي", "عند", "غير", "بين", "حسب", "اي", "اذا", "قبل", "بعد",
+    "وذلك", "بما", "منها", "فيها", "عليه", "عليها", "بها", "له", "لها",
+    "حيث", "لدى", "ضمن", "نحو", "مثل", "بشكل", "اخري", "ايضا",
+    "المورد", "العرض", "المتطلبات", "المتطلب", "المعيار", "المعايير",
+    "التقييم", "المنافسه", "المشروع", "النظام", "الخدمه", "مقدم",
 }
 
 
@@ -47,21 +57,88 @@ DOMAIN_HINTS = {
         "mandatory", "compliance", "eligible", "eligibility", "must",
         "required", "certification", "license", "registration",
         "data residency", "sla", "security", "legal", "pass/fail",
+        # Arabic compliance / eligibility vocabulary.
+        "الزامي", "امتثال", "شهاده", "السجل التجاري", "الزكاه",
+        "التامينات", "سعوده", "ضمان بنكي", "ختم", "توقيع", "اقرار",
+        "تعهد", "ترخيص", "الغرفه التجاريه", "iban",
     ],
 }
+
+# Arabic domain hints appended per agent domain so retrieval
+# works for Arabic proposals as well as English ones.
+_ARABIC_DOMAIN_HINTS = {
+    "technical": [
+        "تقني", "فني", "معماريه", "منصه", "تكامل", "امن", "حمايه",
+        "بنيه تحتيه", "اداء", "قاعده بيانات", "سحابه", "شبكه",
+        "تحليلات", "تقارير", "بيانات", "نسخ احتياطي", "استعاده",
+        "فهرسه", "مستودع رقمي", "بحث", "تشفير", "صلاحيات",
+    ],
+    "experience": [
+        "خبره", "خبرات", "سابقه", "مشاريع", "عملاء", "مرجع",
+        "سنوات", "تنفيذ", "مماثله", "مشابهه", "اعمال",
+    ],
+    "team": [
+        "فريق", "كوادر", "موظف", "سيره ذاتيه", "مؤهل", "مؤهلات",
+        "شهاده", "معتمد", "مهندس", "مدير", "خبير", "اخصائي",
+    ],
+    "financial": [
+        "مالي", "سعر", "اسعار", "تكلفه", "تكاليف", "ميزانيه", "ريال",
+        "رسوم", "دفعه", "دفعات", "ضريبه", "اشتراك", "صيانه",
+        "ترخيص", "اجمالي",
+    ],
+    "project_plan": [
+        "خطه", "منهجيه", "جدول زمني", "مراحل", "مرحله", "تسليم",
+        "مخرجات", "حوكمه", "اداره المشروع", "مخاطر", "اختبار",
+        "تدريب", "دعم", "اطلاق",
+    ],
+    "compliance": [
+        "الزامي", "امتثال", "شهاده", "سجل تجاري", "زكاه", "تامينات",
+        "سعوده", "ضمان", "ختم", "توقيع", "اقرار", "تعهد",
+    ],
+}
+
+for _domain, _hints in _ARABIC_DOMAIN_HINTS.items():
+    DOMAIN_HINTS.setdefault(_domain, []).extend(_hints)
+
+
+_ARABIC_DIACRITICS = re.compile(r"[ً-ْٰـ]")
+
+
+def _normalize_arabic(text: str) -> str:
+    """
+    Light Arabic normalization so lexical retrieval matches
+    across common orthographic variants.
+    """
+    text = _ARABIC_DIACRITICS.sub("", text)
+    text = (
+        text
+        .replace("أ", "ا")
+        .replace("إ", "ا")
+        .replace("آ", "ا")
+        .replace("ة", "ه")
+        .replace("ى", "ي")
+        .replace("ؤ", "و")
+        .replace("ئ", "ي")
+    )
+    return text
 
 
 def _normalize_text(value: str) -> str:
     return re.sub(r"\s+", " ", str(value or "")).strip()
 
 
+_TOKEN_PATTERN = re.compile(
+    r"[a-z0-9ء-ي][a-z0-9_./+ء-ي-]{1,}"
+)
+
+
 def _tokenize(value: str) -> list[str]:
-    text = _normalize_text(value).lower()
-    tokens = re.findall(r"[a-z0-9][a-z0-9_./+-]{2,}", text)
+    text = _normalize_arabic(_normalize_text(value).lower())
+    tokens = _TOKEN_PATTERN.findall(text)
     return [
         token
         for token in tokens
-        if token not in STOPWORDS
+        if len(token) >= 2 and token not in STOPWORDS
     ]
 
 
@@ -106,7 +183,24 @@ def _split_paragraphs(text: str) -> list[str]:
     if not paragraphs and text.strip():
         paragraphs = [text.strip()]
 
-    return paragraphs
+    # Final guard: a block with no usable line structure
+    # (some OCR/extraction output) would otherwise stay a
+    # single huge paragraph and defeat retrieval, so split
+    # it on character count as a last resort.
+    bounded = []
+
+    for paragraph in paragraphs:
+        if len(paragraph) <= 3500:
+            bounded.append(paragraph)
+            continue
+
+        for start in range(0, len(paragraph), 3000):
+            piece = paragraph[start:start + 3000].strip()
+
+            if piece:
+                bounded.append(piece)
+
+    return bounded
 
 
 def _make_chunks(
@@ -168,7 +262,7 @@ def _score_chunk(
     if not chunk:
         return 0.0
 
-    lower = chunk.lower()
+    lower = _normalize_arabic(chunk.lower())
     chunk_tokens = _tokenize(chunk)
 
     if not chunk_tokens:
@@ -188,7 +282,7 @@ def _score_chunk(
     phrase_bonus = 0.0
 
     for phrase in important_phrases:
-        phrase = phrase.strip().lower()
+        phrase = _normalize_arabic(phrase.strip().lower())
 
         if len(phrase) >= 6 and phrase in lower:
             phrase_bonus += 4.0
@@ -276,48 +370,62 @@ def build_relevant_context(
     if best_score < min_retrieval_score:
         return proposal_text
 
-    selected_indexes = {
+    top_indexes = [
         index
         for index, _, _ in scored[:top_k]
-    }
+    ]
 
-    if include_document_start:
-        selected_indexes.add(0)
-
-    # Add neighboring chunks around strong matches. This helps preserve
-    # headings and evidence that spans chunk boundaries.
+    # Neighboring chunks around strong matches preserve headings and
+    # evidence that spans a chunk boundary.
     strongest = [
         index
         for index, score, _ in scored[:max(2, top_k // 2)]
         if score > 0
     ]
 
+    neighbor_indexes = []
+
     for index in strongest:
-        if index - 1 >= 0:
-            selected_indexes.add(index - 1)
+        for neighbor in (index - 1, index + 1):
+            if 0 <= neighbor < len(chunks):
+                neighbor_indexes.append(neighbor)
 
-        if index + 1 < len(chunks):
-            selected_indexes.add(index + 1)
+    # Priority order for spending the character budget:
+    # best-scoring chunks first, then their neighbors, then the
+    # document opening (useful context, but never at the cost of
+    # the actual evidence in a long document).
+    priority = []
 
-    context_parts = []
+    for index in top_indexes + neighbor_indexes:
+        if index not in priority:
+            priority.append(index)
+
+    if include_document_start and 0 not in priority:
+        priority.append(0)
+
+    selected_indexes = []
     current_chars = 0
 
-    for index in sorted(selected_indexes):
-        chunk = chunks[index]
+    for index in priority:
+        chunk_length = len(chunks[index]) + 20
 
-        if current_chars + len(chunk) > max_chars:
-            remaining = max_chars - current_chars
+        if current_chars + chunk_length > max_chars:
+            continue
 
-            if remaining >= 700:
-                context_parts.append(chunk[:remaining])
+        selected_indexes.append(index)
+        current_chars += chunk_length
 
-            break
+    # Nothing fit (a single oversized chunk): fall back to the
+    # highest-scoring chunk, truncated.
+    if not selected_indexes and priority:
+        best_index = priority[0]
 
-        context_parts.append(chunk)
-        current_chars += len(chunk) + 20
+        return chunks[best_index][:max_chars]
 
+    # Emit in document order so the excerpt still reads top to bottom.
     context = "\n\n--- PROPOSAL EXCERPT ---\n\n".join(
-        context_parts
+        chunks[index]
+        for index in sorted(selected_indexes)
     ).strip()
 
     # If retrieval produced too little context, prefer the full proposal.

@@ -409,6 +409,43 @@ MALFORMED JSON
     # Compliance reference
     # =====================================================
 
+    @staticmethod
+    def _is_eligible(
+        vendor,
+    ):
+        """
+        Deterministic recommendation eligibility.
+
+        A vendor is excluded ONLY on VERIFIED failure of a
+        mandatory gate the RFP treats as grounds for
+        exclusion (mandatoryComplianceStatus == "FAIL").
+
+        PARTIAL and UNKNOWN remain eligible for review:
+        an unverifiable legal certificate is missing
+        evidence, not proof the vendor lacks it. Those
+        cases are surfaced through humanReviewRequired
+        instead of a silent disqualification.
+
+        When no status is present (older stored results),
+        fall back to the legacy strict compliant flag.
+        """
+        status = str(
+            vendor.get(
+                "mandatoryComplianceStatus",
+                "",
+            )
+        ).strip().upper()
+
+        if status:
+            return status != "FAIL"
+
+        return (
+            vendor.get(
+                "compliant"
+            )
+            is True
+        )
+
     def _build_compliance_reference(
         self,
         vendor_results,
@@ -416,8 +453,8 @@ MALFORMED JSON
         """
         Create deterministic eligibility information.
 
-        A vendor is eligible for recommendation only
-        when compliance is explicitly True.
+        A vendor is excluded only on verified failure of a
+        mandatory exclusion-grade requirement.
         """
 
         compliance_reference = {}
@@ -450,8 +487,9 @@ MALFORMED JSON
             )
 
             eligible = (
-                compliant
-                is True
+                self._is_eligible(
+                    vendor
+                )
             )
 
             compliance_reference[
@@ -463,6 +501,13 @@ MALFORMED JSON
 
                 "eligible": (
                     eligible
+                ),
+
+                "mandatoryComplianceStatus": (
+                    vendor.get(
+                        "mandatoryComplianceStatus",
+                        "UNKNOWN",
+                    )
                 ),
 
                 "mandatoryCompliance": (
@@ -548,10 +593,16 @@ MALFORMED JSON
                     ),
 
                     "eligible": (
-                        vendor.get(
-                            "compliant"
+                        self._is_eligible(
+                            vendor
                         )
-                        is True
+                    ),
+
+                    "mandatoryComplianceStatus": (
+                        vendor.get(
+                            "mandatoryComplianceStatus",
+                            "UNKNOWN",
+                        )
                     ),
 
                     "mandatoryCompliance": (

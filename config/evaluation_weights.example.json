@@ -1,0 +1,20 @@
+{
+  "_comment": "Optional reviewer-defined criterion weights. Copy to evaluation_weights.json to activate. Keys may be criterion names (as discovered from the RFP) or criterion IDs (C01, C02...). Weights must total 100 across ALL discovered criteria, otherwise the file is ignored and the system-defined importance weights are used. These are OUR evaluation model, not official RFP weights.",
+  "weight_overrides": {
+    "C01": 12,
+    "C02": 10,
+    "C03": 8,
+    "C04": 8,
+    "C05": 8,
+    "C06": 8,
+    "C07": 7,
+    "C08": 5,
+    "C09": 6,
+    "C10": 4,
+    "C11": 6,
+    "C12": 6,
+    "C13": 6,
+    "C14": 3,
+    "C15": 3
+  }
+}

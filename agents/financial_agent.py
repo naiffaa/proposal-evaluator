@@ -221,6 +221,22 @@ class FinancialAgent:
                     "requirement": requirement_text,
                     "source": source,
                     "mandatory": mandatory,
+                    "requirement_type": (
+                        str(
+                            requirement.get(
+                                "requirement_type",
+                                "",
+                            )
+                        ).strip()
+                    ),
+                    "evidence_expected": (
+                        str(
+                            requirement.get(
+                                "evidence_expected",
+                                "",
+                            )
+                        ).strip()
+                    ),
                 }
             )
 
@@ -956,6 +972,53 @@ Do NOT reward a lower price simply because it is lower.
 A lower price is not automatically better unless the RFP
 explicitly defines such a formula.
 
+If the RFP does not state a budget, a ceiling, or a
+pricing formula, then price competitiveness CANNOT be
+objectively determined against a budget. Say so
+explicitly in the rationale instead of guessing, and
+evaluate what can be assessed: completeness,
+transparency, TCO and commercial risk.
+
+==================================================
+WHAT TO EVALUATE
+==================================================
+
+Assess the financial submission on the dimensions the RFP
+actually asks for. Where present, these commonly include:
+
+- completeness: is every required cost component priced,
+  or are there unpriced scope items?
+- separate financial proposal and required file formats
+- detailed pricing breakdown and rate card / bill of
+  quantities
+- payment schedule tied to deliverables or milestones
+- licensing model (annual subscription vs perpetual) and
+  renewal implications
+- maintenance, update, warranty and support pricing
+- infrastructure / hosting costs
+- training costs
+- integration costs
+- total cost of ownership over the horizon the RFP names
+  (for example 3-5 years), and whether the vendor
+  actually computed it
+- whether prices are stated as inclusive of VAT and all
+  other applicable charges
+- proposal validity period
+- advance payment: if the RFP forbids or caps an advance
+  payment, flag any proposed advance that exceeds or
+  contradicts that condition
+- final retention / closing payment conditions where the
+  RFP requires them
+- transparency: are assumptions, exclusions, currency and
+  escalation clearly stated?
+- commercial risk: open-ended time-and-materials items,
+  unbounded pass-through costs, unstated renewal
+  increases, or missing costs that will surface later
+
+Report unpriced or omitted cost components explicitly as
+missing costs rather than assuming they are free or
+already included.
+
 ==================================================
 OUTPUT
 ==================================================
@@ -1162,6 +1225,32 @@ Very limited financial evidence.
 
 0:
 No relevant financial information.
+
+==================================================
+WHAT TO EVALUATE
+==================================================
+
+Do NOT reward a lower price simply because it is lower.
+
+If the RFP does not state a budget, a ceiling, or a
+pricing formula, price competitiveness CANNOT be
+objectively determined against a budget. Say so
+explicitly rather than guessing.
+
+Assess, where the RFP asks for them: completeness of
+pricing, separate financial submission, detailed
+breakdown / rate card, payment schedule tied to
+deliverables, licensing model (annual vs perpetual),
+maintenance and support pricing, infrastructure costs,
+training costs, integration costs, total cost of
+ownership over the horizon the RFP names, VAT and other
+charges being included, proposal validity, restrictions
+on advance payments, final retention conditions,
+transparency of assumptions and exclusions, and overall
+commercial risk.
+
+Report unpriced or omitted cost components explicitly as
+missing costs rather than assuming they are included.
 
 ==================================================
 STRENGTHS AND GAPS

@@ -23,6 +23,15 @@ class ComplianceAgent:
         "MET",
         "PARTIAL",
         "NOT_MET",
+        "UNVERIFIED",
+        "NOT_APPLICABLE",
+    }
+
+    VALID_COMPLIANCE_STATUSES = {
+        "PASS",
+        "PARTIAL",
+        "FAIL",
+        "UNKNOWN",
     }
 
     VALID_RISK_LEVELS = {
@@ -300,6 +309,27 @@ class ComplianceAgent:
                             "",
                         )
                     ),
+
+                    "category": (
+                        requirement.get(
+                            "category",
+                            "",
+                        )
+                    ),
+
+                    "evidence_expected": (
+                        requirement.get(
+                            "evidence_expected",
+                            "",
+                        )
+                    ),
+
+                    "exclusion_grade": bool(
+                        requirement.get(
+                            "exclusion_grade",
+                            False,
+                        )
+                    ),
                 }
             )
 
@@ -427,11 +457,31 @@ class ComplianceAgent:
         value,
     ):
         status = str(
-            value or "NOT_MET"
+            value or "UNVERIFIED"
         ).strip().upper()
 
+        # Common LLM synonyms.
+        aliases = {
+            "NOT_FOUND": "UNVERIFIED",
+            "NOT_PROVIDED": "UNVERIFIED",
+            "UNKNOWN": "UNVERIFIED",
+            "CANNOT_VERIFY": "UNVERIFIED",
+            "N/A": "NOT_APPLICABLE",
+            "NA": "NOT_APPLICABLE",
+            "COMPLIANT": "MET",
+            "MISSING": "NOT_MET",
+            "NON_COMPLIANT": "NOT_MET",
+        }
+
+        status = aliases.get(
+            status,
+            status,
+        )
+
         if status not in self.VALID_STATUSES:
-            return "NOT_MET"
+            # An unrecognized status is treated as
+            # unverifiable, never as a verified failure.
+            return "UNVERIFIED"
 
         return status
 
@@ -543,10 +593,41 @@ Use ONLY proposal evidence.
 Do not invent evidence.
 Do not use external knowledge.
 
-Statuses:
-MET
-PARTIAL
-NOT_MET
+Statuses (use exactly one per requirement):
+
+MET:
+The proposal contains meaningful evidence that the
+requirement is satisfied.
+
+PARTIAL:
+Relevant evidence exists but it is incomplete.
+
+NOT_MET:
+The proposal provides evidence that the requirement is
+NOT satisfied, or explicitly contradicts / refuses it.
+Use NOT_MET ONLY for verified non-compliance.
+
+UNVERIFIED:
+The uploaded proposal simply does not contain enough
+information to verify the requirement either way.
+This is common for legal certificates, stamps, signatures
+and attachments that may live outside the technical
+proposal document. NEVER conclude that a vendor lacks a
+certificate or legal document just because this document
+does not mention it - that is UNVERIFIED, not NOT_MET.
+
+NOT_APPLICABLE:
+The RFP itself makes the requirement conditional and the
+condition clearly does not apply to this proposal
+(for example a guarantee required only "if applicable"
+or only when an advance payment is requested and none
+is requested).
+
+Each requirement may include "evidence_expected"
+describing what evidence would demonstrate compliance,
+and "exclusion_grade" indicating the RFP treats it as
+grounds for exclusion. Use them to judge the evidence,
+but never lower the evidence bar for exclusion items.
 
 Return EXACTLY {len(requirements)} evaluations.
 
@@ -745,6 +826,34 @@ RELEVANT PROPOSAL:
                     "evidence": evidence,
                     "gap": gap,
                     "reason": reason,
+
+                    "category": (
+                        source_requirement.get(
+                            "category",
+                            "",
+                        )
+                    ),
+
+                    "evidence_expected": (
+                        source_requirement.get(
+                            "evidence_expected",
+                            "",
+                        )
+                    ),
+
+                    "exclusion_grade": bool(
+                        source_requirement.get(
+                            "exclusion_grade",
+                            False,
+                        )
+                    ),
+
+                    "gate_type": (
+                        source_requirement.get(
+                            "gate_type",
+                            "scored_mandatory",
+                        )
+                    ),
                 }
             )
 
@@ -908,15 +1017,29 @@ RELEVANT PROPOSAL:
         self,
         evaluations,
     ):
-        if not evaluations:
+        """
+        Deterministic compliance percentage.
+
+        NOT_APPLICABLE items are excluded from the
+        denominator. UNVERIFIED items count as zero points
+        (they are not verified compliant) but they do NOT
+        make the vendor "non-compliant" - that distinction
+        is carried by the compliance status, not the
+        percentage.
+        """
+        counted = [
+            item
+            for item in evaluations
+            if item["status"] != "NOT_APPLICABLE"
+        ]
+
+        if not counted:
             return True, 100.0
 
         points = 0.0
-        statuses = []
 
-        for item in evaluations:
+        for item in counted:
             status = item["status"]
-            statuses.append(status)
 
             if status == "MET":
                 points += 1.0
@@ -927,7 +1050,7 @@ RELEVANT PROPOSAL:
             (
                 points
                 /
-                len(evaluations)
+                len(counted)
             )
             *
             100,
@@ -935,11 +1058,79 @@ RELEVANT PROPOSAL:
         )
 
         compliant = all(
-            status == "MET"
-            for status in statuses
+            item["status"] == "MET"
+            for item in counted
         )
 
         return compliant, score
+
+    def _calculate_compliance_status(
+        self,
+        evaluations,
+    ):
+        """
+        Deterministic overall mandatory-compliance status:
+
+        FAIL:
+        At least one exclusion-grade requirement has
+        VERIFIED non-compliance (NOT_MET). A vendor is
+        never hard-failed on UNVERIFIED evidence.
+
+        PARTIAL:
+        Verified issues exist (NOT_MET on non-exclusion
+        items, or PARTIAL evidence anywhere).
+
+        UNKNOWN:
+        No verified issues, but at least one requirement
+        could not be verified (or nothing to evaluate).
+
+        PASS:
+        Every applicable requirement is verified MET.
+        """
+        counted = [
+            item
+            for item in evaluations
+            if item["status"] != "NOT_APPLICABLE"
+        ]
+
+        if not counted:
+            return "UNKNOWN"
+
+        exclusion_failed = any(
+            item["status"] == "NOT_MET"
+            and bool(
+                item.get(
+                    "exclusion_grade",
+                    False,
+                )
+            )
+            for item in counted
+        )
+
+        if exclusion_failed:
+            return "FAIL"
+
+        has_verified_issue = any(
+            item["status"]
+            in {
+                "NOT_MET",
+                "PARTIAL",
+            }
+            for item in counted
+        )
+
+        if has_verified_issue:
+            return "PARTIAL"
+
+        has_unverified = any(
+            item["status"] == "UNVERIFIED"
+            for item in counted
+        )
+
+        if has_unverified:
+            return "UNKNOWN"
+
+        return "PASS"
 
     def _calculate_overall_risk(
         self,
@@ -955,7 +1146,11 @@ RELEVANT PROPOSAL:
         partial = sum(
             1
             for item in evaluations
-            if item["status"] == "PARTIAL"
+            if item["status"]
+            in {
+                "PARTIAL",
+                "UNVERIFIED",
+            }
         )
 
         highest = "Low"
@@ -1041,6 +1236,15 @@ RELEVANT PROPOSAL:
                 ),
                 "compliant": True,
                 "complianceScore": 100.0,
+                "complianceStatus": "UNKNOWN",
+                "complianceBreakdown": {
+                    "compliant": [],
+                    "partial": [],
+                    "missing": [],
+                    "unverified": [],
+                    "notApplicable": [],
+                },
+                "clarificationsNeeded": [],
             }
 
         requirements = (
@@ -1187,6 +1391,12 @@ RELEVANT PROPOSAL:
             )
         )
 
+        compliance_status = (
+            self._calculate_compliance_status(
+                evaluations
+            )
+        )
+
         risk_level = (
             self._calculate_overall_risk(
                 evaluations,
@@ -1209,7 +1419,11 @@ RELEVANT PROPOSAL:
                 ),
             }
             for item in evaluations
-            if item["status"] != "MET"
+            if item["status"]
+            in {
+                "NOT_MET",
+                "PARTIAL",
+            }
         ]
 
         gaps = [
@@ -1226,7 +1440,95 @@ RELEVANT PROPOSAL:
                 ),
             }
             for item in evaluations
-            if item["status"] != "MET"
+            if item["status"]
+            in {
+                "NOT_MET",
+                "PARTIAL",
+            }
+        ]
+
+        def _breakdown_entry(item):
+            return {
+                "requirement_id": (
+                    item["requirement_id"]
+                ),
+                "requirement": (
+                    item["requirement"]
+                ),
+                "category": item.get(
+                    "category",
+                    "",
+                ),
+                "exclusion_grade": item.get(
+                    "exclusion_grade",
+                    False,
+                ),
+                "evidence": item.get(
+                    "evidence",
+                    [],
+                ),
+                "gap": item.get(
+                    "gap",
+                    "",
+                ),
+                "reason": item.get(
+                    "reason",
+                    "",
+                ),
+            }
+
+        compliance_breakdown = {
+            "compliant": [
+                _breakdown_entry(item)
+                for item in evaluations
+                if item["status"] == "MET"
+            ],
+            "partial": [
+                _breakdown_entry(item)
+                for item in evaluations
+                if item["status"] == "PARTIAL"
+            ],
+            "missing": [
+                _breakdown_entry(item)
+                for item in evaluations
+                if item["status"] == "NOT_MET"
+            ],
+            "unverified": [
+                _breakdown_entry(item)
+                for item in evaluations
+                if item["status"] == "UNVERIFIED"
+            ],
+            "notApplicable": [
+                _breakdown_entry(item)
+                for item in evaluations
+                if item["status"]
+                == "NOT_APPLICABLE"
+            ],
+        }
+
+        clarifications = [
+            {
+                "requirement_id": (
+                    item["requirement_id"]
+                ),
+                "requirement": (
+                    item["requirement"]
+                ),
+                "clarification": (
+                    item.get(
+                        "evidence_expected"
+                    )
+                    or item.get("gap")
+                    or item.get("reason")
+                    or (
+                        "Provide verifiable "
+                        "evidence for this "
+                        "requirement."
+                    )
+                ),
+            }
+            for item in evaluations
+            if item["status"] == "UNVERIFIED"
         ]
 
         met_count = sum(
@@ -1247,14 +1549,31 @@ RELEVANT PROPOSAL:
             if item["status"] == "NOT_MET"
         )
 
+        unverified_count = sum(
+            1
+            for item in evaluations
+            if item["status"] == "UNVERIFIED"
+        )
+
+        not_applicable_count = sum(
+            1
+            for item in evaluations
+            if item["status"] == "NOT_APPLICABLE"
+        )
+
         rationale = (
             "Mandatory compliance evaluation "
             f"completed against "
             f"{len(evaluations)} requirements. "
             f"MET: {met_count}, "
             f"PARTIAL: {partial_count}, "
-            f"NOT_MET: {not_met_count}. "
-            f"Compliance score: {score}%."
+            f"NOT_MET: {not_met_count}, "
+            f"UNVERIFIED: {unverified_count}, "
+            f"NOT_APPLICABLE: "
+            f"{not_applicable_count}. "
+            f"Compliance score: {score}%. "
+            f"Compliance status: "
+            f"{compliance_status}."
         )
 
         return {
@@ -1270,11 +1589,26 @@ RELEVANT PROPOSAL:
             "rationale": rationale,
             "compliant": compliant,
             "complianceScore": score,
+            "complianceStatus": (
+                compliance_status
+            ),
+            "complianceBreakdown": (
+                compliance_breakdown
+            ),
+            "clarificationsNeeded": (
+                clarifications
+            ),
             "summary": {
                 "total": len(evaluations),
                 "met": met_count,
                 "partial": partial_count,
                 "notMet": not_met_count,
+                "unverified": (
+                    unverified_count
+                ),
+                "notApplicable": (
+                    not_applicable_count
+                ),
                 "batchCount": len(batches),
             },
         }

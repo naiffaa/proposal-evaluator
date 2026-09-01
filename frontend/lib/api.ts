@@ -180,6 +180,15 @@ interface BackendVendor {
   overallMandatoryCompliance?:
     number | null
 
+  mandatoryCompliancePercentage?:
+    number | null
+
+  mandatoryComplianceStatus?:
+    | 'PASS'
+    | 'PARTIAL'
+    | 'FAIL'
+    | 'UNKNOWN'
+
   riskLevel?: string
 
   compliant?:
@@ -886,6 +895,8 @@ function adaptVendor(
     overallMandatoryCompliance:
       Number(
         backendVendor
+          .mandatoryCompliancePercentage ??
+        backendVendor
           .overallMandatoryCompliance ??
         0,
       ),
@@ -896,10 +907,29 @@ function adaptVendor(
           .riskLevel,
       ),
 
+    // A vendor is excluded only on VERIFIED failure of a
+    // mandatory exclusion-grade requirement. Evidence that
+    // simply cannot be verified from the uploaded documents
+    // (for example a legal certificate submitted outside the
+    // technical proposal) leaves the vendor eligible for
+    // human review rather than silently disqualifying it.
+    // Older stored evaluations have no status field, so fall
+    // back to the legacy strict flag.
     eligible:
       backendVendor
-        .compliant ===
-      true,
+        .mandatoryComplianceStatus !==
+        undefined
+        ? backendVendor
+            .mandatoryComplianceStatus !==
+          'FAIL'
+        : backendVendor
+            .compliant ===
+          true,
+
+    mandatoryComplianceStatus:
+      backendVendor
+        .mandatoryComplianceStatus ??
+      null,
 
     strengths,
 

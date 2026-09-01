@@ -265,6 +265,24 @@ class ExperienceAgent:
                     "mandatory": (
                         mandatory
                     ),
+
+                    "requirement_type": (
+                        str(
+                            requirement.get(
+                                "requirement_type",
+                                "",
+                            )
+                        ).strip()
+                    ),
+
+                    "evidence_expected": (
+                        str(
+                            requirement.get(
+                                "evidence_expected",
+                                "",
+                            )
+                        ).strip()
+                    ),
                 }
             )
 
@@ -1156,6 +1174,38 @@ require.
 
 If the RFP does not require client references, do not
 turn missing references into an automatic failure.
+
+==================================================
+RELEVANCE AND TRANSFERABILITY
+==================================================
+
+14. Judge experience on TRANSFERABLE relevance, not on
+an exact client or sector match.
+
+The vendor does NOT need to have served the same client
+or the identical institution type. Experience counts when
+the underlying capability clearly transfers to this RFP:
+comparable systems, comparable content or data volumes,
+comparable integrations, comparable migrations,
+comparable languages/localization, or comparable
+operational complexity.
+
+15. When judging each experience claim, weigh:
+
+- relevance: how closely the prior work maps to the
+  capabilities this RFP requires
+- scale: users, records, content volume, sites, budget
+- complexity: integrations, migrations, standards,
+  regulatory or security constraints
+- evidence: how concretely the work is described
+- references and case studies: named clients, outcomes,
+  durations, testimonials
+- similarity to this RFP overall
+
+16. Adjacent-domain experience that clearly transfers is
+credible evidence and should NOT be scored as zero. State
+the transferability reasoning in the rationale, and use
+PARTIAL_MATCH when the transfer is real but incomplete.
 
 ==================================================
 MATCH STATUS

@@ -3,3 +3,13 @@ __pycache__/
 *.pyc
 .env
 .env.*
+
+# Local validation and run outputs
+.offline_validation/
+artifacts/
+
+# Reviewer-specific weight configuration (ship the example instead)
+config/evaluation_weights.json
+
+# Local extraction cache entries generated during testing
+frontend/tsconfig.tsbuildinfo

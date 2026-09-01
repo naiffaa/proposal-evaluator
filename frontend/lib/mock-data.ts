@@ -285,6 +285,7 @@ function buildVendor(profile: VendorProfile, rank: number): Vendor {
     name: profile.name,
     overallScore: profile.overallScore,
     overallMandatoryCompliance: profile.overallMandatoryCompliance,
+    mandatoryComplianceStatus: profile.eligible ? 'PASS' : 'PARTIAL',
     riskLevel: profile.riskLevel,
     eligible: profile.eligible,
     strengths: profile.strengths,

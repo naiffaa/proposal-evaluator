@@ -73,12 +73,26 @@ export interface MissingRequirement {
   issue: string
 }
 
+export type MandatoryComplianceStatus =
+  | 'PASS'
+  | 'PARTIAL'
+  | 'FAIL'
+  | 'UNKNOWN'
+
 export interface Vendor {
   id: string
   rank: number
   name: string
   overallScore: number
   overallMandatoryCompliance: number
+  /**
+   * Deterministic mandatory-compliance verdict.
+   * FAIL only on verified failure of a requirement the RFP
+   * treats as grounds for exclusion; UNKNOWN when evidence
+   * could not be verified from the uploaded documents.
+   * null for evaluations stored before this field existed.
+   */
+  mandatoryComplianceStatus: MandatoryComplianceStatus | null
   riskLevel: RiskLevel
   eligible: boolean
   strengths: string[]

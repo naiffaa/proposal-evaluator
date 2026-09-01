@@ -6,6 +6,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from services.llm_client import LLMClient
 
+from config import (
+    RFP_EXTRACTION_CHUNK_CHARS,
+    RFP_EXTRACTION_CHUNK_OVERLAP,
+    RFP_EXTRACTION_WORKERS,
+)
+
 
 class RFPAgent:
     """
@@ -79,7 +85,7 @@ class RFPAgent:
     # =====================================================
 
     MIN_CRITERIA = 2
-    MAX_CRITERIA = 12
+    MAX_CRITERIA = 16
 
     ASSIGNMENT_BATCH_SIZE = 45
     MAX_ASSIGNMENT_WORKERS = 2
@@ -1379,6 +1385,23 @@ CRITERIA DISCOVERY RULES
    categories, but specific enough to represent materially
    different evaluation dimensions.
 
+   For a rich, specification-heavy RFP, prefer a fuller set
+   of distinct dimensions over a few catch-all buckets, so
+   that a vendor cannot score highly with a generic
+   proposal. Depending on what THIS RFP actually contains,
+   materially different dimensions often include: the core
+   solution scope and requirements compliance; architecture
+   and infrastructure; integration and interoperability;
+   security and data protection; data migration; user
+   experience, language and accessibility obligations;
+   advanced / innovative capabilities; implementation
+   methodology and project plan; training, knowledge
+   transfer and support; deliverables and intellectual
+   property obligations; vendor experience; project team;
+   and the financial proposal. Only create a dimension when
+   the RFP genuinely contains such content, and name it in
+   the RFP's own vocabulary.
+
 5. Return between {self.MIN_CRITERIA} and
    {self.MAX_CRITERIA} criteria.
 
@@ -1386,6 +1409,13 @@ CRITERIA DISCOVERY RULES
 
 7. Do NOT assign requirement IDs yet.
    Requirement assignment happens in a separate controlled step.
+
+7b. Do NOT create criteria for administrative eligibility
+    gates (signatures, stamps, legal certificates such as
+    commercial registration / zakat / social insurance /
+    Saudization, bank guarantees, submission formalities).
+    Those are pass/fail gates handled by a separate
+    compliance track, not scored quality criteria.
 
 ==================================================
 EXPLICIT WEIGHT RULES
@@ -2659,16 +2689,145 @@ OUTPUT
 
         return weights
 
+    def _resolve_weight_overrides(
+        self,
+        discovered_criteria,
+        weight_config,
+    ):
+        """
+        Reviewer-configurable weights.
+
+        weight_config format:
+        {"weight_overrides": {"<criterion name or id>": weight}}
+
+        Overrides are used only when EVERY discovered
+        criterion is matched and the total is ~100.
+        Otherwise they are ignored with a warning so the
+        evaluation never runs with a broken weight scheme.
+        """
+        if not isinstance(
+            weight_config,
+            dict,
+        ):
+            return None
+
+        overrides = weight_config.get(
+            "weight_overrides"
+        )
+
+        if not isinstance(
+            overrides,
+            dict,
+        ) or not overrides:
+            return None
+
+        normalized_overrides = {
+            self._normalize_search_text(
+                key
+            ): value
+            for key, value in overrides.items()
+        }
+
+        resolved = {}
+
+        for criterion in discovered_criteria:
+            candidates = [
+                self._normalize_search_text(
+                    criterion.get(
+                        "criterion_id",
+                        "",
+                    )
+                ),
+                self._normalize_search_text(
+                    criterion.get(
+                        "name",
+                        "",
+                    )
+                ),
+            ]
+
+            value = None
+
+            for candidate in candidates:
+                if (
+                    candidate
+                    and candidate
+                    in normalized_overrides
+                ):
+                    value = (
+                        normalized_overrides[
+                            candidate
+                        ]
+                    )
+                    break
+
+            if value is None:
+                print(
+                    "WARNING: weight override has no "
+                    "entry for criterion "
+                    f"'{criterion.get('name', '')}'. "
+                    "Ignoring weight overrides."
+                )
+                return None
+
+            try:
+                weight = float(
+                    value
+                )
+            except (
+                TypeError,
+                ValueError,
+            ):
+                print(
+                    "WARNING: invalid override weight "
+                    f"for '{criterion.get('name', '')}'. "
+                    "Ignoring weight overrides."
+                )
+                return None
+
+            if weight < 0 or weight > 100:
+                print(
+                    "WARNING: override weight out of "
+                    "range for "
+                    f"'{criterion.get('name', '')}'. "
+                    "Ignoring weight overrides."
+                )
+                return None
+
+            resolved[
+                criterion["criterion_id"]
+            ] = weight
+
+        total = round(
+            sum(
+                resolved.values()
+            ),
+            4,
+        )
+
+        if abs(total - 100.0) > 0.05:
+            print(
+                "WARNING: weight overrides total "
+                f"{total}, not 100. "
+                "Ignoring weight overrides."
+            )
+            return None
+
+        return resolved
+
     def _finalize_criteria_weights(
         self,
         discovered_criteria,
         grouped,
+        weight_config=None,
     ):
         use_explicit = (
             self._has_complete_explicit_weights(
                 discovered_criteria
             )
         )
+
+        override_weights = None
 
         if use_explicit:
             importance_weights = None
@@ -2679,6 +2838,13 @@ OUTPUT
             )
 
         else:
+            override_weights = (
+                self._resolve_weight_overrides(
+                    discovered_criteria,
+                    weight_config,
+                )
+            )
+
             importance_weights = (
                 self._normalize_importance_weights(
                     discovered_criteria
@@ -2690,10 +2856,17 @@ OUTPUT
                 "scheme found."
             )
 
-            print(
-                "Using dynamic criterion-level "
-                "importance weights."
-            )
+            if override_weights:
+                print(
+                    "Using reviewer-configured "
+                    "system-defined weight overrides."
+                )
+            else:
+                print(
+                    "Using system-defined weights "
+                    "derived from criterion importance. "
+                    "These are NOT official RFP weights."
+                )
 
         final_criteria = []
 
@@ -2747,6 +2920,22 @@ OUTPUT
                     )
                 )
 
+            elif override_weights:
+                weight = (
+                    override_weights[
+                        criterion_id
+                    ]
+                )
+
+                weight_source = (
+                    "system_defined_override"
+                )
+
+                weight_evidence = (
+                    "Reviewer-configured weight. "
+                    "Not an official RFP weight."
+                )
+
             else:
                 weight = (
                     importance_weights[
@@ -2755,10 +2944,14 @@ OUTPUT
                 )
 
                 weight_source = (
-                    "dynamic_criterion_importance"
+                    "system_defined"
                 )
 
-                weight_evidence = ""
+                weight_evidence = (
+                    "Derived from RFP-driven criterion "
+                    "importance. Not an official RFP "
+                    "weight."
+                )
 
             final_criteria.append(
                 {
@@ -3166,9 +3359,1524 @@ Return ONLY valid JSON:
     # Main analysis
     # =====================================================
 
+
+    # =====================================================
+    # Structured LLM requirement extraction
+    #
+    # Used when the RFP has NO GEN/REQ numbered requirement
+    # IDs (for example narrative Arabic RFPs organized as
+    # hierarchical sections and bullet lists).
+    #
+    # Python still owns:
+    # - deterministic section/page chunking
+    # - stable requirement ID assignment (R-001, R-002...)
+    # - deduplication
+    # - mandatory / preferred normalization
+    # - importance scoring
+    #
+    # The LLM only transcribes requirement text that exists
+    # in the source chunk. It never controls IDs or counts.
+    # =====================================================
+
+    MAX_EXTRACTION_RETRIES = 1
+
+    EXTRACTION_REQUIREMENT_LEVELS = {
+        "mandatory",
+        "preferred",
+        "standard",
+    }
+
+    EXTRACTION_CATEGORIES = {
+        "technical",
+        "functional",
+        "integration",
+        "security",
+        "data_migration",
+        "infrastructure",
+        "delivery",
+        "training_support",
+        "team",
+        "experience",
+        "financial",
+        "legal_administrative",
+        "submission",
+        "ip_deliverables",
+        "other",
+    }
+
+    ELIGIBILITY_CATEGORIES = {
+        "legal_certificate",
+        "declaration",
+        "submission_format",
+        "financial_guarantee",
+        "proposal_validity",
+        "process",
+        "other",
+    }
+
+    # Deterministic signals used to pre-select the RFP pages
+    # that most likely contain eligibility / exclusion gates.
+    ELIGIBILITY_SIGNALS = [
+        "قائمة التدقيق",
+        "إلزامي",
+        "الزامي",
+        "استبعاد",
+        "استثناء مقدم العطاء",
+        "لاغيا",
+        "لاغياً",
+        "السجل التجاري",
+        "الزكاة",
+        "التأمينات",
+        "سعودة",
+        "الغرفة التجارية",
+        "ضمان بنكي",
+        "IBAN",
+        "الإقرارات والتعهدات",
+        "الاقرارات والتعهدات",
+        "صلاحية العروض",
+        "سريان العروض",
+        "ختم",
+        "مختوم",
+        "موقعة",
+        "العرض الفني في ملف منفصل",
+        "العرض المالي في ملف منفصل",
+        "checklist",
+        "eligibility",
+        "disqualif",
+        "commercial registration",
+        "bank guarantee",
+        "proposal validity",
+    ]
+
+    def _split_pages(
+        self,
+        rfp_text,
+    ):
+        """
+        Split extracted text into (page_number, text) pairs
+        using the parser's [Page N] markers. Text before the
+        first marker is returned with page_number = None.
+        """
+        matches = list(
+            self.PAGE_PATTERN.finditer(
+                rfp_text
+            )
+        )
+
+        if not matches:
+            return [
+                (
+                    None,
+                    rfp_text,
+                )
+            ]
+
+        pages = []
+
+        if matches[0].start() > 0:
+            preamble = rfp_text[
+                :matches[0].start()
+            ].strip()
+
+            if preamble:
+                pages.append(
+                    (
+                        None,
+                        preamble,
+                    )
+                )
+
+        for (
+            index,
+            match,
+        ) in enumerate(
+            matches
+        ):
+            end = (
+                matches[index + 1].start()
+                if index + 1 < len(matches)
+                else len(rfp_text)
+            )
+
+            try:
+                page_number = int(
+                    match.group(1)
+                )
+            except (
+                TypeError,
+                ValueError,
+            ):
+                page_number = None
+
+            page_text = rfp_text[
+                match.end():end
+            ].strip()
+
+            if page_text:
+                pages.append(
+                    (
+                        page_number,
+                        page_text,
+                    )
+                )
+
+        return pages
+
+    def _split_extraction_chunks(
+        self,
+        rfp_text,
+    ):
+        """
+        Deterministic page-aware chunking for structured
+        requirement extraction. Whole pages are grouped into
+        chunks of about RFP_EXTRACTION_CHUNK_CHARS, and a
+        small tail of the previous chunk is prepended so a
+        requirement that spans a chunk boundary is not lost.
+        """
+        pages = self._split_pages(
+            rfp_text
+        )
+
+        chunks = []
+
+        current_pages = []
+        current_texts = []
+        current_len = 0
+
+        def flush():
+            nonlocal current_pages
+            nonlocal current_texts
+            nonlocal current_len
+
+            if not current_texts:
+                return
+
+            chunk_text = "\n\n".join(
+                current_texts
+            ).strip()
+
+            if chunk_text:
+                chunks.append(
+                    {
+                        "pages": [
+                            page
+                            for page in current_pages
+                            if page is not None
+                        ],
+                        "text": chunk_text,
+                    }
+                )
+
+            current_pages = []
+            current_texts = []
+            current_len = 0
+
+        for (
+            page_number,
+            page_text,
+        ) in pages:
+            page_len = len(
+                page_text
+            )
+
+            if (
+                current_texts
+                and current_len + page_len
+                > RFP_EXTRACTION_CHUNK_CHARS
+            ):
+                flush()
+
+            current_pages.append(
+                page_number
+            )
+
+            current_texts.append(
+                page_text
+                if page_number is None
+                else (
+                    f"[Page {page_number}]\n"
+                    f"{page_text}"
+                )
+            )
+
+            current_len += page_len
+
+        flush()
+
+        # Prepend an overlap tail from the previous chunk.
+        overlapped = []
+
+        for (
+            index,
+            chunk,
+        ) in enumerate(
+            chunks
+        ):
+            if (
+                index == 0
+                or RFP_EXTRACTION_CHUNK_OVERLAP <= 0
+            ):
+                overlapped.append(
+                    chunk
+                )
+                continue
+
+            tail = chunks[index - 1][
+                "text"
+            ][-RFP_EXTRACTION_CHUNK_OVERLAP:]
+
+            overlapped.append(
+                {
+                    "pages": chunk[
+                        "pages"
+                    ],
+                    "text": (
+                        "(continuation context)\n"
+                        f"{tail}\n\n"
+                        f"{chunk['text']}"
+                    ),
+                }
+            )
+
+        return overlapped
+
+    def _build_chunk_extraction_prompt(
+        self,
+        chunk,
+        chunk_number,
+        total_chunks,
+        document_language,
+        retry_reason=None,
+    ):
+        retry_section = ""
+
+        if retry_reason:
+            retry_section = f"""
+==================================================
+RETRY
+==================================================
+
+The previous response was invalid:
+
+{retry_reason}
+
+Return ONLY one valid JSON object with a
+"requirements" array. No markdown. No prose.
+"""
+
+        return f"""
+You are a senior procurement analyst extracting the
+evaluatable requirements from ONE SECTION of an RFP.
+
+This system is DOMAIN-AGNOSTIC. The RFP may cover any
+procurement domain.
+
+You are reading section chunk {chunk_number} of
+{total_chunks}.
+
+Dominant document language: {document_language}
+Keep every extracted requirement in the SAME language
+as the source text.
+
+==================================================
+WHAT COUNTS AS A REQUIREMENT
+==================================================
+
+Extract atomic, vendor-facing requirements: anything the
+vendor / proposed solution must provide, support, deliver,
+integrate with, comply with, staff, price, or do.
+
+Include, when present in THIS chunk:
+- functional and technical specifications
+- architecture / infrastructure / security obligations
+- integrations, standards and protocols
+- data migration duties
+- deliverables and documentation duties
+- implementation / methodology / timeline obligations
+- training, support, warranty and SLA obligations
+- team composition and qualification obligations
+- prior-experience expectations
+- financial / pricing content requirements
+- legal, administrative and submission obligations
+- intellectual property / source code obligations
+
+Rules:
+1. Split composite sentences into separate atomic
+   requirements, one capability or obligation each.
+2. Copy the substance faithfully. Do NOT invent, merge,
+   generalize, or import requirements that are not in
+   this chunk.
+3. EXCLUDE: pure background about the issuing
+   organization, marketing narrative, table-of-contents
+   lines, page headers/footers, standalone headings,
+   contact details, and calendar dates by themselves.
+4. Keep each requirement under 60 words.
+
+==================================================
+FIELDS
+==================================================
+
+requirement_level - exactly one of:
+- "mandatory": binding wording such as
+  يجب / إلزامي / ملزم / يلتزم / لا يحق / shall / must /
+  required / mandatory
+- "preferred": preference wording such as
+  يفضل / تفضيلي / يستحسن / preferred / desirable
+- "standard": descriptive scope items without explicit
+  binding or preference wording
+
+category - exactly one of:
+technical | functional | integration | security |
+data_migration | infrastructure | delivery |
+training_support | team | experience | financial |
+legal_administrative | submission | ip_deliverables |
+other
+
+section - the nearest heading INSIDE this chunk that the
+requirement belongs to (same language as the source).
+
+evidence_expected - one short sentence describing what
+evidence in a vendor proposal would demonstrate
+compliance (same language as the source).
+
+==================================================
+OUTPUT
+==================================================
+
+Return ONLY valid JSON. No markdown fences. No prose.
+
+{{
+  "requirements": [
+    {{
+      "requirement": "...",
+      "section": "...",
+      "requirement_level": "mandatory",
+      "category": "technical",
+      "evidence_expected": "..."
+    }}
+  ]
+}}
+
+If this chunk contains no evaluatable requirements,
+return {{"requirements": []}}.
+
+{retry_section}
+
+==================================================
+RFP SECTION TEXT
+==================================================
+
+<RFP_SECTION>
+{chunk["text"]}
+</RFP_SECTION>
+"""
+
+    def _validate_extracted_chunk(
+        self,
+        data,
+    ):
+        if not isinstance(
+            data,
+            dict,
+        ):
+            raise ValueError(
+                "Extraction response must be "
+                "a JSON object."
+            )
+
+        items = data.get(
+            "requirements"
+        )
+
+        if not isinstance(
+            items,
+            list,
+        ):
+            raise ValueError(
+                "Extraction response must contain "
+                "a 'requirements' array."
+            )
+
+        validated = []
+
+        for item in items:
+            if not isinstance(
+                item,
+                dict,
+            ):
+                continue
+
+            text = self._normalize_text(
+                item.get(
+                    "requirement",
+                    "",
+                )
+            )
+
+            if len(text) < 8:
+                continue
+
+            # Guard against runaway transcription.
+            if len(text) > 600:
+                text = text[:600]
+
+            level = str(
+                item.get(
+                    "requirement_level",
+                    "standard",
+                )
+            ).strip().lower()
+
+            if level not in (
+                self.EXTRACTION_REQUIREMENT_LEVELS
+            ):
+                level = "standard"
+
+            category = str(
+                item.get(
+                    "category",
+                    "other",
+                )
+            ).strip().lower()
+
+            if category not in (
+                self.EXTRACTION_CATEGORIES
+            ):
+                category = "other"
+
+            validated.append(
+                {
+                    "requirement": text,
+
+                    "section": (
+                        self._normalize_text(
+                            item.get(
+                                "section",
+                                "",
+                            )
+                        )[:140]
+                    ),
+
+                    "requirement_level": (
+                        level
+                    ),
+
+                    "category": (
+                        category
+                    ),
+
+                    "evidence_expected": (
+                        self._normalize_text(
+                            item.get(
+                                "evidence_expected",
+                                "",
+                            )
+                        )[:300]
+                    ),
+                }
+            )
+
+        return validated
+
+    def _extract_chunk_requirements(
+        self,
+        chunk,
+        chunk_number,
+        total_chunks,
+        document_language,
+    ):
+        last_error = None
+        retry_reason = None
+
+        for attempt in range(
+            1,
+            self.MAX_EXTRACTION_RETRIES + 2,
+        ):
+            prompt = (
+                self._build_chunk_extraction_prompt(
+                    chunk=chunk,
+                    chunk_number=chunk_number,
+                    total_chunks=total_chunks,
+                    document_language=(
+                        document_language
+                    ),
+                    retry_reason=retry_reason,
+                )
+            )
+
+            response = self.llm.ask(
+                prompt,
+                label=(
+                    "RFP-Extract-"
+                    f"{chunk_number}/{total_chunks}"
+                ),
+            )
+
+            try:
+                data = self._parse_json(
+                    response,
+                    "RFP requirement extraction",
+                )
+
+                return (
+                    self._validate_extracted_chunk(
+                        data
+                    )
+                )
+
+            except Exception as error:
+                last_error = str(
+                    error
+                )
+
+                if (
+                    attempt
+                    >= self.MAX_EXTRACTION_RETRIES + 1
+                ):
+                    break
+
+                retry_reason = last_error
+
+                print(
+                    "Retrying requirement extraction "
+                    f"chunk {chunk_number} because: "
+                    f"{last_error}"
+                )
+
+        raise RuntimeError(
+            "RFP requirement extraction failed for "
+            f"chunk {chunk_number}/{total_chunks}: "
+            f"{last_error}"
+        )
+
+    def _requirement_dedupe_key(
+        self,
+        text,
+    ):
+        normalized = (
+            self._normalize_search_text(
+                text
+            )
+        )
+
+        normalized = re.sub(
+            r"[^0-9a-z\u0621-\u064a ]",
+            "",
+            normalized,
+        )
+
+        normalized = re.sub(
+            r"\s+",
+            " ",
+            normalized,
+        ).strip()
+
+        return normalized[:160]
+
+    def _extract_requirements_with_llm(
+        self,
+        rfp_text,
+        document_language,
+    ):
+        """
+        Structured requirement extraction for RFPs without
+        numbered requirement IDs.
+        """
+        chunks = (
+            self._split_extraction_chunks(
+                rfp_text
+            )
+        )
+
+        total_chunks = len(
+            chunks
+        )
+
+        print(
+            "Structured extraction chunks: "
+            f"{total_chunks}"
+        )
+
+        chunk_results = {}
+
+        worker_count = max(
+            1,
+            min(
+                RFP_EXTRACTION_WORKERS,
+                total_chunks,
+            ),
+        )
+
+        with ThreadPoolExecutor(
+            max_workers=worker_count
+        ) as executor:
+            future_map = {
+                executor.submit(
+                    self._extract_chunk_requirements,
+                    chunk,
+                    chunk_number,
+                    total_chunks,
+                    document_language,
+                ): chunk_number
+                for chunk_number, chunk
+                in enumerate(
+                    chunks,
+                    start=1,
+                )
+            }
+
+            for future in as_completed(
+                future_map
+            ):
+                chunk_number = future_map[
+                    future
+                ]
+
+                chunk_results[
+                    chunk_number
+                ] = future.result()
+
+        # Deterministic ID assignment in document order.
+        requirements = []
+        seen_keys = set()
+
+        for chunk_number in range(
+            1,
+            total_chunks + 1,
+        ):
+            chunk = chunks[
+                chunk_number - 1
+            ]
+
+            chunk_pages = chunk.get(
+                "pages",
+                [],
+            )
+
+            if chunk_pages:
+                if (
+                    len(chunk_pages)
+                    == 1
+                ):
+                    page_label = (
+                        f"Page {chunk_pages[0]}"
+                    )
+                else:
+                    page_label = (
+                        f"Pages {chunk_pages[0]}-"
+                        f"{chunk_pages[-1]}"
+                    )
+            else:
+                page_label = "RFP"
+
+            # Per-requirement page resolution: locate the
+            # transcribed requirement inside the chunk and
+            # take the nearest preceding [Page N] marker,
+            # so a multi-page chunk still yields precise
+            # page references.
+            chunk_text = chunk["text"]
+
+            page_marks = [
+                (
+                    match.start(),
+                    int(match.group(1)),
+                )
+                for match
+                in self.PAGE_PATTERN.finditer(
+                    chunk_text
+                )
+            ]
+
+            chunk_search_text = (
+                self._normalize_search_text(
+                    chunk_text
+                )
+            )
+
+            def resolve_page(text):
+                """
+                Best-effort page for one requirement.
+                Falls back to the chunk's first page.
+                """
+                default_page = (
+                    chunk_pages[0]
+                    if chunk_pages
+                    else None
+                )
+
+                if not page_marks:
+                    return default_page
+
+                probe = (
+                    self._normalize_search_text(
+                        text
+                    )[:60]
+                )
+
+                if len(probe) < 12:
+                    return default_page
+
+                position = (
+                    chunk_search_text.find(
+                        probe
+                    )
+                )
+
+                if position < 0:
+                    return default_page
+
+                # Marker offsets come from the raw chunk
+                # text; normalization only collapses
+                # whitespace, so ordering is preserved
+                # well enough for a nearest-preceding
+                # lookup on relative position.
+                ratio = (
+                    position
+                    /
+                    max(
+                        1,
+                        len(chunk_search_text),
+                    )
+                )
+
+                approx_offset = int(
+                    ratio * len(chunk_text)
+                )
+
+                page = default_page
+
+                for (
+                    offset,
+                    page_number,
+                ) in page_marks:
+                    if offset <= approx_offset:
+                        page = page_number
+                    else:
+                        break
+
+                return page
+
+            for item in chunk_results.get(
+                chunk_number,
+                [],
+            ):
+                key = (
+                    self._requirement_dedupe_key(
+                        item["requirement"]
+                    )
+                )
+
+                if (
+                    not key
+                    or key in seen_keys
+                ):
+                    continue
+
+                seen_keys.add(
+                    key
+                )
+
+                requirement_id = (
+                    f"R-{len(requirements) + 1:03d}"
+                )
+
+                level = item[
+                    "requirement_level"
+                ]
+
+                mandatory = (
+                    level == "mandatory"
+                )
+
+                # Keep the same Arabic literals used by the
+                # deterministic parser so downstream
+                # importance / scoring behavior is identical.
+                requirement_type = (
+                    "إلزامي"
+                    if mandatory
+                    else (
+                        "تفضيلي"
+                        if level == "preferred"
+                        else ""
+                    )
+                )
+
+                section = (
+                    item["section"]
+                    or "RFP"
+                )
+
+                resolved_page = resolve_page(
+                    item["requirement"]
+                )
+
+                requirement_page_label = (
+                    f"Page {resolved_page}"
+                    if resolved_page is not None
+                    else page_label
+                )
+
+                source_parts = []
+
+                if requirement_page_label != "RFP":
+                    source_parts.append(
+                        requirement_page_label
+                    )
+
+                if section != "RFP":
+                    source_parts.append(
+                        section
+                    )
+
+                requirement = {
+                    "id": requirement_id,
+
+                    "requirement": (
+                        item["requirement"]
+                    ),
+
+                    "source": (
+                        " - ".join(
+                            source_parts
+                        )
+                        or "RFP"
+                    ),
+
+                    "page": (
+                        resolved_page
+                    ),
+
+                    "section": section,
+
+                    "mandatory": mandatory,
+
+                    "requirement_type": (
+                        requirement_type
+                    ),
+
+                    "mandatory_evidence": (
+                        requirement_type
+                        if mandatory
+                        else ""
+                    ),
+
+                    "response_evidence_required": (
+                        item[
+                            "evidence_expected"
+                        ]
+                    ),
+
+                    "category": (
+                        item["category"]
+                    ),
+
+                    "evidence_expected": (
+                        item[
+                            "evidence_expected"
+                        ]
+                    ),
+                }
+
+                requirement.update(
+                    self._calculate_requirement_importance(
+                        requirement
+                    )
+                )
+
+                requirements.append(
+                    requirement
+                )
+
+        mandatory_count = sum(
+            1
+            for item in requirements
+            if item["mandatory"]
+        )
+
+        preferred_count = sum(
+            1
+            for item in requirements
+            if item.get("requirement_type")
+            == "تفضيلي"
+        )
+
+        print()
+        print(
+            "================================"
+        )
+        print(
+            "STRUCTURED LLM RFP EXTRACTION"
+        )
+        print(
+            "================================"
+        )
+        print(
+            "Requirements extracted: "
+            f"{len(requirements)}"
+        )
+        print(
+            "Mandatory requirements: "
+            f"{mandatory_count}"
+        )
+        print(
+            "Preferred requirements: "
+            f"{preferred_count}"
+        )
+
+        return requirements
+
+    # =====================================================
+    # Project information
+    # =====================================================
+
+    def _extract_project_information(
+        self,
+        rfp_text,
+        document_language,
+    ):
+        """
+        High-level project facts. Non-fatal: returns {}
+        if the LLM cannot produce a valid answer.
+        """
+        context = rfp_text[
+            :self.DISCOVERY_RFP_CONTEXT_LIMIT
+        ]
+
+        prompt = f"""
+You are analyzing an RFP.
+
+Dominant document language: {document_language}
+Answer in the SAME language as the RFP.
+
+Extract ONLY facts stated in the document. If a fact is
+not stated, use an empty string or empty array.
+
+Return ONLY valid JSON. No markdown. No prose.
+
+{{
+  "project_name": "",
+  "issuing_organization": "",
+  "project_objective": "",
+  "scope_of_work": [],
+  "implementation_duration": "",
+  "required_deliverables": [],
+  "submission_deadline": "",
+  "proposal_validity": ""
+}}
+
+<RFP_DOCUMENT>
+{context}
+</RFP_DOCUMENT>
+"""
+
+        try:
+            response = self.llm.ask(
+                prompt,
+                label="RFP-ProjectInfo",
+            )
+
+            data = self._parse_json(
+                response,
+                "RFP project information",
+            )
+
+            if not isinstance(
+                data,
+                dict,
+            ):
+                return {}
+
+            def clean_str(key):
+                return self._normalize_text(
+                    data.get(
+                        key,
+                        "",
+                    )
+                )[:600]
+
+            def clean_list(key):
+                value = data.get(
+                    key,
+                    [],
+                )
+
+                if not isinstance(
+                    value,
+                    list,
+                ):
+                    return []
+
+                return [
+                    self._normalize_text(
+                        item
+                    )[:400]
+                    for item in value
+                    if self._normalize_text(
+                        item
+                    )
+                ][:40]
+
+            return {
+                "project_name": (
+                    clean_str("project_name")
+                ),
+                "issuing_organization": (
+                    clean_str(
+                        "issuing_organization"
+                    )
+                ),
+                "project_objective": (
+                    clean_str(
+                        "project_objective"
+                    )
+                ),
+                "scope_of_work": (
+                    clean_list("scope_of_work")
+                ),
+                "implementation_duration": (
+                    clean_str(
+                        "implementation_duration"
+                    )
+                ),
+                "required_deliverables": (
+                    clean_list(
+                        "required_deliverables"
+                    )
+                ),
+                "submission_deadline": (
+                    clean_str(
+                        "submission_deadline"
+                    )
+                ),
+                "proposal_validity": (
+                    clean_str(
+                        "proposal_validity"
+                    )
+                ),
+            }
+
+        except Exception as error:
+            print(
+                "WARNING: project information "
+                f"extraction failed: {error}"
+            )
+
+            return {}
+
+    # =====================================================
+    # Eligibility / mandatory submission gates
+    # =====================================================
+
+    def _select_eligibility_context(
+        self,
+        rfp_text,
+        max_chars=26000,
+    ):
+        """
+        Deterministically select the pages most likely to
+        contain eligibility gates (checklists, certificates,
+        submission and exclusion rules).
+        """
+        pages = self._split_pages(
+            rfp_text
+        )
+
+        selected = []
+        total = 0
+
+        for (
+            index,
+            (
+                page_number,
+                page_text,
+            ),
+        ) in enumerate(
+            pages
+        ):
+            # PDF extraction breaks phrases across lines,
+            # so compare on whitespace-collapsed text.
+            comparable = (
+                self._normalize_search_text(
+                    page_text
+                )
+            )
+
+            has_signal = any(
+                self._normalize_search_text(
+                    signal
+                )
+                in comparable
+                for signal
+                in self.ELIGIBILITY_SIGNALS
+            )
+
+            # Always include the opening pages: checklists
+            # normally appear early in the document.
+            if not has_signal and index >= 6:
+                continue
+
+            if (
+                total + len(page_text)
+                > max_chars
+            ):
+                break
+
+            label = (
+                f"[Page {page_number}]"
+                if page_number is not None
+                else "[Preamble]"
+            )
+
+            selected.append(
+                f"{label}\n{page_text}"
+            )
+
+            total += len(
+                page_text
+            )
+
+        return "\n\n".join(
+            selected
+        )
+
+    def _validate_eligibility_items(
+        self,
+        data,
+    ):
+        if not isinstance(
+            data,
+            dict,
+        ):
+            raise ValueError(
+                "Eligibility response must be "
+                "a JSON object."
+            )
+
+        items = data.get(
+            "eligibility_requirements"
+        )
+
+        if not isinstance(
+            items,
+            list,
+        ):
+            raise ValueError(
+                "Eligibility response must contain "
+                "an 'eligibility_requirements' array."
+            )
+
+        validated = []
+        seen_keys = set()
+
+        for item in items:
+            if not isinstance(
+                item,
+                dict,
+            ):
+                continue
+
+            name = self._normalize_text(
+                item.get(
+                    "name",
+                    "",
+                )
+            )[:200]
+
+            description = (
+                self._normalize_text(
+                    item.get(
+                        "description",
+                        "",
+                    )
+                )[:500]
+            )
+
+            if not name:
+                continue
+
+            key = (
+                self._requirement_dedupe_key(
+                    name
+                )
+            )
+
+            if (
+                not key
+                or key in seen_keys
+            ):
+                continue
+
+            seen_keys.add(
+                key
+            )
+
+            category = str(
+                item.get(
+                    "category",
+                    "other",
+                )
+            ).strip().lower()
+
+            if category not in (
+                self.ELIGIBILITY_CATEGORIES
+            ):
+                category = "other"
+
+            exclusion = item.get(
+                "exclusion_grade",
+                False,
+            )
+
+            if isinstance(
+                exclusion,
+                str,
+            ):
+                exclusion = (
+                    exclusion
+                    .strip()
+                    .lower()
+                    in {
+                        "true",
+                        "yes",
+                        "1",
+                    }
+                )
+            else:
+                exclusion = bool(
+                    exclusion
+                )
+
+            identifier = (
+                f"E-{len(validated) + 1:03d}"
+            )
+
+            validated.append(
+                {
+                    "id": identifier,
+
+                    "requirement_id": (
+                        identifier
+                    ),
+
+                    "name": name,
+
+                    "description": (
+                        description
+                    ),
+
+                    # Legacy-compatible field used by the
+                    # compliance agent and UI counters.
+                    "requirement": (
+                        f"{name}. {description}".strip(
+                            ". "
+                        )
+                        if description
+                        else name
+                    ),
+
+                    "category": category,
+
+                    "source_section": (
+                        self._normalize_text(
+                            item.get(
+                                "source_section",
+                                "",
+                            )
+                        )[:200]
+                    ),
+
+                    "source": (
+                        self._normalize_text(
+                            item.get(
+                                "source_section",
+                                "",
+                            )
+                        )[:200]
+                        or "RFP"
+                    ),
+
+                    "evidence_expected": (
+                        self._normalize_text(
+                            item.get(
+                                "evidence_expected",
+                                "",
+                            )
+                        )[:300]
+                    ),
+
+                    "exclusion_grade": (
+                        exclusion
+                    ),
+
+                    "mandatory": True,
+
+                    "mandatory_evidence": (
+                        "إلزامي"
+                    ),
+
+                    "gate_type": (
+                        "eligibility"
+                    ),
+                }
+            )
+
+        return validated
+
+    def _extract_eligibility_requirements(
+        self,
+        rfp_text,
+        document_language,
+    ):
+        """
+        Extract pass/fail eligibility and mandatory
+        submission gates SEPARATELY from scored criteria.
+
+        Non-fatal: returns [] with a warning if extraction
+        repeatedly fails, so the rest of the analysis still
+        completes (compliance then falls back to the scored
+        mandatory requirements).
+        """
+        context = (
+            self._select_eligibility_context(
+                rfp_text
+            )
+        )
+
+        if not context.strip():
+            return []
+
+        base_prompt = f"""
+You are a senior procurement compliance analyst.
+
+Identify the MANDATORY ELIGIBILITY AND SUBMISSION GATES
+in this RFP: administrative, legal and formal conditions
+that decide whether a bid may be considered AT ALL,
+separate from how its quality is scored.
+
+Dominant document language: {document_language}
+Return names/descriptions in the SAME language as the RFP.
+
+Typical gates (extract ONLY the ones actually present):
+- signed / stamped technical and financial proposals
+- signed / stamped RFP document and annexes
+- signed declarations and undertakings
+- valid commercial registration
+- chamber of commerce certificate
+- zakat / tax certificate
+- social insurance (GOSI) certificate
+- Saudization / localization certificate
+- bank account (IBAN) certificate
+- bank guarantees
+- separate technical and financial submissions and
+  required file formats
+- submission channel / deadline conditions that void a bid
+- proposal validity period
+- one-bid-per-vendor rules
+- conflict-of-interest declarations
+- subcontractor disclosure obligations
+
+Rules:
+1. Extract ONLY gates stated in the text below.
+2. Do NOT include scored quality requirements
+   (technical capabilities, methodology quality, team
+   quality, pricing competitiveness).
+3. exclusion_grade = true ONLY when the RFP clearly says
+   missing this item excludes / voids / disqualifies the
+   bid (for example a checklist marked إلزامي whose
+   absence leads to استبعاد, or wording such as
+   "يعتبر العرض لاغياً").
+4. category - exactly one of:
+   legal_certificate | declaration | submission_format |
+   financial_guarantee | proposal_validity | process |
+   other
+5. evidence_expected - one short sentence describing what
+   evidence in the submitted proposal would satisfy the
+   gate.
+6. source_section - the heading or page reference where
+   the gate appears.
+
+Return ONLY valid JSON. No markdown. No prose.
+
+{{
+  "eligibility_requirements": [
+    {{
+      "name": "...",
+      "description": "...",
+      "category": "legal_certificate",
+      "source_section": "...",
+      "evidence_expected": "...",
+      "exclusion_grade": true
+    }}
+  ]
+}}
+
+<RFP_ELIGIBILITY_CONTEXT>
+{context}
+</RFP_ELIGIBILITY_CONTEXT>
+"""
+
+        last_error = None
+
+        for attempt in range(
+            1,
+            self.MAX_EXTRACTION_RETRIES + 2,
+        ):
+            try:
+                response = self.llm.ask(
+                    base_prompt
+                    if attempt == 1
+                    else (
+                        base_prompt
+                        + f"""
+
+RETRY: previous response was invalid ({last_error}).
+Return ONLY the JSON object described above.
+"""
+                    ),
+                    label="RFP-Eligibility",
+                )
+
+                data = self._parse_json(
+                    response,
+                    "RFP eligibility extraction",
+                )
+
+                items = (
+                    self._validate_eligibility_items(
+                        data
+                    )
+                )
+
+                print(
+                    "Eligibility gates extracted: "
+                    f"{len(items)}"
+                )
+
+                return items
+
+            except Exception as error:
+                last_error = str(
+                    error
+                )
+
+                print(
+                    "Retrying eligibility extraction "
+                    f"because: {last_error}"
+                )
+
+        print(
+            "WARNING: eligibility extraction failed "
+            f"after retries: {last_error}. "
+            "Compliance will fall back to scored "
+            "mandatory requirements."
+        )
+
+        return []
+
     def analyze(
         self,
         rfp_text,
+        weight_config=None,
     ):
         if not isinstance(
             rfp_text,
@@ -3211,10 +4919,38 @@ Return ONLY valid JSON:
             )
         )
 
+        extraction_method = (
+            "deterministic_numbered_parser"
+        )
+
+        if not requirements:
+            print(
+                "No GEN / REQ numbered requirement "
+                "IDs found."
+            )
+            print(
+                "Falling back to structured "
+                "section-based LLM extraction."
+            )
+
+            requirements = (
+                self._extract_requirements_with_llm(
+                    rfp_text=rfp_text,
+                    document_language=(
+                        document_language
+                    ),
+                )
+            )
+
+            extraction_method = (
+                "llm_structured_section_extraction"
+            )
+
         if not requirements:
             raise RuntimeError(
-                "No GEN / REQ numbered requirements "
-                "were found in the RFP."
+                "No requirements could be extracted "
+                "from the RFP (neither numbered IDs "
+                "nor structured section extraction)."
             )
 
         print()
@@ -3301,12 +5037,39 @@ Return ONLY valid JSON:
                     active_discovered_criteria
                 ),
                 grouped=grouped,
+                weight_config=weight_config,
             )
         )
 
         mandatory_requirements = (
             self._build_mandatory_requirements(
                 criteria
+            )
+        )
+
+        print()
+        print(
+            "================================"
+        )
+        print(
+            "STEP D2 - PROJECT INFORMATION "
+            "AND ELIGIBILITY GATES"
+        )
+        print(
+            "================================"
+        )
+
+        project_information = (
+            self._extract_project_information(
+                rfp_text=rfp_text,
+                document_language=document_language,
+            )
+        )
+
+        eligibility_requirements = (
+            self._extract_eligibility_requirements(
+                rfp_text=rfp_text,
+                document_language=document_language,
             )
         )
 
@@ -3431,6 +5194,15 @@ Return ONLY valid JSON:
                 f"source={criterion['weight_source']}"
             )
 
+        # The RFP in scope may not publish official numeric
+        # weights. Never present internal weights as official:
+        # anything not explicit_rfp is labeled system_defined.
+        evaluation_weight_source = (
+            "explicit_rfp"
+            if weight_sources == {"explicit_rfp"}
+            else "system_defined"
+        )
+
         return {
             "rfp_summary": (
                 rfp_summary
@@ -3440,12 +5212,24 @@ Return ONLY valid JSON:
                 document_language
             ),
 
+            "project_information": (
+                project_information
+            ),
+
             "criteria": (
                 criteria
             ),
 
             "mandatory_requirements": (
                 mandatory_requirements
+            ),
+
+            "eligibility_requirements": (
+                eligibility_requirements
+            ),
+
+            "evaluation_weight_source": (
+                evaluation_weight_source
             ),
 
             "all_requirements": (
@@ -3471,6 +5255,12 @@ Return ONLY valid JSON:
                     )
                 ),
 
+                "eligibility_requirement_count": (
+                    len(
+                        eligibility_requirements
+                    )
+                ),
+
                 "total_weight": (
                     total_weight
                 ),
@@ -3479,12 +5269,16 @@ Return ONLY valid JSON:
                     overall_weight_source
                 ),
 
+                "evaluation_weight_source": (
+                    evaluation_weight_source
+                ),
+
                 "document_language": (
                     document_language
                 ),
 
                 "requirement_extraction_method": (
-                    "deterministic_numbered_parser"
+                    extraction_method
                 ),
 
                 "criteria_discovery_method": (

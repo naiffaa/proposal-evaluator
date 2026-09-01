@@ -50,3 +50,48 @@ TECHNICAL_CONTEXT_MAX_CHARS = int(
 COMPLIANCE_CONTEXT_MAX_CHARS = int(
     os.getenv("COMPLIANCE_CONTEXT_MAX_CHARS", "32000")
 )
+
+# =========================================================
+# RFP extraction (RFPs without GEN/REQ numbered IDs)
+# =========================================================
+
+# Character size of each RFP section chunk sent to the LLM
+# during structured requirement extraction.
+RFP_EXTRACTION_CHUNK_CHARS = int(
+    os.getenv("RFP_EXTRACTION_CHUNK_CHARS", "9000")
+)
+
+# Overlap kept between consecutive extraction chunks so a
+# requirement split across a chunk boundary is not lost.
+RFP_EXTRACTION_CHUNK_OVERLAP = int(
+    os.getenv("RFP_EXTRACTION_CHUNK_OVERLAP", "600")
+)
+
+# Parallel workers for chunked RFP requirement extraction.
+RFP_EXTRACTION_WORKERS = int(
+    os.getenv("RFP_EXTRACTION_WORKERS", "2")
+)
+
+# =========================================================
+# Evaluation weight configuration
+# =========================================================
+
+# Optional JSON file with reviewer-defined criterion weights:
+# {
+#   "weight_overrides": {
+#     "<criterion name or criterion_id>": <weight 0-100>,
+#     ...
+#   }
+# }
+# When present and the weights are valid (total ~100 across
+# matched criteria), these override the system-derived
+# importance weights and are labeled
+# weight_source = "system_defined_override".
+EVALUATION_WEIGHTS_FILE = os.getenv(
+    "EVALUATION_WEIGHTS_FILE",
+    os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "config",
+        "evaluation_weights.json",
+    ),
+)
