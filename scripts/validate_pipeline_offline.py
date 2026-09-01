@@ -741,6 +741,151 @@ def main():
         == len(requirements),
     )
 
+    check(
+        "criteria expose subcriteria",
+        all(
+            isinstance(
+                item.get("subcriteria"),
+                list,
+            )
+            and item["subcriteria"]
+            for item in analysis["criteria"]
+        ),
+    )
+
+    print()
+    print("=" * 60)
+    print("1b. SUBCRITERIA GROUPING")
+    print("=" * 60)
+
+    # Direct unit check with distinct section headings.
+    # The scripted extractor returns one section name, so
+    # the end-to-end sample alone cannot prove grouping.
+    sample_requirements = [
+        {
+            "id": "R-001",
+            "requirement": "دعم MARC21",
+            "section": "معايير الفهرسة",
+            "mandatory": True,
+            "requirement_type": "إلزامي",
+            "importance_score": 5,
+            "importance_level": "Critical",
+            "category": "technical",
+            "source": "Page 11",
+            "page": 11,
+        },
+        {
+            "id": "R-002",
+            "requirement": "دعم RDA",
+            "section": "معايير الفهرسة",
+            "mandatory": True,
+            "requirement_type": "إلزامي",
+            "importance_score": 4,
+            "importance_level": "High",
+            "category": "technical",
+            "source": "Page 11",
+            "page": 11,
+        },
+        {
+            "id": "R-003",
+            "requirement": "التكامل مع RFID",
+            "section": "التكامل والربط",
+            "mandatory": True,
+            "requirement_type": "إلزامي",
+            "importance_score": 5,
+            "importance_level": "Critical",
+            "category": "integration",
+            "source": "Page 9",
+            "page": 9,
+        },
+        {
+            "id": "R-004",
+            "requirement": "يفضل محركات توصية",
+            "section": "التقنيات المتقدمة",
+            "mandatory": False,
+            "requirement_type": "تفضيلي",
+            "importance_score": 1,
+            "importance_level": "Low",
+            "category": "technical",
+            "source": "Page 13",
+            "page": 13,
+        },
+        {
+            "id": "R-005",
+            "requirement": "تقارير دورية",
+            "section": "إدارة المشروع",
+            "mandatory": False,
+            "requirement_type": "",
+            "importance_score": 3,
+            "importance_level": "Important",
+            "category": "delivery",
+            "source": "Page 17",
+            "page": 17,
+        },
+    ]
+
+    subcriteria = agent._build_subcriteria(
+        "C04",
+        sample_requirements,
+    )
+
+    check(
+        "subcriteria group by RFP section",
+        [item["name"] for item in subcriteria]
+        == [
+            "معايير الفهرسة",
+            "التكامل والربط",
+            "التقنيات المتقدمة",
+            "إدارة المشروع",
+        ],
+        str([item["name"] for item in subcriteria]),
+    )
+
+    check(
+        "subcriterion importance labels derived",
+        [
+            item["importance"]
+            for item in subcriteria
+        ]
+        == [
+            "mandatory",
+            "mandatory",
+            "preferred",
+            "medium",
+        ],
+        str(
+            [
+                item["importance"]
+                for item in subcriteria
+            ]
+        ),
+    )
+
+    subcriteria_ids = [
+        requirement_id
+        for item in subcriteria
+        for requirement_id in item[
+            "requirement_ids"
+        ]
+    ]
+
+    check(
+        "subcriteria lose no requirements",
+        sorted(subcriteria_ids)
+        == sorted(
+            item["id"]
+            for item in sample_requirements
+        )
+        and len(subcriteria_ids)
+        == len(set(subcriteria_ids)),
+    )
+
+    check(
+        "subcriteria carry page references",
+        subcriteria[0]["pages"] == [11]
+        and subcriteria[2]["pages"] == [13],
+    )
+
     print()
     print("=" * 60)
     print("2. WEIGHT OVERRIDES")

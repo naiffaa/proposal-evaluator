@@ -76,6 +76,19 @@ Each requirement carries `page`, `section`, `mandatory`,
 `requirement_type` (`إلزامي` / `تفضيلي`), `category` and
 `evidence_expected`.
 
+**Subcriteria.** Each criterion also exposes a
+`subcriteria` array, built deterministically in Python by
+grouping the criterion's requirements under the RFP
+section heading they were extracted from. Subcriterion
+names therefore come from the RFP's own structure rather
+than an LLM guess, and document order is preserved. Each
+carries `source_section`, `pages`, an `importance` label
+(`mandatory` / `preferred` / `high` / `medium` / `low`)
+derived from the requirements inside it, counts, and
+`requirement_ids`. This is an additive view - the flat
+`requirements` list is unchanged, so existing consumers
+are unaffected.
+
 **Criteria** are discovered dynamically from the RFP,
 named in the RFP's own language. Administrative
 eligibility gates are explicitly excluded from scored
@@ -225,6 +238,17 @@ Covers extraction without numbered IDs, page mapping,
 weight rules, compliance status rules, Arabic retrieval,
 the compliance matrix, and backward compatibility of
 every field the frontend reads.
+
+```bash
+python3 scripts/analyze_rfp_only.py <rfp.pdf> [output.json]
+```
+
+RFP analysis only - no proposals evaluated. Writes the
+framework to `artifacts/rfp_analysis.json` and prints an
+inspection report of project information, eligibility
+gates, criteria, weights, subcriteria and the mandatory /
+preferred / standard split. Use this to review the
+framework before running any proposal evaluation.
 
 ```bash
 python3 scripts/run_library_rfp.py <rfp.pdf> <proposal.pdf> [...]

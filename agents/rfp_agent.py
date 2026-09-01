@@ -3025,12 +3025,226 @@ OUTPUT
                     "requirements": (
                         criterion_requirements
                     ),
+
+                    # Additive hierarchical view grouped by
+                    # the RFP section each requirement came
+                    # from. Consumers of "requirements" are
+                    # unaffected.
+                    "subcriteria": (
+                        self._build_subcriteria(
+                            criterion_id=criterion_id,
+                            requirements=(
+                                criterion_requirements
+                            ),
+                        )
+                    ),
                 }
             )
 
         return (
             final_criteria
         )
+
+    # =====================================================
+    # Subcriteria
+    # =====================================================
+
+    def _build_subcriteria(
+        self,
+        criterion_id,
+        requirements,
+    ):
+        """
+        Group a criterion's requirements into subcriteria.
+
+        Deterministic and domain-agnostic: the grouping key
+        is the RFP section heading each requirement was
+        extracted from, so subcriterion names come from the
+        RFP's own structure rather than an LLM guess, and
+        document order is preserved.
+
+        This is an additive view. The flat `requirements`
+        list on the criterion is unchanged, so nothing that
+        already consumes it is affected.
+        """
+        groups = OrderedDict()
+
+        for requirement in requirements:
+            section = (
+                self._normalize_text(
+                    requirement.get(
+                        "section",
+                        "",
+                    )
+                )
+                or "RFP"
+            )
+
+            groups.setdefault(
+                section,
+                [],
+            ).append(
+                requirement
+            )
+
+        subcriteria = []
+
+        for (
+            index,
+            (
+                section,
+                items,
+            ),
+        ) in enumerate(
+            groups.items(),
+            start=1,
+        ):
+            mandatory_count = sum(
+                1
+                for item in items
+                if item.get(
+                    "mandatory",
+                    False,
+                )
+            )
+
+            preferred_count = sum(
+                1
+                for item in items
+                if item.get(
+                    "requirement_type"
+                )
+                == "تفضيلي"
+            )
+
+            # Importance label for the whole subcriterion,
+            # derived from the requirements inside it.
+            if mandatory_count:
+                importance = "mandatory"
+
+            elif (
+                preferred_count
+                and preferred_count == len(items)
+            ):
+                importance = "preferred"
+
+            else:
+                average_score = (
+                    sum(
+                        float(
+                            item.get(
+                                "importance_score",
+                                1,
+                            )
+                        )
+                        for item in items
+                    )
+                    /
+                    len(items)
+                )
+
+                if average_score >= 4:
+                    importance = "high"
+                elif average_score >= 2.5:
+                    importance = "medium"
+                else:
+                    importance = "low"
+
+            pages = sorted(
+                {
+                    item["page"]
+                    for item in items
+                    if item.get("page")
+                    is not None
+                }
+            )
+
+            subcriteria.append(
+                {
+                    "subcriterion_id": (
+                        f"{criterion_id}-S"
+                        f"{index:02d}"
+                    ),
+
+                    "name": section,
+
+                    "source_section": section,
+
+                    "pages": pages,
+
+                    "importance": importance,
+
+                    "requirement_count": len(
+                        items
+                    ),
+
+                    "mandatory_count": (
+                        mandatory_count
+                    ),
+
+                    "preferred_count": (
+                        preferred_count
+                    ),
+
+                    "requirement_ids": [
+                        item["id"]
+                        for item in items
+                    ],
+
+                    # Compact inspection view. Full detail
+                    # remains on criterion["requirements"].
+                    "requirements": [
+                        {
+                            "id": item["id"],
+
+                            "requirement": (
+                                item["requirement"]
+                            ),
+
+                            "mandatory": (
+                                item.get(
+                                    "mandatory",
+                                    False,
+                                )
+                            ),
+
+                            "requirement_type": (
+                                item.get(
+                                    "requirement_type",
+                                    "",
+                                )
+                            ),
+
+                            "importance_level": (
+                                item.get(
+                                    "importance_level"
+                                )
+                            ),
+
+                            "category": (
+                                item.get(
+                                    "category",
+                                    "",
+                                )
+                            ),
+
+                            "source": (
+                                item.get(
+                                    "source",
+                                    "",
+                                )
+                            ),
+
+                            "page": (
+                                item.get("page")
+                            ),
+                        }
+                        for item in items
+                    ],
+                }
+            )
+
+        return subcriteria
 
     # =====================================================
     # Mandatory requirements
