@@ -658,19 +658,13 @@ class ProposalEvaluationService:
         )
 
         # =================================================
-        # Mandatory requirements
+        # Eligibility gates
         # =================================================
-
-        mandatory_requirements = (
-            self._get_mandatory_requirements(
-                criteria
-            )
-        )
 
         print(
             f"[{vendor_name}] "
-            f"Mandatory eligibility gates: "
-            f"{len(mandatory_requirements)}"
+            f"Explicit eligibility gates: "
+            f"{len(eligibility_requirements)}"
         )
 
         # =================================================
@@ -1077,6 +1071,9 @@ class ProposalEvaluationService:
                     vendor_name=vendor_name,
                     proposal_text=proposal_text,
                     criteria=criteria,
+                    eligibility_requirements=(
+                        eligibility_requirements
+                    ),
                 )
             )
 
@@ -1354,6 +1351,12 @@ class ProposalEvaluationService:
             )
         )
 
+        eligibility_requirements = (
+            self._get_eligibility_requirements(
+                rfp_analysis
+            )
+        )
+
         print(
             f"RFP framework frozen with "
             f"{len(criteria)} criteria."
@@ -1365,8 +1368,13 @@ class ProposalEvaluationService:
         )
 
         print(
-            f"Mandatory eligibility gates: "
+            f"Mandatory requirements: "
             f"{len(mandatory_requirements)}"
+        )
+
+        print(
+            f"Explicit eligibility gates: "
+            f"{len(eligibility_requirements)}"
         )
 
         print(
@@ -1770,4 +1778,4 @@ class ProposalEvaluationService:
             if callable(
                 close_method
             ):
-                close_method()
+                close_method() 
